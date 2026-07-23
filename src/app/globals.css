@@ -1,0 +1,156 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+  --background: #fff5f8;
+  --foreground: #1e1b2b;
+  --card: rgba(255, 255, 255, 0.65);
+  --card-border: rgba(255, 255, 255, 0.5);
+  --accent-pink: #ff4d82;
+  --accent-purple: #8b5cf6;
+  --accent-purple-dark: #6d28d9;
+  --glass-blur: blur(20px);
+}
+
+.dark {
+  --background: #0b071a;
+  --foreground: #f3f1f7;
+  --card: rgba(18, 12, 38, 0.65);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --accent-pink: #ff5e91;
+  --accent-purple: #a78bfa;
+  --accent-purple-dark: #7c3aed;
+}
+
+@theme {
+  --font-sans: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --color-primary-pink: var(--accent-pink);
+  --color-primary-purple: var(--accent-purple);
+  --color-primary-purple-dark: var(--accent-purple-dark);
+  
+  --animate-shimmer: shimmer 2s infinite linear;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-15px) scale(1.05); }
+  }
+}
+
+/* Custom base resets */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+/* Custom premium styles */
+.glass-panel {
+  background: var(--card);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--card-border);
+}
+
+.glass-card {
+  background: var(--card);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 8px 32px 0 rgba(236, 72, 153, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px 0 rgba(236, 72, 153, 0.12);
+  border-color: rgba(255, 77, 130, 0.3);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--accent-pink) 0%, var(--accent-purple) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-gradient-premium {
+  background: linear-gradient(135deg, var(--accent-pink) 0%, var(--accent-purple) 100%);
+}
+
+.bg-gradient-purple-pink {
+  background: linear-gradient(135deg, var(--accent-purple-dark) 0%, var(--accent-pink) 100%);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(5px);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.glass-input:focus {
+  border-color: var(--accent-pink);
+  box-shadow: 0 0 10px rgba(255, 77, 130, 0.2);
+}
+
+/* Shimmer Loading Skeleton */
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.06) 25%, rgba(255,255,255,0.13) 50%, rgba(255,255,255,0.06) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, var(--accent-pink), var(--accent-purple));
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-pink);
+}
+
+/* Floating background particles */
+.floating-bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 77, 130, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+  filter: blur(40px);
+  z-index: -1;
+  pointer-events: none;
+  animation: float 25s infinite ease-in-out;
+}
+
+/* Animated Hearts for matching */
+@keyframes heartBurst {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5) rotate(45deg);
+    opacity: 0;
+  }
+}
