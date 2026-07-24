@@ -9,6 +9,14 @@ export const metadata = {
   title: "Soul Bridge | Premium World-Class AI Matchmaking Platform",
   description: "Experience the ultimate luxury dating application. Soul Bridge combines Apple-level polish, 3D interactive graphics, and Gemini AI compatibility analysis.",
   keywords: ["dating app", "luxury dating", "AI matching", "Soul Bridge", "find love", "chat real-time"],
+  icons: {
+    icon: [
+      { url: "/icon.png", type: "image/png" },
+      { url: "/favicon.ico" }
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-icon.png",
+  },
   openGraph: {
     title: "Soul Bridge | Premium World-Class Dating",
     description: "Discover deep, meaningful connections with Gemini AI compatibility scoring, interactive 3D matching, and real-time socket chat.",
