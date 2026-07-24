@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Heart, CheckCircle2, AlertTriangle, ArrowRight, Sparkles } from "lucide-react";
 import { verifyUserEmail } from "@/actions/auth";
 
-export default function VerifyEmail() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   
@@ -126,5 +126,13 @@ export default function VerifyEmail() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function VerifyEmail() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-foreground/50">Loading...</div>}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

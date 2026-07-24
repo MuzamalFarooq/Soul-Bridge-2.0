@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { MessageCircle, Heart, Star, Sparkles, Send, ShieldAlert, CircleUser } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import ChatWindow from "@/components/chat/ChatWindow";
 import { fetchConversations } from "@/actions/chat";
 
-export default function ChatPage() {
+function ChatContent() {
   const searchParams = useSearchParams();
   const initialConvoId = searchParams.get("convo");
 
@@ -144,5 +144,13 @@ export default function ChatPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-foreground/50">Loading chat...</div>}>
+      <ChatContent />
+    </Suspense>
   );
 }
