@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Heart, CheckCircle2, AlertTriangle, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { Heart, CheckCircle2, AlertTriangle, ArrowRight, Sparkles } from "lucide-react";
 import { verifyUserEmail } from "@/actions/auth";
 
 export default function VerifyEmail() {
@@ -16,7 +17,7 @@ export default function VerifyEmail() {
 
   const handleVerify = async () => {
     if (!token) {
-      setError("Verification token is missing. Please check your email registration.");
+      setError("Verification token missing.");
       return;
     }
 
@@ -29,16 +30,15 @@ export default function VerifyEmail() {
       if (res.success) {
         setSuccess(res.message);
       } else {
-        setError(res.error || "Failed to verify email");
+        setError(res.error || "Failed to verify email address.");
       }
     } catch (err) {
-      setError("An unexpected error occurred during verification");
+      setError("An unexpected error occurred during verification.");
     } finally {
       setVerifying(false);
     }
   };
 
-  // Auto trigger verification if token exists
   useEffect(() => {
     if (token) {
       handleVerify();
@@ -46,43 +46,52 @@ export default function VerifyEmail() {
   }, [token]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative z-10">
-      <div className="w-full max-w-md glass-card rounded-2xl p-8 border border-white border-opacity-10 shadow-2xl text-center">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative z-10 bg-[#09090B]">
+      <div className="absolute w-[500px] h-[500px] bg-radial from-[#FF4D8D]/20 via-[#9C6BFF]/10 to-transparent blur-[120px] pointer-events-none" />
+
+      <motion.div 
+        initial={{ opacity: 0, y: 20, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md glass-card-lux rounded-3xl p-8 md:p-10 border border-white/10 shadow-2xl text-center relative"
+      >
         <div className="flex flex-col items-center mb-6">
-          <Heart className="w-12 h-12 text-primary-pink fill-primary-pink animate-pulse mb-3" />
-          <h2 className="text-2xl font-bold">Email Verification</h2>
-          <p className="text-xs text-foreground text-opacity-65 mt-1.5">
-            Verifying your security credentials.
+          <div className="relative mb-3">
+            <Heart className="w-12 h-12 text-[#FF4D8D] fill-[#FF4D8D] animate-bounce filter drop-shadow-[0_0_12px_rgba(255,77,141,0.6)]" />
+          </div>
+          <h2 className="text-2xl font-black text-white">Email Verification</h2>
+          <p className="text-xs text-white/60 mt-1 font-medium">
+            Validating security token...
           </p>
         </div>
 
         {verifying && (
           <div className="py-8 flex flex-col items-center gap-3">
-            <div className="w-8 h-8 border-4 border-primary-pink border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-xs text-foreground text-opacity-60">Validating token...</p>
+            <div className="w-10 h-10 border-4 border-[#FF4D8D] border-t-transparent rounded-full animate-spin" />
+            <p className="text-xs text-white/60 font-semibold">Checking database token...</p>
           </div>
         )}
 
         {!verifying && error && (
           <div className="py-6 flex flex-col items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-red-500 bg-opacity-15 flex items-center justify-center border border-red-500 border-opacity-25">
-              <AlertTriangle className="w-6 h-6 text-red-500" />
+            <div className="w-12 h-12 rounded-full bg-rose-500/20 flex items-center justify-center border border-rose-500/30">
+              <AlertTriangle className="w-6 h-6 text-rose-400" />
             </div>
-            <p className="text-sm font-semibold text-red-500">{error}</p>
-            <p className="text-xs text-foreground text-opacity-60 max-w-xs mx-auto">
-              Please make sure your token is correct, or try registering your account again.
+            <p className="text-sm font-bold text-rose-400">{error}</p>
+            <p className="text-xs text-white/60 max-w-xs font-medium">
+              Check your token string or register a new user account.
             </p>
           </div>
         )}
 
         {!verifying && success && (
           <div className="py-6 flex flex-col items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-emerald-500 bg-opacity-15 flex items-center justify-center border border-emerald-500 border-opacity-25">
-              <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+            <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+              <CheckCircle2 className="w-6 h-6 text-emerald-400" />
             </div>
-            <p className="text-sm font-semibold text-emerald-500">{success}</p>
-            <p className="text-xs text-foreground text-opacity-60">
-              Your email is successfully verified. You can now login.
+            <p className="text-sm font-bold text-emerald-400">{success}</p>
+            <p className="text-xs text-white/60 font-medium">
+              Account activated! You can now log in and complete your profile.
             </p>
           </div>
         )}
@@ -93,29 +102,29 @@ export default function VerifyEmail() {
               type="text"
               placeholder="Paste verification token here"
               id="manual-token"
-              className="w-full px-4 py-2.5 rounded-xl glass-input text-sm text-center"
+              className="w-full px-4 py-3 rounded-2xl glass-input-lux text-xs text-center text-white"
             />
             <button
               onClick={() => {
                 const tokenVal = document.getElementById("manual-token").value;
                 window.location.search = `?token=${tokenVal}`;
               }}
-              className="w-full py-2.5 rounded-xl bg-gradient-premium text-white font-semibold text-xs cursor-pointer"
+              className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] text-white font-bold text-xs shadow-lg cursor-pointer"
             >
-              Verify Token
+              Verify Token Now
             </button>
           </div>
         )}
 
-        <div className="mt-8 border-t border-white border-opacity-5 pt-6">
+        <div className="mt-8 border-t border-white/10 pt-6">
           <Link
             href="/login"
-            className="inline-flex items-center gap-1.5 text-xs text-primary-pink font-semibold hover:underline"
+            className="inline-flex items-center gap-2 text-xs text-[#FF4D8D] font-bold hover:underline"
           >
-            Go to Login Page <ArrowRight className="w-3.5 h-3.5" />
+            Proceed to Login <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

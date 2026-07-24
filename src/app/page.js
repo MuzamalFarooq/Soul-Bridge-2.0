@@ -2,383 +2,398 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { 
   Heart, Sparkles, Shield, Zap, MessageCircle, Video, UserCheck, 
-  ArrowRight, Check, ChevronDown, Award, Globe, Brain 
+  ArrowRight, Check, ChevronDown, Award, Globe, Brain, Star, TrendingUp, Users, Lock, Flame
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import HeroCanvas3D from "@/components/ui/HeroCanvas3D";
 
 export default function Home() {
   const [activeFaq, setActiveFaq] = useState(null);
-  const [floatingHearts, setFloatingHearts] = useState([]);
-
-  // Create floating hearts for hero animation
-  useEffect(() => {
-    const hearts = Array.from({ length: 15 }).map((_, i) => ({
-      id: i,
-      left: `${Math.random() * 85 + 5}%`,
-      delay: `${Math.random() * 8}s`,
-      size: `${Math.random() * 20 + 10}px`,
-      duration: `${Math.random() * 10 + 6}s`,
-      opacity: Math.random() * 0.4 + 0.1,
-    }));
-    setFloatingHearts(hearts);
-  }, []);
+  const [annualBilling, setAnnualBilling] = useState(false);
 
   const faqData = [
     {
-      q: "How does the AI matching system work?",
-      a: "Our AI engine analyzes your detailed profile questionnaire, hobbies, writing style, and preferences. It calculates a detailed compatibility percentage based on psychological traits and interests, helping you bypass small talk and connect on a deeper level."
+      q: "How does the AI matching algorithm calculate compatibility?",
+      a: "Soul Bridge uses advanced Gemini AI to evaluate over 30 psychological markers, personal values, communication styles, and life goals to calculate exact compatibility match percentages."
     },
     {
-      q: "Is Soul Bridge safe and secure?",
-      a: "Absolutely. Safety is our number one priority. We implement end-to-end encryption for video and audio calls, screenshot detection guidelines, direct profile report mechanisms, and quick verification badges to ensure every user is verified."
+      q: "Is my personal data and gallery photo privacy protected?",
+      a: "Yes! All communications and call feeds are end-to-end encrypted. We support incognito mode, private photo locks, screenshot prevention, and verified identity badges."
     },
     {
-      q: "What features are included in the Premium plans?",
-      a: "Premium memberships (Gold & Platinum) unlock features like unlimited swipes, advanced filtering (religion, height, education), profile boosts to place you on top of discovery decks, read receipts, incognito browsing, and unlimited access to the Gemini AI Dating Coach."
+      q: "What features are included in Gold & Platinum memberships?",
+      a: "Premium tiers include unlimited swipes, 5+ daily superlikes, see who liked you instantly, incognito mode, read receipts, priority matching, and unlimited Gemini AI dating coaching."
     },
     {
-      q: "Can I use Soul Bridge on mobile and desktop?",
-      a: "Yes! Soul Bridge is built with progressive web app (PWA) standards, ensuring it feels like a native app on iOS or Android, while offering a fully responsive experience on tablets and desktop browsers."
+      q: "Can I use Soul Bridge on mobile devices?",
+      a: "Yes! Soul Bridge is built with responsive Progressive Web App standards, delivering a native app feel on iOS and Android with bottom touch bar navigation and haptic swipe gestures."
     }
   ];
 
   return (
-    <div className="relative min-h-screen flex flex-col overflow-hidden">
-      {/* Floating hearts container */}
-      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-        {floatingHearts.map((heart) => (
-          <div
-            key={heart.id}
-            className="absolute bottom-0 text-primary-pink animate-bounce fill-current opacity-40"
-            style={{
-              left: heart.left,
-              fontSize: heart.size,
-              animationDelay: heart.delay,
-              animationDuration: heart.duration,
-              opacity: heart.opacity,
-              animationName: "heartBurst",
-              animationIterationCount: "infinite",
-              animationTimingFunction: "linear"
-            }}
-          >
-            ♥
-          </div>
-        ))}
-      </div>
-
+    <div className="relative min-h-screen flex flex-col overflow-hidden bg-[#09090B] text-foreground">
       <Navbar />
 
-      {/* Hero Section */}
-      <section className="relative z-10 px-6 pt-20 pb-16 md:pt-32 md:pb-24 max-w-7xl mx-auto w-full text-center flex flex-col items-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel border-opacity-30 text-xs font-semibold text-primary-pink mb-8 animate-pulse-slow">
-          <Sparkles className="w-4 h-4" /> Powered by Gemini Advanced AI
-        </div>
-        
-        <h1 className="text-4xl md:text-7xl font-extrabold tracking-tight leading-tight max-w-5xl mb-6">
-          Find the Bridge to Your <br />
-          <span className="text-gradient">Ultimate Soulmate</span>
-        </h1>
-        
-        <p className="text-base md:text-xl text-foreground text-opacity-80 max-w-3xl mb-10 leading-relaxed">
-          Skip the endless small talk. Soul Bridge uses psychological analysis and deep personality matching to pair you with partners who share your values, dreams, and life rhythm.
-        </p>
+      {/* HERO SECTION WITH 3D CANVAS */}
+      <section className="relative min-h-[90vh] flex items-center justify-center px-6 pt-16 pb-20 md:pt-24 md:pb-28 max-w-7xl mx-auto w-full text-center">
+        <HeroCanvas3D />
 
-        <div className="flex flex-col sm:flex-row gap-4 mb-16">
-          <Link
-            href="/register"
-            className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-full bg-gradient-premium text-white font-semibold text-base shadow-xl shadow-pink-500/20 hover:shadow-pink-500/40 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+        <div className="relative z-10 flex flex-col items-center max-w-4xl mx-auto">
+          {/* Badge */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card-lux text-xs font-bold text-[#FF4D8D] mb-8 border border-[#FF4D8D]/30 shadow-lg shadow-pink-500/10"
           >
-            Create Your Account <ArrowRight className="w-5 h-5" />
-          </Link>
-          <Link
-            href="#how-it-works"
-            className="inline-flex items-center justify-center px-8 py-4 rounded-full glass-panel hover:bg-white hover:bg-opacity-10 font-semibold text-base transition-all"
+            <Sparkles className="w-4 h-4 text-[#FF4D8D] animate-spin" />
+            <span>Next-Gen Gemini AI Matchmaker</span>
+          </motion.div>
+          
+          {/* Animated Headline */}
+          <motion.h1 
+            initial={{ opacity: 0, y: 25 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight leading-[1.1] mb-6"
           >
-            See How it Works
-          </Link>
-        </div>
+            Find the Bridge to Your <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF4D8D] via-[#FFB6C1] to-[#9C6BFF] filter drop-shadow-[0_0_25px_rgba(255,77,141,0.4)]">
+              Ultimate Soulmate
+            </span>
+          </motion.h1>
+          
+          {/* Subheading */}
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="text-base sm:text-lg md:text-xl text-white/75 max-w-2xl mb-10 leading-relaxed font-medium"
+          >
+            Skip surface small talk. Connect deeply through AI personality compatibility, interactive 3D profile matching, and live socket conversations.
+          </motion.p>
 
-        {/* Dynamic illustration frame */}
-        <div className="w-full max-w-4xl rounded-2xl glass-card border border-opacity-30 overflow-hidden relative shadow-2xl p-2 animate-float">
-          <div className="rounded-xl overflow-hidden bg-slate-900 aspect-video relative flex items-center justify-center bg-gradient-purple-pink">
-            {/* Mock Swipe Interface Preview */}
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center p-6">
-              <div className="w-[300px] h-[400px] glass-card rounded-2xl p-4 flex flex-col justify-between border border-white/20 shadow-2xl animate-pulse">
-                <div className="w-full h-48 rounded-xl bg-gradient-to-tr from-pink-500 to-indigo-500 flex items-center justify-center relative">
-                  <div className="absolute top-3 left-3 bg-black/50 text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 font-bold">
-                    <Brain className="w-3 h-3 text-pink-400" /> 97% Match
+          {/* CTA Buttons */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="flex flex-col sm:flex-row gap-4 mb-16 w-full sm:w-auto"
+          >
+            <Link
+              href="/register"
+              className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-full bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] text-white font-bold text-base shadow-xl shadow-pink-500/25 hover:shadow-pink-500/50 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            >
+              Start Free Today <ArrowRight className="w-5 h-5" />
+            </Link>
+            <Link
+              href="#how-it-works"
+              className="inline-flex items-center justify-center px-8 py-4 rounded-full glass-card-lux hover:bg-white/10 font-bold text-base text-white border border-white/15 transition-all"
+            >
+              Explore Features
+            </Link>
+          </motion.div>
+
+          {/* Mock Interactive Card Stack Preview */}
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.5 }}
+            className="w-full max-w-3xl rounded-3xl glass-card-lux border border-white/20 p-3 shadow-2xl relative"
+          >
+            <div className="rounded-2xl overflow-hidden bg-[#09090B] aspect-video relative flex items-center justify-center bg-gradient-to-tr from-[#9C6BFF]/30 to-[#FF4D8D]/30 border border-white/10">
+              <div className="w-[320px] h-[410px] glass-card-lux rounded-3xl p-5 flex flex-col justify-between border border-white/20 shadow-2xl relative">
+                <div className="w-full h-52 rounded-2xl bg-slate-800 relative overflow-hidden">
+                  <img
+                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&h=600&fit=crop"
+                    alt="Sample Profile"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-[#FF4D8D] flex items-center gap-1 border border-white/10">
+                    <Brain className="w-3 h-3 text-[#FF4D8D]" /> 98% Match
                   </div>
-                  <Heart className="w-12 h-12 text-white/40" />
                 </div>
-                <div className="text-left mt-4">
-                  <h3 className="font-bold text-white text-lg">Amara, 27</h3>
-                  <p className="text-xs text-white/80">UX Designer • New York</p>
-                  <p className="text-[10px] text-pink-300 italic mt-2">\"Always up for coffee and gallery walks.\"</p>
+
+                <div className="text-left mt-3">
+                  <h3 className="font-extrabold text-white text-xl flex items-center gap-2">
+                    Sophia, 26 <Check className="w-4 h-4 text-emerald-400 bg-emerald-400/20 p-0.5 rounded-full" />
+                  </h3>
+                  <p className="text-xs text-white/70">Architect • San Francisco</p>
+                  <p className="text-xs text-[#FFB6C1] italic mt-1 font-medium">"Coffee enthusiast & gallery hopper."</p>
                 </div>
-                <div className="flex justify-around items-center mt-3">
-                  <button className="w-10 h-10 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center text-red-400 text-sm font-bold">✕</button>
-                  <button className="w-12 h-12 rounded-full bg-gradient-premium flex items-center justify-center text-white"><Heart className="w-6 h-6 fill-white" /></button>
-                  <button className="w-10 h-10 rounded-full bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 text-sm font-bold">★</button>
+
+                <div className="flex justify-around items-center mt-2">
+                  <button className="w-11 h-11 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 font-bold hover:scale-110 transition-transform">✕</button>
+                  <button className="w-14 h-14 rounded-full bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] flex items-center justify-center text-white shadow-lg shadow-pink-500/30 hover:scale-110 transition-transform"><Heart className="w-7 h-7 fill-white" /></button>
+                  <button className="w-11 h-11 rounded-full bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 font-bold hover:scale-110 transition-transform">★</button>
                 </div>
               </div>
             </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* STATS BANNER */}
+      <section className="relative z-10 py-12 border-y border-white/10 bg-[#09090B]/60 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div className="flex flex-col gap-1">
+            <span className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#FF4D8D] to-[#FFB6C1]">
+              1.2M+
+            </span>
+            <span className="text-xs font-bold text-white/50 uppercase tracking-widest">Active Connections</span>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <span className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#9C6BFF] to-[#FF4D8D]">
+              98.4%
+            </span>
+            <span className="text-xs font-bold text-white/50 uppercase tracking-widest">AI Match Accuracy</span>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <span className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF]">
+              450K+
+            </span>
+            <span className="text-xs font-bold text-white/50 uppercase tracking-widest">Successful Couples</span>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <span className="text-3xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#FFB6C1] to-[#9C6BFF]">
+              4.9★
+            </span>
+            <span className="text-xs font-bold text-white/50 uppercase tracking-widest">User Rating</span>
           </div>
         </div>
       </section>
 
-      {/* How it Works Section */}
-      <section id="how-it-works" className="relative z-10 py-20 px-6 max-w-7xl mx-auto w-full border-t border-white border-opacity-5">
+      {/* HOW IT WORKS SECTION */}
+      <section id="how-it-works" className="relative z-10 py-24 px-6 max-w-7xl mx-auto w-full">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4">How Soul Bridge Connects You</h2>
-          <p className="text-foreground text-opacity-70 max-w-2xl mx-auto">
-            Three simple steps to transition from surface swipes to meaningful, long-term conversations.
+          <h2 className="text-3xl md:text-5xl font-black mb-4">How Soul Bridge Connects You</h2>
+          <p className="text-white/60 max-w-xl mx-auto text-sm font-medium">
+            Three simple steps to transition from surface swiping to meaningful, lasting relationships.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="glass-card rounded-2xl p-8 flex flex-col gap-4">
-            <div className="w-12 h-12 rounded-xl bg-pink-500/20 flex items-center justify-center text-primary-pink font-bold text-xl border border-pink-500/30">
-              1
+          <div className="glass-card-lux rounded-3xl p-8 flex flex-col gap-5 border border-white/10 hover:border-[#FF4D8D]/40 transition-all">
+            <div className="w-14 h-14 rounded-2xl bg-[#FF4D8D]/20 text-[#FF4D8D] font-black text-2xl flex items-center justify-center border border-[#FF4D8D]/30 shadow-lg">
+              01
             </div>
-            <h3 className="text-xl font-bold">Craft Your AI Profile</h3>
-            <p className="text-sm text-foreground text-opacity-70 leading-relaxed">
-              Answer our questionnaire. Use our AI Bio Generator to easily write a detailed representation of your values, hobbies, and personality type.
+            <h3 className="text-xl font-extrabold text-white">Create AI Profile</h3>
+            <p className="text-xs text-white/70 leading-relaxed font-medium">
+              Complete our personality assessment. Use the integrated Gemini AI Bio Generator to craft an authentic summary of your traits and goals.
             </p>
           </div>
 
-          <div className="glass-card rounded-2xl p-8 flex flex-col gap-4">
-            <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center text-primary-purple font-bold text-xl border border-purple-500/30">
-              2
+          <div className="glass-card-lux rounded-3xl p-8 flex flex-col gap-5 border border-white/10 hover:border-[#9C6BFF]/40 transition-all">
+            <div className="w-14 h-14 rounded-2xl bg-[#9C6BFF]/20 text-[#9C6BFF] font-black text-2xl flex items-center justify-center border border-[#9C6BFF]/30 shadow-lg">
+              02
             </div>
-            <h3 className="text-xl font-bold">Unlock Smart Matches</h3>
-            <p className="text-sm text-foreground text-opacity-70 leading-relaxed">
-              Explore profiles with deep compatibility calculations. Our system dynamically scores each match based on traits, religion, goals, and lifestyle.
+            <h3 className="text-xl font-extrabold text-white">Smart Match Scoring</h3>
+            <p className="text-xs text-white/70 leading-relaxed font-medium">
+              Explore profiles calculated with deep compatibility percentages based on psychological values, hobbies, religion, and lifestyle choices.
             </p>
           </div>
 
-          <div className="glass-card rounded-2xl p-8 flex flex-col gap-4">
-            <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-xl border border-indigo-500/30">
-              3
+          <div className="glass-card-lux rounded-3xl p-8 flex flex-col gap-5 border border-white/10 hover:border-[#FFB6C1]/40 transition-all">
+            <div className="w-14 h-14 rounded-2xl bg-[#FFB6C1]/20 text-[#FFB6C1] font-black text-2xl flex items-center justify-center border border-[#FFB6C1]/30 shadow-lg">
+              03
             </div>
-            <h3 className="text-xl font-bold">Converse and Meet</h3>
-            <p className="text-sm text-foreground text-opacity-70 leading-relaxed">
-              Chat in real-time with automatic Ice Breakers, typing indicators, call capabilities, and conversation guides powered by Gemini.
+            <h3 className="text-xl font-extrabold text-white">Real-Time Interaction</h3>
+            <p className="text-xs text-white/70 leading-relaxed font-medium">
+              Engage through private socket messaging, live WebRTC video calls, reactions, read receipts, and Gemini conversation assistance.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="relative z-10 py-20 px-6 max-w-7xl mx-auto w-full border-t border-white border-opacity-5">
+      {/* CORE FEATURES SECTION */}
+      <section id="features" className="relative z-10 py-24 px-6 max-w-7xl mx-auto w-full border-t border-white/10">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4">Core Platform Capabilities</h2>
-          <p className="text-foreground text-opacity-70 max-w-2xl mx-auto">
-            Everything you need in a modern, secure, and advanced dating workspace.
+          <h2 className="text-3xl md:text-5xl font-black mb-4">World-Class Capabilities</h2>
+          <p className="text-white/60 max-w-xl mx-auto text-sm font-medium">
+            Designed with Apple-level aesthetic polish, interactive 3D physics, and advanced security.
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          <div className="flex gap-4 p-6 glass-card rounded-2xl">
-            <Brain className="w-10 h-10 text-primary-pink shrink-0" />
+          <div className="glass-card-lux rounded-3xl p-6 flex items-start gap-4">
+            <Brain className="w-10 h-10 text-[#FF4D8D] shrink-0" />
             <div>
-              <h3 className="font-bold text-base mb-1">AI Dating Assistant</h3>
-              <p className="text-xs text-foreground text-opacity-70 leading-relaxed">
-                Generate bio bios, score match alignments, and consult live tips on how to build confidence.
+              <h3 className="font-extrabold text-base mb-1 text-white">Gemini AI Coach</h3>
+              <p className="text-xs text-white/60 leading-relaxed">
+                Receive live advice on profile improvements and conversation icebreakers tailored to your match.
               </p>
             </div>
           </div>
 
-          <div className="flex gap-4 p-6 glass-card rounded-2xl">
-            <Zap className="w-10 h-10 text-primary-purple shrink-0" />
+          <div className="glass-card-lux rounded-3xl p-6 flex items-start gap-4">
+            <Flame className="w-10 h-10 text-[#9C6BFF] shrink-0" />
             <div>
-              <h3 className="font-bold text-base mb-1">Interactive Swipe Cards</h3>
-              <p className="text-xs text-foreground text-opacity-70 leading-relaxed">
-                Smooth tinder-like touch gestures to quickly pass, like, or superlike, with instant match checking.
+              <h3 className="font-extrabold text-base mb-1 text-white">Interactive Swipe Deck</h3>
+              <p className="text-xs text-white/60 leading-relaxed">
+                Touch gesture drag physics with card stack elevation, like/pass stamps, and undo memory.
               </p>
             </div>
           </div>
 
-          <div className="flex gap-4 p-6 glass-card rounded-2xl">
-            <MessageCircle className="w-10 h-10 text-pink-400 shrink-0" />
+          <div className="glass-card-lux rounded-3xl p-6 flex items-start gap-4">
+            <MessageCircle className="w-10 h-10 text-[#FFB6C1] shrink-0" />
             <div>
-              <h3 className="font-bold text-base mb-1">Real-time Socket Chat</h3>
-              <p className="text-xs text-foreground text-opacity-70 leading-relaxed">
-                Private chatting with read indicators, reactions, image attachments, and typing bubbles.
+              <h3 className="font-extrabold text-base mb-1 text-white">Real-Time Messaging</h3>
+              <p className="text-xs text-white/60 leading-relaxed">
+                Socket.io real-time chat with typing bubbles, read indicators, emoji reactions, and media sharing.
               </p>
             </div>
           </div>
 
-          <div className="flex gap-4 p-6 glass-card rounded-2xl">
+          <div className="glass-card-lux rounded-3xl p-6 flex items-start gap-4">
             <Video className="w-10 h-10 text-purple-400 shrink-0" />
             <div>
-              <h3 className="font-bold text-base mb-1">WebRTC Audio/Video Calls</h3>
-              <p className="text-xs text-foreground text-opacity-70 leading-relaxed">
-                Verify matches securely by initiating video or voice calls directly through the browser.
+              <h3 className="font-extrabold text-base mb-1 text-white">WebRTC Audio/Video Calls</h3>
+              <p className="text-xs text-white/60 leading-relaxed">
+                Initiate end-to-end encrypted video or audio calls directly inside the browser.
               </p>
             </div>
           </div>
 
-          <div className="flex gap-4 p-6 glass-card rounded-2xl">
+          <div className="glass-card-lux rounded-3xl p-6 flex items-start gap-4">
             <Shield className="w-10 h-10 text-indigo-400 shrink-0" />
             <div>
-              <h3 className="font-bold text-base mb-1">Safety & Incognito Mode</h3>
-              <p className="text-xs text-foreground text-opacity-70 leading-relaxed">
-                Hide your profile, secure your gallery photos as private, and block or report users instantly.
+              <h3 className="font-extrabold text-base mb-1 text-white">Incognito & Safety</h3>
+              <p className="text-xs text-white/60 leading-relaxed">
+                Browse privately, secure private photos in your gallery, and trigger instant safety checks.
               </p>
             </div>
           </div>
 
-          <div className="flex gap-4 p-6 glass-card rounded-2xl">
+          <div className="glass-card-lux rounded-3xl p-6 flex items-start gap-4">
             <UserCheck className="w-10 h-10 text-emerald-400 shrink-0" />
             <div>
-              <h3 className="font-bold text-base mb-1">Profile Verification</h3>
-              <p className="text-xs text-foreground text-opacity-70 leading-relaxed">
-                Verified badges for authenticated users to ensure authenticity and build confidence.
+              <h3 className="font-extrabold text-base mb-1 text-white">Profile Verification</h3>
+              <p className="text-xs text-white/60 leading-relaxed">
+                Verified identity badges to build trust and guarantee authentic member interactions.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Success Stories / Testimonials */}
-      <section className="relative z-10 py-20 px-6 max-w-7xl mx-auto w-full border-t border-white border-opacity-5">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4">Soul Bridge Success Stories</h2>
-          <p className="text-foreground text-opacity-70 max-w-2xl mx-auto">
-            Read how couples found each other through our AI matching algorithm.
+      {/* LUXURY PRICING SECTION */}
+      <section id="pricing" className="relative z-10 py-24 px-6 max-w-7xl mx-auto w-full border-t border-white/10">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-5xl font-black mb-4">Luxury Premium Plans</h2>
+          <p className="text-white/60 max-w-xl mx-auto text-sm font-medium">
+            Unlock VIP capabilities and multiply your match success rate.
           </p>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="glass-card rounded-2xl p-8 flex flex-col justify-between border border-pink-500/10">
-            <p className="text-sm italic text-foreground text-opacity-80 mb-6 leading-relaxed">
-              \"I was skeptical about AI matching, but Soul Bridge proved me wrong. When I matched with Mark, our compatibility score was 96%. We both loved hiking, indie music, and shared the same relationship goals. After talking for a few days, we met. The rest is history!\"
-            </p>
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-pink-400 flex items-center justify-center font-bold text-white text-sm">
-                S
-              </div>
-              <div>
-                <h4 className="font-bold text-sm">Sarah & Mark</h4>
-                <p className="text-[10px] text-foreground text-opacity-50">Matched in October 2025</p>
-              </div>
-            </div>
+          {/* Monthly / Yearly Toggle */}
+          <div className="flex items-center justify-center gap-3 mt-8">
+            <span className={`text-xs font-bold ${!annualBilling ? "text-[#FF4D8D]" : "text-white/50"}`}>Monthly</span>
+            <button
+              onClick={() => setAnnualBilling(!annualBilling)}
+              className="w-14 h-7 rounded-full bg-white/10 border border-white/20 p-1 flex items-center transition-colors cursor-pointer"
+            >
+              <div className={`w-5 h-5 rounded-full bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] transition-transform ${annualBilling ? "translate-x-7" : "translate-x-0"}`} />
+            </button>
+            <span className={`text-xs font-bold ${annualBilling ? "text-[#FF4D8D]" : "text-white/50"}`}>
+              Annual <span className="text-[10px] bg-[#FF4D8D]/20 text-[#FF4D8D] px-2 py-0.5 rounded-full ml-1">Save 25%</span>
+            </span>
           </div>
-
-          <div className="glass-card rounded-2xl p-8 flex flex-col justify-between border border-purple-500/10">
-            <p className="text-sm italic text-foreground text-opacity-80 mb-6 leading-relaxed">
-              \"The AI conversation recommendations were a lifesaver. NextAuth registration was simple, and the swiping animations are beautiful. But what mattered most is that I found Jessica. We connected over our favorite movies and our shared religious values.\"
-            </p>
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-purple-400 flex items-center justify-center font-bold text-white text-sm">
-                J
-              </div>
-              <div>
-                <h4 className="font-bold text-sm">Jessica & Daniel</h4>
-                <p className="text-[10px] text-foreground text-opacity-50">Matched in January 2026</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Tiers Section */}
-      <section id="pricing" className="relative z-10 py-20 px-6 max-w-7xl mx-auto w-full border-t border-white border-opacity-5">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4">Choose Your Premium Plan</h2>
-          <p className="text-foreground text-opacity-70 max-w-2xl mx-auto">
-            Upgrade your experience and double your match rate with our premium capabilities.
-          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Free Tier */}
-          <div className="glass-card rounded-2xl p-8 flex flex-col justify-between border border-white border-opacity-5">
+          {/* FREE */}
+          <div className="glass-card-lux rounded-3xl p-8 flex flex-col justify-between border border-white/10">
             <div>
-              <h3 className="text-lg font-bold mb-1">Free</h3>
-              <p className="text-xs text-foreground text-opacity-60 mb-6">Standard Matchmaking</p>
-              <div className="text-3xl font-extrabold mb-6">$0 <span className="text-xs font-normal text-foreground text-opacity-50">/ month</span></div>
-              <ul className="flex flex-col gap-3 text-xs mb-8">
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> 30 Likes per day</li>
+              <h3 className="text-xl font-extrabold text-white mb-1">Free</h3>
+              <p className="text-xs text-white/50 mb-6 font-medium">Standard Exploration</p>
+              <div className="text-4xl font-black text-white mb-6">$0 <span className="text-xs text-white/40 font-normal">/ month</span></div>
+              <ul className="flex flex-col gap-3.5 text-xs text-white/80 mb-8 font-medium">
+                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> 30 Swipes per day</li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> Standard chat with matches</li>
-                <li className="flex items-center gap-2 text-foreground text-opacity-40">✕ Advanced filters</li>
-                <li className="flex items-center gap-2 text-foreground text-opacity-40">✕ See who viewed you</li>
-                <li className="flex items-center gap-2 text-foreground text-opacity-40">✕ AI coach consults</li>
+                <li className="flex items-center gap-2 text-white/30">✕ Advanced search filters</li>
+                <li className="flex items-center gap-2 text-white/30">✕ See who viewed your profile</li>
+                <li className="flex items-center gap-2 text-white/30">✕ Gemini AI dating coach</li>
               </ul>
             </div>
-            <Link href="/register" className="w-full text-center py-2.5 rounded-full border border-foreground border-opacity-20 text-xs font-semibold hover:bg-white hover:bg-opacity-5 transition-all">
-              Get Started
+            <Link href="/register" className="w-full text-center py-3 rounded-full border border-white/20 text-xs font-bold text-white hover:bg-white/10 transition-all">
+              Get Started Free
             </Link>
           </div>
 
-          {/* Gold Tier */}
-          <div className="glass-card rounded-2xl p-8 flex flex-col justify-between border border-primary-pink/30 relative">
-            <div className="absolute -top-3 right-6 bg-gradient-premium text-white text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1 uppercase">
-              <Award className="w-3.5 h-3.5" /> Popular
+          {/* GOLD */}
+          <div className="glass-card-lux rounded-3xl p-8 flex flex-col justify-between border border-[#FF4D8D]/50 relative shadow-2xl shadow-pink-500/10">
+            <div className="absolute -top-3 right-6 bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] text-white text-[10px] font-black px-3 py-1 rounded-full flex items-center gap-1 uppercase tracking-wider">
+              <Award className="w-3.5 h-3.5" /> Most Popular
             </div>
             <div>
-              <h3 className="text-lg font-bold mb-1 text-primary-pink">Gold</h3>
-              <p className="text-xs text-foreground text-opacity-60 mb-6">Enhanced Exploration</p>
-              <div className="text-3xl font-extrabold mb-6">$14.99 <span className="text-xs font-normal text-foreground text-opacity-50">/ month</span></div>
-              <ul className="flex flex-col gap-3 text-xs mb-8">
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> Unlimited Likes & Swipes</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> 5 Super Likes per day</li>
+              <h3 className="text-xl font-extrabold text-[#FF4D8D] mb-1">Gold</h3>
+              <p className="text-xs text-white/50 mb-6 font-medium">Enhanced Discovery</p>
+              <div className="text-4xl font-black text-white mb-6">
+                {annualBilling ? "$11.99" : "$14.99"} <span className="text-xs text-white/40 font-normal">/ month</span>
+              </div>
+              <ul className="flex flex-col gap-3.5 text-xs text-white/80 mb-8 font-medium">
+                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> Unlimited Swipes & Likes</li>
+                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> 5 Super Likes daily</li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> See who viewed your profile</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> Advanced discovery filters</li>
-                <li className="flex items-center gap-2 text-foreground text-opacity-40">✕ Incognito browsing mode</li>
+                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> Advanced age & location filters</li>
+                <li className="flex items-center gap-2 text-white/30">✕ Incognito invisible mode</li>
               </ul>
             </div>
-            <Link href="/register" className="w-full text-center py-2.5 rounded-full bg-gradient-premium text-white text-xs font-semibold shadow-lg shadow-pink-500/20 hover:scale-[1.02] transition-all">
+            <Link href="/register" className="w-full text-center py-3.5 rounded-full bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] text-white text-xs font-bold shadow-lg shadow-pink-500/25 hover:scale-105 transition-all">
               Upgrade to Gold
             </Link>
           </div>
 
-          {/* Platinum Tier */}
-          <div className="glass-card rounded-2xl p-8 flex flex-col justify-between border border-primary-purple/30">
+          {/* PLATINUM */}
+          <div className="glass-card-lux rounded-3xl p-8 flex flex-col justify-between border border-[#9C6BFF]/50">
             <div>
-              <h3 className="text-lg font-bold mb-1 text-primary-purple">Platinum</h3>
-              <p className="text-xs text-foreground text-opacity-60 mb-6">VIP AI Matchmaker</p>
-              <div className="text-3xl font-extrabold mb-6">$29.99 <span className="text-xs font-normal text-foreground text-opacity-50">/ month</span></div>
-              <ul className="flex flex-col gap-3 text-xs mb-8">
+              <h3 className="text-xl font-extrabold text-[#9C6BFF] mb-1">Platinum</h3>
+              <p className="text-xs text-white/50 mb-6 font-medium">VIP Matchmaking</p>
+              <div className="text-4xl font-black text-white mb-6">
+                {annualBilling ? "$22.99" : "$29.99"} <span className="text-xs text-white/40 font-normal">/ month</span>
+              </div>
+              <ul className="flex flex-col gap-3.5 text-xs text-white/80 mb-8 font-medium">
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> Everything in Gold</li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> Incognito & invisible mode</li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> Unlimited Gemini AI analysis</li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> Read receipts in chat</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> Priority matching queue</li>
+                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> Priority discovery deck placement</li>
               </ul>
             </div>
-            <Link href="/register" className="w-full text-center py-2.5 rounded-full border border-primary-purple hover:bg-primary-purple hover:text-white text-xs font-semibold transition-all">
+            <Link href="/register" className="w-full text-center py-3 rounded-full border border-[#9C6BFF] text-xs font-bold text-white hover:bg-[#9C6BFF]/20 transition-all">
               Go Platinum
             </Link>
           </div>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section className="relative z-10 py-20 px-6 max-w-4xl mx-auto w-full border-t border-white border-opacity-5">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold mb-4">Frequently Asked Questions</h2>
-          <p className="text-foreground text-opacity-70">
-            Got questions? We have answers.
-          </p>
+      {/* FAQ SECTION */}
+      <section className="relative z-10 py-20 px-6 max-w-4xl mx-auto w-full border-t border-white/10">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-black mb-3">Frequently Asked Questions</h2>
+          <p className="text-white/60 text-xs font-medium">Everything you need to know about Soul Bridge.</p>
         </div>
 
         <div className="flex flex-col gap-4">
           {faqData.map((faq, index) => (
-            <div key={index} className="glass-card rounded-2xl overflow-hidden border border-white border-opacity-5">
+            <div key={index} className="glass-card-lux rounded-2xl border border-white/10 overflow-hidden">
               <button
                 onClick={() => setActiveFaq(activeFaq === index ? null : index)}
-                className="w-full px-6 py-4 flex items-center justify-between font-bold text-sm md:text-base text-left hover:bg-white hover:bg-opacity-5 transition-colors cursor-pointer"
+                className="w-full px-6 py-4 flex items-center justify-between font-bold text-sm text-left text-white hover:bg-white/5 transition-colors cursor-pointer"
               >
                 <span>{faq.q}</span>
-                <ChevronDown className={`w-5 h-5 text-primary-pink transition-transform duration-300 ${activeFaq === index ? "rotate-180" : ""}`} />
+                <ChevronDown className={`w-5 h-5 text-[#FF4D8D] transition-transform duration-300 ${activeFaq === index ? "rotate-180" : ""}`} />
               </button>
               
               {activeFaq === index && (
-                <div className="px-6 pb-6 pt-2 text-xs md:text-sm text-foreground text-opacity-70 leading-relaxed border-t border-white border-opacity-5 animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="px-6 pb-6 pt-1 text-xs text-white/70 leading-relaxed border-t border-white/10 font-medium">
                   {faq.a}
                 </div>
               )}

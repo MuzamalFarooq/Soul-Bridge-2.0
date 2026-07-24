@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { motion } from "framer-motion";
 import { 
   Heart, Sparkles, User, Calendar, MapPin, Compass, Briefcase, 
   Camera, Check, ChevronRight, ChevronLeft, ArrowRight, Brain 
@@ -18,7 +19,6 @@ export default function Onboarding() {
   const [aiLoading, setAiLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Form Fields State
   const [formData, setFormData] = useState({
     fullName: "",
     username: "",
@@ -46,7 +46,6 @@ export default function Onboarding() {
     occupation: "",
     lookingFor: "",
     personalityType: "INTJ",
-    // Mock Photos
     photo1: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
     photo2: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop"
   });
@@ -60,13 +59,13 @@ export default function Onboarding() {
     setError("");
     if (step === 1) {
       if (!formData.fullName || !formData.username || !formData.dob) {
-        setError("Please complete all basic info fields");
+        setError("Please complete all basic info fields.");
         return;
       }
     }
     if (step === 2) {
       if (!formData.country || !formData.city || !formData.profession) {
-        setError("Please complete your location and profession");
+        setError("Please complete your location and profession.");
         return;
       }
     }
@@ -92,10 +91,10 @@ export default function Onboarding() {
       if (res.success) {
         setFormData(prev => ({ ...prev, bio: res.bio }));
       } else {
-        setError(res.error || "Failed to generate AI Bio");
+        setError(res.error || "Failed to generate AI Bio.");
       }
     } catch (err) {
-      setError("AI generation failed. Please type bio manually.");
+      setError("AI generation failed. Please enter bio manually.");
     } finally {
       setAiLoading(false);
     }
@@ -106,7 +105,6 @@ export default function Onboarding() {
     setLoading(true);
 
     try {
-      // Structure profile dataset
       const payload = {
         ...formData,
         height: formData.height ? parseFloat(formData.height) : undefined,
@@ -124,12 +122,11 @@ export default function Onboarding() {
 
       const res = await saveUserProfile(payload);
       if (!res.success) {
-        setError(res.error || "Failed to submit profile");
+        setError(res.error || "Failed to submit profile dataset.");
         setLoading(false);
         return;
       }
 
-      // Update Session parameters client-side
       await updateSession({
         completed: true,
         username: formData.username,
@@ -145,79 +142,86 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative z-10">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative z-10 bg-[#09090B]">
+      <div className="absolute w-[600px] h-[600px] bg-radial from-[#FF4D8D]/20 via-[#9C6BFF]/10 to-transparent blur-[140px] pointer-events-none" />
+
       {/* Brand logo */}
-      <div className="flex items-center gap-1.5 mb-6">
-        <Heart className="w-7 h-7 text-primary-pink fill-primary-pink" />
-        <span className="text-xl font-bold tracking-tight bg-gradient-premium bg-clip-text text-transparent">
-          Soul Bridge Onboarding
+      <div className="flex items-center gap-2 mb-8">
+        <Heart className="w-8 h-8 text-[#FF4D8D] fill-[#FF4D8D] filter drop-shadow-[0_0_10px_rgba(255,77,141,0.6)]" />
+        <span className="text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#FF4D8D] via-[#FFB6C1] to-[#9C6BFF]">
+          Soul Bridge Setup
         </span>
       </div>
 
-      <div className="w-full max-w-2xl glass-card rounded-3xl p-8 border border-white border-opacity-10 shadow-2xl relative">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-2xl glass-card-lux rounded-3xl p-8 md:p-10 border border-white/10 shadow-2xl relative"
+      >
         {/* Progress Bar */}
-        <div className="w-full h-1 bg-white/10 rounded-full mb-8 overflow-hidden">
-          <div 
-            className="h-full bg-gradient-premium transition-all duration-300"
-            style={{ width: `${(step / 4) * 100}%` }}
-          ></div>
+        <div className="w-full h-1.5 bg-white/10 rounded-full mb-8 overflow-hidden">
+          <motion.div 
+            className="h-full bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF]"
+            animate={{ width: `${(step / 4) * 100}%` }}
+            transition={{ duration: 0.4 }}
+          />
         </div>
 
         {/* Step Indicators */}
-        <div className="flex justify-between text-xs text-foreground/50 mb-8 font-semibold">
-          <span className={step >= 1 ? "text-primary-pink" : ""}>1. Basic Info</span>
-          <span className={step >= 2 ? "text-primary-pink" : ""}>2. Lifestyle</span>
-          <span className={step >= 3 ? "text-primary-pink" : ""}>3. AI Bio</span>
-          <span className={step >= 4 ? "text-primary-pink" : ""}>4. Photos & Socials</span>
+        <div className="flex justify-between text-xs text-white/50 mb-8 font-bold">
+          <span className={step >= 1 ? "text-[#FF4D8D]" : ""}>1. Basic Info</span>
+          <span className={step >= 2 ? "text-[#FF4D8D]" : ""}>2. Lifestyle</span>
+          <span className={step >= 3 ? "text-[#FF4D8D]" : ""}>3. AI Bio</span>
+          <span className={step >= 4 ? "text-[#FF4D8D]" : ""}>4. Gallery</span>
         </div>
 
         {error && (
-          <div className="p-3.5 mb-6 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs text-left">
+          <div className="p-3.5 mb-6 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs font-semibold text-left">
             {error}
           </div>
         )}
 
-        {/* STEP 1: BASIC INFO */}
+        {/* STEP 1 */}
         {step === 1 && (
-          <div className="flex flex-col gap-5 animate-in fade-in duration-200">
-            <h3 className="text-xl font-bold flex items-center gap-2">
-              <User className="w-5 h-5 text-primary-pink" /> Let's get to know you
+          <div className="flex flex-col gap-5 animate-in fade-in duration-300">
+            <h3 className="text-xl font-black text-white flex items-center gap-2">
+              <User className="w-5 h-5 text-[#FF4D8D]" /> Basic Information
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground/70">Full Name</label>
+                <label className="text-xs font-bold text-white/70">Full Name</label>
                 <input
                   type="text"
                   name="fullName"
-                  placeholder="e.g. John Doe"
+                  placeholder="e.g. Alex Morgan"
                   value={formData.fullName}
                   onChange={handleChange}
-                  className="px-4 py-2.5 rounded-xl glass-input text-sm"
+                  className="px-4 py-3 rounded-2xl glass-input-lux text-xs text-white"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground/70">Username</label>
+                <label className="text-xs font-bold text-white/70">Username</label>
                 <input
                   type="text"
                   name="username"
-                  placeholder="e.g. johndoe"
+                  placeholder="e.g. alexmorgan"
                   value={formData.username}
                   onChange={handleChange}
-                  className="px-4 py-2.5 rounded-xl glass-input text-sm"
+                  className="px-4 py-3 rounded-2xl glass-input-lux text-xs text-white"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground/70">Gender</label>
+                <label className="text-xs font-bold text-white/70">Gender</label>
                 <select
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
-                  className="px-4 py-2.5 rounded-xl glass-input text-sm bg-background"
+                  className="px-4 py-3 rounded-2xl glass-input-lux text-xs bg-[#09090B] text-white"
                 >
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
@@ -226,12 +230,12 @@ export default function Onboarding() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground/70">Interested In</label>
+                <label className="text-xs font-bold text-white/70">Interested In</label>
                 <select
                   name="interestedIn"
                   value={formData.interestedIn}
                   onChange={handleChange}
-                  className="px-4 py-2.5 rounded-xl glass-input text-sm bg-background"
+                  className="px-4 py-3 rounded-2xl glass-input-lux text-xs bg-[#09090B] text-white"
                 >
                   <option value="Female">Female</option>
                   <option value="Male">Male</option>
@@ -240,300 +244,200 @@ export default function Onboarding() {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground/70">Date of Birth</label>
+                <label className="text-xs font-bold text-white/70">Date of Birth</label>
                 <input
                   type="date"
                   name="dob"
                   value={formData.dob}
                   onChange={handleChange}
-                  className="px-4 py-2.5 rounded-xl glass-input text-sm"
+                  className="px-4 py-3 rounded-2xl glass-input-lux text-xs text-white"
                 />
               </div>
             </div>
           </div>
         )}
 
-        {/* STEP 2: LIFESTYLE & LOCATION */}
+        {/* STEP 2 */}
         {step === 2 && (
-          <div className="flex flex-col gap-5 animate-in fade-in duration-200">
-            <h3 className="text-xl font-bold flex items-center gap-2">
-              <Compass className="w-5 h-5 text-primary-purple" /> Lifestyle & Background
+          <div className="flex flex-col gap-5 animate-in fade-in duration-300">
+            <h3 className="text-xl font-black text-white flex items-center gap-2">
+              <Compass className="w-5 h-5 text-[#9C6BFF]" /> Lifestyle & Location
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground/70">Country</label>
+                <label className="text-xs font-bold text-white/70">Country</label>
                 <input
                   type="text"
                   name="country"
                   placeholder="e.g. United States"
                   value={formData.country}
                   onChange={handleChange}
-                  className="px-4 py-2.5 rounded-xl glass-input text-sm"
+                  className="px-4 py-3 rounded-2xl glass-input-lux text-xs text-white"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground/70">City</label>
+                <label className="text-xs font-bold text-white/70">City</label>
                 <input
                   type="text"
                   name="city"
-                  placeholder="e.g. New York"
+                  placeholder="e.g. San Francisco"
                   value={formData.city}
                   onChange={handleChange}
-                  className="px-4 py-2.5 rounded-xl glass-input text-sm"
+                  className="px-4 py-3 rounded-2xl glass-input-lux text-xs text-white"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground/70">Profession</label>
+                <label className="text-xs font-bold text-white/70">Profession</label>
                 <input
                   type="text"
                   name="profession"
-                  placeholder="e.g. UX Designer"
+                  placeholder="e.g. Architect"
                   value={formData.profession}
                   onChange={handleChange}
-                  className="px-4 py-2.5 rounded-xl glass-input text-sm"
+                  className="px-4 py-3 rounded-2xl glass-input-lux text-xs text-white"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground/70">Education</label>
+                <label className="text-xs font-bold text-white/70">Education</label>
                 <input
                   type="text"
                   name="education"
-                  placeholder="e.g. Bachelor's Degree"
+                  placeholder="e.g. Master's Degree"
                   value={formData.education}
                   onChange={handleChange}
-                  className="px-4 py-2.5 rounded-xl glass-input text-sm"
+                  className="px-4 py-3 rounded-2xl glass-input-lux text-xs text-white"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground/70">Religion</label>
+                <label className="text-xs font-bold text-white/70">Religion</label>
                 <input
                   type="text"
                   name="religion"
-                  placeholder="e.g. Christian"
+                  placeholder="e.g. Spiritual"
                   value={formData.religion}
                   onChange={handleChange}
-                  className="px-4 py-2.5 rounded-xl glass-input text-sm"
+                  className="px-4 py-3 rounded-2xl glass-input-lux text-xs text-white"
                 />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground/70">Height (cm)</label>
-                <input
-                  type="number"
-                  name="height"
-                  placeholder="e.g. 175"
-                  value={formData.height}
-                  onChange={handleChange}
-                  className="px-4 py-2.5 rounded-xl glass-input text-sm"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground/70">Smoking</label>
-                <select
-                  name="smoking"
-                  value={formData.smoking}
-                  onChange={handleChange}
-                  className="px-4 py-2.5 rounded-xl glass-input text-sm bg-background"
-                >
-                  <option value="Non-smoker">Non-smoker</option>
-                  <option value="Social Smoker">Social Smoker</option>
-                  <option value="Smoker">Smoker</option>
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground/70">Drinking</label>
-                <select
-                  name="drinking"
-                  value={formData.drinking}
-                  onChange={handleChange}
-                  className="px-4 py-2.5 rounded-xl glass-input text-sm bg-background"
-                >
-                  <option value="Non-drinker">Non-drinker</option>
-                  <option value="Social Drinker">Social Drinker</option>
-                  <option value="Heavy Drinker">Heavy Drinker</option>
-                </select>
               </div>
             </div>
           </div>
         )}
 
-        {/* STEP 3: BIO & HOBBIES WITH AI GENERATOR */}
+        {/* STEP 3 */}
         {step === 3 && (
-          <div className="flex flex-col gap-5 animate-in fade-in duration-200">
-            <h3 className="text-xl font-bold flex items-center gap-2">
-              <Brain className="w-5 h-5 text-indigo-400" /> Bio & Interests
+          <div className="flex flex-col gap-5 animate-in fade-in duration-300">
+            <h3 className="text-xl font-black text-white flex items-center gap-2">
+              <Brain className="w-5 h-5 text-[#FFB6C1]" /> Gemini AI Bio Assistant
             </h3>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-foreground/70">Hobbies (Comma separated)</label>
+              <label className="text-xs font-bold text-white/70">Hobbies (Comma separated)</label>
               <input
                 type="text"
                 name="hobbies"
-                placeholder="e.g. Hiking, Photography, Reading, Coffee"
+                placeholder="e.g. Coffee, Photography, Hiking, Gallery Walks"
                 value={formData.hobbies}
                 onChange={handleChange}
-                className="px-4 py-2.5 rounded-xl glass-input text-sm"
+                className="px-4 py-3 rounded-2xl glass-input-lux text-xs text-white"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
               <div className="flex justify-between items-center px-1">
-                <label className="text-xs font-semibold text-foreground/70">About Me / Bio</label>
+                <label className="text-xs font-bold text-white/70">Bio Description</label>
                 <button
                   type="button"
                   onClick={handleGenerateAIBio}
                   disabled={aiLoading}
-                  className="flex items-center gap-1 text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/35 px-2 py-0.5 rounded-full hover:bg-indigo-500 hover:text-white transition-all cursor-pointer disabled:opacity-50"
+                  className="flex items-center gap-1.5 text-[10px] bg-[#9C6BFF]/20 text-[#9C6BFF] border border-[#9C6BFF]/30 px-3 py-1 rounded-full hover:bg-[#9C6BFF] hover:text-white transition-all cursor-pointer font-bold disabled:opacity-50"
                 >
-                  <Sparkles className="w-3 h-3" /> {aiLoading ? "Generating..." : "Generate AI Bio"}
+                  <Sparkles className="w-3 h-3" /> {aiLoading ? "Generating AI Bio..." : "Generate with Gemini"}
                 </button>
               </div>
               <textarea
                 name="bio"
                 rows={4}
-                placeholder="Tell potential matches about yourself..."
+                placeholder="Write or generate your personal bio..."
                 value={formData.bio}
                 onChange={handleChange}
-                className="px-4 py-3 rounded-xl glass-input text-sm resize-none"
+                className="px-4 py-3 rounded-2xl glass-input-lux text-xs text-white resize-none"
               />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground/70">Relationship Goal</label>
-                <select
-                  name="relationshipGoal"
-                  value={formData.relationshipGoal}
-                  onChange={handleChange}
-                  className="px-4 py-2.5 rounded-xl glass-input text-sm bg-background"
-                >
-                  <option value="Long-term">Long-term relation</option>
-                  <option value="Short-term">Short-term relation</option>
-                  <option value="Marriage">Looking for marriage</option>
-                  <option value="Friendship">Open to friendship</option>
-                  <option value="Casual">Casual dating</option>
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground/70">Personality Type (MBTI)</label>
-                <input
-                  type="text"
-                  name="personalityType"
-                  placeholder="e.g. INFJ, ENFP"
-                  value={formData.personalityType}
-                  onChange={handleChange}
-                  className="px-4 py-2.5 rounded-xl glass-input text-sm"
-                />
-              </div>
             </div>
           </div>
         )}
 
-        {/* STEP 4: PHOTOS & SOCIALS */}
+        {/* STEP 4 */}
         {step === 4 && (
-          <div className="flex flex-col gap-5 animate-in fade-in duration-200">
-            <h3 className="text-xl font-bold flex items-center gap-2">
-              <Camera className="w-5 h-5 text-primary-pink" /> Photos & Social Channels
+          <div className="flex flex-col gap-5 animate-in fade-in duration-300">
+            <h3 className="text-xl font-black text-white flex items-center gap-2">
+              <Camera className="w-5 h-5 text-[#FF4D8D]" /> Gallery & Social Links
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground/70">Profile Photo URL</label>
+                <label className="text-xs font-bold text-white/70">Profile Avatar Photo URL</label>
                 <input
                   type="text"
                   name="photo1"
                   value={formData.photo1}
                   onChange={handleChange}
-                  className="px-4 py-2.5 rounded-xl glass-input text-sm"
+                  className="px-4 py-3 rounded-2xl glass-input-lux text-xs text-white"
                 />
-                <div className="w-20 h-20 rounded-xl overflow-hidden border border-white/20 mt-1">
-                  <img src={formData.photo1} alt="Profile Photo Preview" className="w-full h-full object-cover" />
+                <div className="w-24 h-24 rounded-2xl overflow-hidden border border-white/20 mt-1 shadow-md">
+                  <img src={formData.photo1} alt="Preview 1" className="w-full h-full object-cover" />
                 </div>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground/70">Gallery Photo URL</label>
+                <label className="text-xs font-bold text-white/70">Secondary Gallery Photo URL</label>
                 <input
                   type="text"
                   name="photo2"
                   value={formData.photo2}
                   onChange={handleChange}
-                  className="px-4 py-2.5 rounded-xl glass-input text-sm"
+                  className="px-4 py-3 rounded-2xl glass-input-lux text-xs text-white"
                 />
-                <div className="w-20 h-20 rounded-xl overflow-hidden border border-white/20 mt-1">
-                  <img src={formData.photo2} alt="Gallery Photo Preview" className="w-full h-full object-cover" />
+                <div className="w-24 h-24 rounded-2xl overflow-hidden border border-white/20 mt-1 shadow-md">
+                  <img src={formData.photo2} alt="Preview 2" className="w-full h-full object-cover" />
                 </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-white/5 pt-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground/70">Instagram Handle</label>
-                <input
-                  type="text"
-                  name="instagram"
-                  placeholder="e.g. @johndoe"
-                  value={formData.instagram}
-                  onChange={handleChange}
-                  className="px-4 py-2.5 rounded-xl glass-input text-sm"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-foreground/70">Facebook Profile Link</label>
-                <input
-                  type="text"
-                  name="facebook"
-                  placeholder="e.g. facebook.com/johndoe"
-                  value={formData.facebook}
-                  onChange={handleChange}
-                  className="px-4 py-2.5 rounded-xl glass-input text-sm"
-                />
               </div>
             </div>
           </div>
         )}
 
-        {/* Button Actions */}
-        <div className="flex justify-between items-center mt-10 pt-6 border-t border-white border-opacity-5">
+        {/* Controls */}
+        <div className="flex justify-between items-center mt-10 pt-6 border-t border-white/10">
           {step > 1 ? (
             <button
               onClick={handleBack}
               disabled={loading}
-              className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-white/10 text-xs font-bold hover:bg-white/5 transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-5 py-2.5 rounded-full border border-white/15 text-xs font-bold text-white hover:bg-white/10 transition-all cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" /> Back
             </button>
-          ) : (
-            <div></div>
-          )}
+          ) : <div />}
 
           {step < 4 ? (
             <button
               onClick={handleNext}
-              className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-gradient-premium text-white text-xs font-bold shadow-lg cursor-pointer"
+              className="flex items-center gap-1.5 px-6 py-2.5 rounded-full bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] text-white text-xs font-bold shadow-lg shadow-pink-500/25 cursor-pointer hover:scale-105 transition-all"
             >
-              Next <ChevronRight className="w-4 h-4" />
+              Next Step <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-gradient-premium text-white text-xs font-bold shadow-lg cursor-pointer disabled:opacity-50"
+              className="flex items-center gap-1.5 px-6 py-2.5 rounded-full bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] text-white text-xs font-bold shadow-lg shadow-pink-500/25 cursor-pointer hover:scale-105 transition-all disabled:opacity-50"
             >
-              {loading ? "Saving Profile..." : (
+              {loading ? "Completing Profile..." : (
                 <>
                   Complete Setup <Check className="w-4 h-4" />
                 </>
@@ -541,7 +445,7 @@ export default function Onboarding() {
             </button>
           )}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

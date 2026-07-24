@@ -1,20 +1,24 @@
 import "./globals.css";
 import Providers from "@/components/Providers";
+import LenisProvider from "@/components/ui/LenisProvider";
+import CursorGlow from "@/components/ui/CursorGlow";
+import Loader from "@/components/ui/Loader";
+import BottomNav from "@/components/ui/BottomNav";
 
 export const metadata = {
-  title: "Soul Bridge | Premium AI-Powered Dating & Matchmaking",
-  description: "Experience the next level of dating. Soul Bridge uses advanced Gemini AI to help you find deep, meaningful connections. Swipe, match, celebrate, and chat in real-time.",
-  keywords: ["dating app", "AI matching", "relationships", "Soul Bridge", "find love", "chat real-time"],
+  title: "Soul Bridge | Premium World-Class AI Matchmaking Platform",
+  description: "Experience the ultimate luxury dating application. Soul Bridge combines Apple-level polish, 3D interactive graphics, and Gemini AI compatibility analysis.",
+  keywords: ["dating app", "luxury dating", "AI matching", "Soul Bridge", "find love", "chat real-time"],
   openGraph: {
-    title: "Soul Bridge | Premium AI-Powered Dating",
-    description: "Discover deep, meaningful connections with Gemini AI compatibility scoring, real-time messaging, and interactive matching.",
+    title: "Soul Bridge | Premium World-Class Dating",
+    description: "Discover deep, meaningful connections with Gemini AI compatibility scoring, interactive 3D matching, and real-time socket chat.",
     url: "https://soulbridge.love",
     siteName: "Soul Bridge",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Soul Bridge | Premium AI-Powered Dating",
+    title: "Soul Bridge | Premium World-Class Dating",
     description: "Discover deep, meaningful connections with Gemini AI compatibility scoring.",
   }
 };
@@ -22,17 +26,24 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="h-full antialiased dark" style={{ colorScheme: "dark" }}>
-      <body className="min-h-full flex flex-col font-sans select-none overflow-x-hidden">
-        {/* Floating backdrop glow effects */}
-        <div className="floating-bubble w-[350px] h-[350px] top-[10%] left-[-5%] opacity-40"></div>
-        <div className="floating-bubble w-[450px] h-[450px] bottom-[15%] right-[-10%] opacity-40 animation-delay-2000"></div>
-        <div className="floating-bubble w-[300px] h-[300px] top-[50%] left-[40%] opacity-20 animation-delay-4000"></div>
+      <body className="min-h-full flex flex-col font-sans select-none overflow-x-hidden bg-[#09090B] text-foreground">
+        {/* Animated Aurora Backdrop Mesh */}
+        <div className="aurora-backdrop">
+          <div className="aurora-blob aurora-blob-1" />
+          <div className="aurora-blob aurora-blob-2" />
+          <div className="aurora-blob aurora-blob-3" />
+        </div>
 
-        <Providers>
-          <div className="flex-1 flex flex-col relative z-10">
-            {children}
-          </div>
-        </Providers>
+        <LenisProvider>
+          <Loader />
+          <CursorGlow />
+          <Providers>
+            <div className="flex-1 flex flex-col relative z-10 pb-16 md:pb-0">
+              {children}
+            </div>
+            <BottomNav />
+          </Providers>
+        </LenisProvider>
       </body>
     </html>
   );
