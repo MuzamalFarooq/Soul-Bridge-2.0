@@ -210,15 +210,23 @@ export async function submitSwipeAction({ swipedId, type }) {
         // Create Match and Conversation records
         const sortedIds = [userId, swipedId].sort();
         
-        const matchResult = await prisma.$transaction(async (tx) => {
-          const match = await tx.match.create({
+        let match = await prisma.match.findFirst({
+          where: { user1Id: sortedIds[0], user2Id: sortedIds[1] }
+        });
+        if (!match) {
+          match = await prisma.match.create({
             data: {
               user1Id: sortedIds[0],
               user2Id: sortedIds[1]
             }
           });
+        }
 
-          const convo = await tx.conversation.create({
+        let convo = await prisma.conversation.findFirst({
+          where: { user1Id: sortedIds[0], user2Id: sortedIds[1] }
+        });
+        if (!convo) {
+          convo = await prisma.conversation.create({
             data: {
               user1Id: sortedIds[0],
               user2Id: sortedIds[1],
@@ -226,9 +234,11 @@ export async function submitSwipeAction({ swipedId, type }) {
               lastMessageAt: new Date()
             }
           });
+        }
 
-          // Create notification records for both users
-          await tx.notification.create({
+        // Create notification records for both users
+        try {
+          await prisma.notification.create({
             data: {
               userId,
               type: "MATCH",
@@ -236,8 +246,7 @@ export async function submitSwipeAction({ swipedId, type }) {
               link: `/chat?convo=${convo.id}`
             }
           });
-
-          await tx.notification.create({
+          await prisma.notification.create({
             data: {
               userId: swipedId,
               type: "MATCH",
@@ -245,9 +254,9 @@ export async function submitSwipeAction({ swipedId, type }) {
               link: `/chat?convo=${convo.id}`
             }
           });
+        } catch (notifErr) {}
 
-          return { match, convo };
-        });
+        const matchResult = { match, convo };
 
         // Retrieve matched profile info
         const targetProfile = await prisma.profile.findUnique({

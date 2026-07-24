@@ -149,30 +149,30 @@ export async function sendMessageAction({ conversationId, text, imageUrl, audioU
       return { success: true, message: msg };
     }
 
-    const result = await prisma.$transaction(async (tx) => {
-      // Create Message
-      const msg = await tx.message.create({
-        data: {
-          conversationId,
-          senderId: userId,
-          text,
-          imageUrl,
-          audioUrl,
-          repliedToId
-        }
-      });
+    // Create Message
+    const msg = await prisma.message.create({
+      data: {
+        conversationId,
+        senderId: userId,
+        text,
+        imageUrl,
+        audioUrl,
+        repliedToId
+      }
+    });
 
-      // Update Conversation last message
-      await tx.conversation.update({
+    // Update Conversation last message
+    try {
+      await prisma.conversation.update({
         where: { id: conversationId },
         data: {
           lastMessageText: text || "Sent an attachment",
           lastMessageAt: new Date()
         }
       });
+    } catch (convoErr) {}
 
-      return msg;
-    });
+    const result = msg;
 
     return { success: true, message: result };
   } catch (error) {

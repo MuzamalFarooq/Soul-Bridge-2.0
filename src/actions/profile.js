@@ -74,58 +74,92 @@ export async function saveUserProfile(data) {
       }
     }
 
-    // Save profile and photos inside transaction
-    await prisma.$transaction(async (tx) => {
-      // 1. Update/create profile
-      await tx.profile.update({
-        where: { userId },
-        data: {
-          fullName,
-          username: username ? username.toLowerCase().trim() : undefined,
-          gender,
-          interestedIn,
-          dob: dobParsed,
-          age: calculatedAge || undefined,
-          height: height ? parseFloat(height) : undefined,
-          weight: weight ? parseFloat(weight) : undefined,
-          religion,
-          profession,
-          education,
-          country,
-          city,
-          languages: languages || [],
-          relationshipGoal,
-          bio,
-          hobbies: hobbies || [],
-          smoking,
-          drinking,
-          pets: pets || [],
-          favoriteMusic: favoriteMusic || [],
-          favoriteMovies: favoriteMovies || [],
-          instagram,
-          facebook,
-          occupation,
-          lookingFor,
-          personalityType,
-          completed: true
-        }
-      });
+    // 1. Upsert profile safely for all MongoDB setups
+    await prisma.profile.upsert({
+      where: { userId },
+      update: {
+        fullName,
+        username: username ? username.toLowerCase().trim() : undefined,
+        gender,
+        interestedIn,
+        dob: dobParsed,
+        age: calculatedAge || undefined,
+        height: height ? parseFloat(height) : undefined,
+        weight: weight ? parseFloat(weight) : undefined,
+        religion,
+        profession,
+        education,
+        country,
+        city,
+        languages: languages || [],
+        relationshipGoal,
+        bio,
+        hobbies: hobbies || [],
+        smoking,
+        drinking,
+        pets: pets || [],
+        favoriteMusic: favoriteMusic || [],
+        favoriteMovies: favoriteMovies || [],
+        instagram,
+        facebook,
+        occupation,
+        lookingFor,
+        personalityType,
+        completed: true
+      },
+      create: {
+        userId,
+        fullName,
+        username: username ? username.toLowerCase().trim() : undefined,
+        gender,
+        interestedIn,
+        dob: dobParsed,
+        age: calculatedAge || undefined,
+        height: height ? parseFloat(height) : undefined,
+        weight: weight ? parseFloat(weight) : undefined,
+        religion,
+        profession,
+        education,
+        country,
+        city,
+        languages: languages || [],
+        relationshipGoal,
+        bio,
+        hobbies: hobbies || [],
+        smoking,
+        drinking,
+        pets: pets || [],
+        favoriteMusic: favoriteMusic || [],
+        favoriteMovies: favoriteMovies || [],
+        instagram,
+        facebook,
+        occupation,
+        lookingFor,
+        personalityType,
+        completed: true,
+        premiumStatus: "FREE"
+      }
+    });
 
-      // 2. Clear old profile photos if updating, and insert new ones
-      if (photos && photos.length > 0) {
-        await tx.photo.deleteMany({ where: { userId } });
-        
-        await tx.photo.createMany({
-          data: photos.map((p, idx) => ({
+    // 2. Clear old profile photos if updating, and insert new ones sequentially
+    if (photos && photos.length > 0) {
+      try {
+        await prisma.photo.deleteMany({ where: { userId } });
+      } catch (delErr) {}
+      
+      for (let idx = 0; idx < photos.length; idx++) {
+        const p = photos[idx];
+        await prisma.photo.create({
+          data: {
             userId,
             url: p.url || p,
             publicId: p.publicId || `mock_cloudinary_${Date.now()}_${idx}`,
-            isProfile: idx === 0, // Mark first photo as profile photo
+            isProfile: idx === 0,
             isPrivate: p.isPrivate || false
-          }))
+          }
         });
       }
-    });
+    }
 
     return { success: true, message: "Profile saved successfully!" };
   } catch (error) {

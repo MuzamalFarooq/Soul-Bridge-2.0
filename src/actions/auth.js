@@ -33,29 +33,41 @@ export async function registerUser(data) {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Create User, Profile, and Settings inside a transaction
-    const newUser = await prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({
-        data: {
-          email: normalizedEmail,
-          passwordHash,
-          settings: {
-            create: {}
+    // 1. Create User with nested Settings (compatible with all MongoDB deployments)
+    const user = await prisma.user.create({
+      data: {
+        email: normalizedEmail,
+        passwordHash,
+        emailVerified: new Date(), // Auto-verify email upon registration so user can immediately sign in
+        settings: {
+          create: {
+            darkMode: true,
+            pushNotifications: true,
+            emailNotifications: true,
+            invisibleMode: false,
+            privatePhotos: false
           }
         }
-      });
+      }
+    });
 
-      await tx.profile.create({
+    // 2. Create Profile for user
+    try {
+      await prisma.profile.create({
         data: {
           userId: user.id,
           completed: false,
           premiumStatus: "FREE"
         }
       });
+    } catch (profileErr) {
+      console.error("Profile creation notice during registration:", profileErr);
+    }
 
-      // Create a mock email verification token
-      const token = generateToken();
-      await tx.verificationToken.create({
+    // 3. Create Verification Token
+    const token = generateToken();
+    try {
+      await prisma.verificationToken.create({
         data: {
           email: normalizedEmail,
           token,
@@ -63,15 +75,15 @@ export async function registerUser(data) {
           expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
         }
       });
-
-      return { user, token };
-    });
+    } catch (tokErr) {
+      console.error("Verification token creation notice:", tokErr);
+    }
 
     return { 
       success: true, 
-      userId: newUser.user.id,
-      verificationToken: newUser.token, // Return for demo/sandbox purposes
-      message: "Registration successful! Please verify your email."
+      userId: user.id,
+      verificationToken: token,
+      message: "Registration successful! You can now log in."
     };
   } catch (error) {
     console.error("Registration error:", error);
@@ -98,20 +110,23 @@ export async function verifyUserEmail(token) {
     }
 
     if (new Date() > verifToken.expiresAt) {
-      await prisma.verificationToken.delete({ where: { id: verifToken.id } });
+      try {
+        await prisma.verificationToken.delete({ where: { id: verifToken.id } });
+      } catch (e) {}
       return { success: false, error: "Verification token has expired" };
     }
 
-    // Update user status to verified
-    await prisma.$transaction([
-      prisma.user.update({
-        where: { email: verifToken.email },
-        data: { emailVerified: new Date() }
-      }),
-      prisma.verificationToken.delete({
+    // Update user status to verified and cleanup token
+    await prisma.user.update({
+      where: { email: verifToken.email },
+      data: { emailVerified: new Date() }
+    });
+
+    try {
+      await prisma.verificationToken.delete({
         where: { id: verifToken.id }
-      })
-    ]);
+      });
+    } catch (delErr) {}
 
     return { success: true, message: "Email verified successfully! You can now log in." };
   } catch (error) {

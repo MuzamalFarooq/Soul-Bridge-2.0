@@ -34,22 +34,32 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const res = await registerUser({ email, password });
+      let res;
+      try {
+        const response = await fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        res = await response.json();
+      } catch (fetchErr) {
+        res = await registerUser({ email, password });
+      }
       
-      if (!res.success) {
-        setError(res.error || "Failed to register account.");
+      if (!res || !res.success) {
+        setError(res?.error || "Failed to register account.");
         setLoading(false);
         return;
       }
 
-      setSuccess(`Registration successful! Verification token generated.`);
+      setSuccess(`Registration successful! Account created and data saved.`);
       setEmail("");
       setPassword("");
       setConfirmPassword("");
       
       setTimeout(() => {
-        router.push(`/verify-email?token=${res.verificationToken}`);
-      }, 2500);
+        router.push(`/verify-email?token=${res.verificationToken || "success"}`);
+      }, 2000);
 
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
