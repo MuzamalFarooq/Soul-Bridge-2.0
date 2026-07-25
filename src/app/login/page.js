@@ -40,7 +40,11 @@ function LoginContent() {
       });
 
       if (res?.error) {
-        setError(res.error || "Invalid email address or password.");
+        if (res.error === "CredentialsSignin") {
+          setError("Invalid email address or password.");
+        } else {
+          setError(res.error || "Invalid email address or password.");
+        }
         setLoading(false);
         return;
       }

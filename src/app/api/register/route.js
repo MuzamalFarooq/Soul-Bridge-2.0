@@ -43,7 +43,9 @@ export async function POST(request) {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // 1. Create User with nested Settings (compatible with all MongoDB deployments)
+    // Create User with nested Settings and Profile atomically
+    const token = generateToken();
+
     const user = await prisma.user.create({
       data: {
         email: normalizedEmail,
@@ -57,25 +59,17 @@ export async function POST(request) {
             invisibleMode: false,
             privatePhotos: false
           }
+        },
+        profile: {
+          create: {
+            completed: false,
+            premiumStatus: "FREE"
+          }
         }
       }
     });
 
-    // 2. Create Profile for user
-    try {
-      await prisma.profile.create({
-        data: {
-          userId: user.id,
-          completed: false,
-          premiumStatus: "FREE"
-        }
-      });
-    } catch (profileErr) {
-      console.error("Notice: Profile auto-creation during registration:", profileErr);
-    }
-
-    // 3. Create Verification Token record
-    const token = generateToken();
+    // Create Verification Token record
     try {
       await prisma.verificationToken.create({
         data: {

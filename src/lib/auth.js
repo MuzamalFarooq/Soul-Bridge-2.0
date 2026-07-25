@@ -2,6 +2,11 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 
+// Dynamically handle Vercel deployment URLs if NEXTAUTH_URL is not set or defaults to localhost in production
+if (process.env.NODE_ENV === "production" && process.env.VERCEL_URL && (!process.env.NEXTAUTH_URL || process.env.NEXTAUTH_URL.includes("localhost"))) {
+  process.env.NEXTAUTH_URL = `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL}`;
+}
+
 export const authOptions = {
   providers: [
     CredentialsProvider({
@@ -15,8 +20,10 @@ export const authOptions = {
           throw new Error("Please enter your email and password");
         }
 
+        const normalizedEmail = credentials.email.toLowerCase().trim();
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase().trim() },
+          where: { email: normalizedEmail },
           include: { profile: true }
         });
 
@@ -88,5 +95,6 @@ export const authOptions = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || "soul-bridge-jwt-super-secret-key-development-2026",
 };
+

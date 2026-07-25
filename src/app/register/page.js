@@ -32,6 +32,7 @@ export default function Register() {
     }
 
     setLoading(true);
+    const cleanEmail = email.toLowerCase().trim();
 
     try {
       let res;
@@ -39,11 +40,11 @@ export default function Register() {
         const response = await fetch("/api/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ email: cleanEmail, password })
         });
         res = await response.json();
       } catch (fetchErr) {
-        res = await registerUser({ email, password });
+        res = await registerUser({ email: cleanEmail, password });
       }
       
       if (!res || !res.success) {
@@ -52,14 +53,14 @@ export default function Register() {
         return;
       }
 
-      setSuccess(`Registration successful! Account created and data saved.`);
+      setSuccess("Registration successful! Account created and data saved.");
       setEmail("");
       setPassword("");
       setConfirmPassword("");
       
       setTimeout(() => {
         router.push(`/verify-email?token=${res.verificationToken || "success"}`);
-      }, 2000);
+      }, 1500);
 
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
