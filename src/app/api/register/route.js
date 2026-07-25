@@ -91,8 +91,17 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error("API /api/register error:", error);
+    let errorMessage = error.message || "Failed to register account";
+    if (
+      errorMessage.includes("Server selection timeout") ||
+      errorMessage.includes("ReplicaSetNoPrimary") ||
+      errorMessage.includes("fatal alert") ||
+      errorMessage.includes("I/O error")
+    ) {
+      errorMessage = "Database connection failure: Unable to reach MongoDB cluster. Please check MongoDB Atlas Network Access IP whitelist rules for production.";
+    }
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to register account" },
+      { success: false, error: errorMessage },
       { status: 500 }
     );
   }

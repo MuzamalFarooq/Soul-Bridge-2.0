@@ -81,7 +81,16 @@ export async function registerUser(data) {
     };
   } catch (error) {
     console.error("Registration error:", error);
-    return { success: false, error: error.message || "Failed to register user" };
+    let errorMessage = error.message || "Failed to register user";
+    if (
+      errorMessage.includes("Server selection timeout") ||
+      errorMessage.includes("ReplicaSetNoPrimary") ||
+      errorMessage.includes("fatal alert") ||
+      errorMessage.includes("I/O error")
+    ) {
+      errorMessage = "Database connection failure: Unable to reach MongoDB cluster. Please check MongoDB Atlas Network Access IP whitelist rules for production.";
+    }
+    return { success: false, error: errorMessage };
   }
 }
 
