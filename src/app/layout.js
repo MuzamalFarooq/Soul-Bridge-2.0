@@ -20,7 +20,7 @@ export const metadata = {
   openGraph: {
     title: "Soul Bridge | Premium World-Class Dating",
     description: "Discover deep, meaningful connections with Gemini AI compatibility scoring, interactive 3D matching, and real-time socket chat.",
-    url: "https://soulbridge.love",
+    url: "https://soulbridge.muzamal.site",
     siteName: "Soul Bridge",
     type: "website",
   },
