@@ -76,11 +76,11 @@ export default function Dashboard() {
     <div className="min-h-screen flex flex-col bg-[#09090B]">
       <Navbar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-10 relative z-10">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-28 md:pb-12 relative z-10">
         {/* Header Greeting */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-black text-white flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-2 flex-wrap">
               Welcome Back, {profile?.fullName || "User"}! 
               {isPremium && <Crown className="w-6 h-6 text-amber-400 fill-amber-400 animate-bounce" />}
             </h1>

@@ -134,7 +134,7 @@ export default function Discover() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8 relative z-10 flex flex-col">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-28 md:pb-10 relative z-10 flex flex-col">
         {/* Title / Action bar */}
         <div className="flex justify-between items-center mb-8">
           <div>

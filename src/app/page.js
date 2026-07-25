@@ -103,11 +103,11 @@ export default function Home() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.5 }}
-            className="w-full max-w-3xl rounded-3xl glass-card-lux border border-white/20 p-3 shadow-2xl relative"
+            className="w-full max-w-3xl rounded-3xl glass-card-lux border border-white/20 p-2.5 sm:p-3 shadow-2xl relative"
           >
-            <div className="rounded-2xl overflow-hidden bg-[#09090B] aspect-video relative flex items-center justify-center bg-gradient-to-tr from-[#9C6BFF]/30 to-[#FF4D8D]/30 border border-white/10">
-              <div className="w-[320px] h-[410px] glass-card-lux rounded-3xl p-5 flex flex-col justify-between border border-white/20 shadow-2xl relative">
-                <div className="w-full h-52 rounded-2xl bg-slate-800 relative overflow-hidden">
+            <div className="rounded-2xl overflow-hidden bg-[#09090B] py-6 sm:aspect-video relative flex items-center justify-center bg-gradient-to-tr from-[#9C6BFF]/30 to-[#FF4D8D]/30 border border-white/10">
+              <div className="w-full max-w-[300px] sm:max-w-[320px] min-h-[380px] sm:h-[410px] glass-card-lux rounded-3xl p-4 sm:p-5 flex flex-col justify-between border border-white/20 shadow-2xl relative">
+                <div className="w-full h-44 sm:h-52 rounded-2xl bg-slate-800 relative overflow-hidden">
                   <img
                     src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&h=600&fit=crop"
                     alt="Sample Profile"
@@ -119,7 +119,7 @@ export default function Home() {
                 </div>
 
                 <div className="text-left mt-3">
-                  <h3 className="font-extrabold text-white text-xl flex items-center gap-2">
+                  <h3 className="font-extrabold text-white text-lg sm:text-xl flex items-center gap-2">
                     Sophia, 26 <Check className="w-4 h-4 text-emerald-400 bg-emerald-400/20 p-0.5 rounded-full" />
                   </h3>
                   <p className="text-xs text-white/70">Architect • San Francisco</p>
@@ -127,9 +127,9 @@ export default function Home() {
                 </div>
 
                 <div className="flex justify-around items-center mt-2">
-                  <button className="w-11 h-11 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 font-bold hover:scale-110 transition-transform">✕</button>
-                  <button className="w-14 h-14 rounded-full bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] flex items-center justify-center text-white shadow-lg shadow-pink-500/30 hover:scale-110 transition-transform"><Heart className="w-7 h-7 fill-white" /></button>
-                  <button className="w-11 h-11 rounded-full bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 font-bold hover:scale-110 transition-transform">★</button>
+                  <button className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 font-bold hover:scale-110 transition-transform">✕</button>
+                  <button className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] flex items-center justify-center text-white shadow-lg shadow-pink-500/30 hover:scale-110 transition-transform"><Heart className="w-6 h-6 sm:w-7 sm:h-7 fill-white" /></button>
+                  <button className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 font-bold hover:scale-110 transition-transform">★</button>
                 </div>
               </div>
             </div>

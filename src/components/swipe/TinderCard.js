@@ -70,7 +70,7 @@ export default function TinderCard({ candidate, onSwipe, onUndo, canUndo }) {
   };
 
   return (
-    <div className="relative w-full max-w-[360px] h-[520px] select-none mx-auto flex flex-col justify-between">
+    <div className="relative w-full max-w-[330px] sm:max-w-[360px] h-[490px] sm:h-[520px] select-none mx-auto flex flex-col justify-between">
       {/* Cards Deck */}
       <motion.div
         drag={!expanded}
@@ -80,7 +80,7 @@ export default function TinderCard({ candidate, onSwipe, onUndo, canUndo }) {
         animate={controls}
         style={{ x, y, rotate }}
         onClick={() => setExpanded(!expanded)}
-        className="w-full h-[440px] rounded-3xl overflow-hidden glass-card border border-white/10 relative shadow-2xl cursor-pointer"
+        className="w-full h-[410px] sm:h-[440px] rounded-3xl overflow-hidden glass-card border border-white/10 relative shadow-2xl cursor-pointer"
       >
         {/* Current Gallery Image */}
         <div className="absolute inset-0 bg-slate-900">
@@ -194,44 +194,44 @@ export default function TinderCard({ candidate, onSwipe, onUndo, canUndo }) {
       </motion.div>
 
       {/* Swipe action triggers */}
-      <div className="flex justify-around items-center px-4">
+      <div className="flex justify-around items-center px-2 sm:px-4 gap-2">
         {/* Undo */}
         <button
           onClick={onUndo}
           disabled={!canUndo}
-          className={`w-11 h-11 rounded-full border border-white/10 glass-panel flex items-center justify-center transition-all cursor-pointer ${
+          className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full border border-white/10 glass-panel flex items-center justify-center transition-all cursor-pointer ${
             canUndo ? "hover:scale-105 active:scale-95 text-yellow-500 hover:bg-yellow-500/10" : "opacity-35 cursor-not-allowed"
           }`}
           title="Undo Swipe"
         >
-          <RotateCcw className="w-5 h-5" />
+          <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
         {/* Pass (Left) */}
         <button
           onClick={() => triggerSwipe("PASS")}
-          className="w-14 h-14 rounded-full border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-500 flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-md cursor-pointer"
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 text-red-500 flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-md cursor-pointer"
           title="Pass"
         >
-          <X className="w-7 h-7" />
+          <X className="w-6 h-6 sm:w-7 sm:h-7" />
         </button>
 
         {/* Superlike */}
         <button
           onClick={() => triggerSwipe("SUPERLIKE")}
-          className="w-12 h-12 rounded-full border border-purple-500/20 bg-purple-500/10 hover:bg-purple-500/20 text-purple-500 flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-md cursor-pointer"
+          className="w-11 h-11 sm:w-12 sm:h-12 rounded-full border border-purple-500/20 bg-purple-500/10 hover:bg-purple-500/20 text-purple-500 flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-md cursor-pointer"
           title="Super Like"
         >
-          <Star className="w-5 h-5 fill-current" />
+          <Star className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
         </button>
 
         {/* Like (Right) */}
         <button
           onClick={() => triggerSwipe("LIKE")}
-          className="w-14 h-14 rounded-full border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-md cursor-pointer"
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full border border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-md cursor-pointer"
           title="Like"
         >
-          <Heart className="w-7 h-7 fill-current" />
+          <Heart className="w-6 h-6 sm:w-7 sm:h-7 fill-current" />
         </button>
       </div>
     </div>
