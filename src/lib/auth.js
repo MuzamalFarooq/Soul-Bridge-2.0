@@ -1,10 +1,13 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
+import { resolveAuthBaseUrl } from "./auth-url";
 
-// Dynamically handle Vercel deployment URLs if NEXTAUTH_URL is not set or defaults to localhost in production
-if (process.env.NODE_ENV === "production" && process.env.VERCEL_URL && (!process.env.NEXTAUTH_URL || process.env.NEXTAUTH_URL.includes("localhost"))) {
-  process.env.NEXTAUTH_URL = `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL}`;
+const resolvedAuthBaseUrl = resolveAuthBaseUrl(process.env);
+
+if (process.env.NODE_ENV === "production" && resolvedAuthBaseUrl) {
+  process.env.NEXTAUTH_URL = resolvedAuthBaseUrl;
+  process.env.AUTH_URL = resolvedAuthBaseUrl;
 }
 
 export const authOptions = {
@@ -53,7 +56,26 @@ export const authOptions = {
       }
     })
   ],
+  trustHost: true,
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      if (!url) {
+        return baseUrl;
+      }
+
+      if (url.startsWith("/")) {
+        return `${baseUrl}${url}`;
+      }
+
+      try {
+        const parsedUrl = new URL(url);
+        if (parsedUrl.origin === baseUrl) {
+          return url;
+        }
+      } catch (_) {}
+
+      return baseUrl;
+    },
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;

@@ -33,10 +33,12 @@ function LoginContent() {
     setLoading(true);
 
     try {
+      const redirectTo = typeof window !== "undefined" ? window.location.origin + "/dashboard" : "/dashboard";
       const res = await signIn("credentials", {
         email: email.toLowerCase().trim(),
         password,
         redirect: false,
+        callbackUrl: redirectTo,
       });
 
       if (res?.error) {
