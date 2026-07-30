@@ -4,16 +4,21 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
-import { ArrowLeft, BadgeCheck, CalendarDays, Compass, Crown, Heart, MapPin, Sparkles, UserRound, Briefcase, MessageCircle, ShieldCheck } from "lucide-react";
+import { ArrowLeft, BadgeCheck, CalendarDays, Compass, Crown, Heart, MapPin, Sparkles, UserRound, Briefcase, MessageCircle, ShieldCheck, Camera, Plus, UploadCloud } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getDashboardData } from "@/actions/dashboard";
+import { saveUserProfile } from "@/actions/profile";
 
 export default function ProfilePage() {
   const { data: session } = useSession();
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [galleryPhotos, setGalleryPhotos] = useState([]);
+  const [pendingPhotos, setPendingPhotos] = useState([]);
+  const [savingPhotos, setSavingPhotos] = useState(false);
+  const [photoMessage, setPhotoMessage] = useState("");
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -21,6 +26,7 @@ export default function ProfilePage() {
         const response = await getDashboardData();
         if (response?.success) {
           setProfileData(response.data);
+          setGalleryPhotos(response?.data?.profile?.user?.photos || []);
         } else {
           setError(response?.error || "Unable to load your profile right now.");
         }
@@ -37,6 +43,70 @@ export default function ProfilePage() {
   const profile = profileData?.profile;
   const isPremium = profile?.premiumStatus && profile?.premiumStatus !== "FREE";
   const completion = profileData?.completionPercentage || 0;
+
+  const handlePhotoSelection = async (event) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+
+    if (galleryPhotos.length + pendingPhotos.length + files.length > 6) {
+      setPhotoMessage("You can add up to 6 photos in your gallery.");
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      const newImages = await Promise.all(
+        files.map((file) => new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve({
+            url: reader.result,
+            publicId: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            isProfile: false
+          });
+          reader.onerror = () => reject(new Error("Unable to read image"));
+          reader.readAsDataURL(file);
+        }))
+      );
+
+      setPendingPhotos((prev) => [...prev, ...newImages]);
+      setPhotoMessage(`${newImages.length} photo${newImages.length > 1 ? "s" : ""} ready to save.`);
+    } catch (err) {
+      setPhotoMessage("One of the selected files could not be processed.");
+    } finally {
+      event.target.value = "";
+    }
+  };
+
+  const handleSaveGallery = async () => {
+    if (!pendingPhotos.length) return;
+
+    try {
+      setSavingPhotos(true);
+      setPhotoMessage("");
+
+      const normalizedPhotos = [...galleryPhotos, ...pendingPhotos].slice(0, 6).map((photo, index) => ({
+        ...photo,
+        isProfile: index === 0 && !galleryPhotos.some((item) => item.isProfile)
+      }));
+
+      const result = await saveUserProfile({
+        ...profile,
+        photos: normalizedPhotos
+      });
+
+      if (result?.success) {
+        setGalleryPhotos(normalizedPhotos);
+        setPendingPhotos([]);
+        setPhotoMessage("Your gallery has been updated.");
+      } else {
+        setPhotoMessage(result?.error || "Unable to save your gallery.");
+      }
+    } catch (err) {
+      setPhotoMessage("Unable to save your gallery right now.");
+    } finally {
+      setSavingPhotos(false);
+    }
+  };
 
   const highlights = useMemo(() => [
     { label: "Matches", value: profileData?.matchesCount || 0, icon: Heart },
@@ -158,6 +228,63 @@ export default function ProfilePage() {
                     <div>{profile?.gender || "Share how you identify."}</div>
                   </div>
                 </div>
+              </div>
+
+              <div className="mt-8 rounded-3xl border border-white/10 bg-[#101019] p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                      <Camera className="w-4 h-4 text-[#FF4D8D]" /> Instagram-style gallery
+                    </div>
+                    <p className="mt-1 text-sm text-white/60">Share multiple moments so other users can see your personality.</p>
+                  </div>
+                  <div className="rounded-full border border-[#FF4D8D]/30 bg-[#FF4D8D]/10 px-3 py-1 text-xs font-semibold text-[#FF4D8D]">
+                    {galleryPhotos.length + pendingPhotos.length}/6 photos
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {galleryPhotos.length > 0 ? galleryPhotos.map((photo, index) => (
+                    <div key={photo.id || `${photo.url}-${index}`} className="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
+                      <img src={photo.url} alt={`Gallery ${index + 1}`} className="h-40 w-full object-cover" />
+                      {photo.isProfile && (
+                        <div className="px-3 py-2 text-xs font-semibold text-[#9C6BFF]">Primary photo</div>
+                      )}
+                    </div>
+                  )) : (
+                    <div className="sm:col-span-2 rounded-2xl border border-dashed border-white/15 bg-white/5 p-5 text-center text-sm text-white/60">
+                      No photos yet. Add a few to make your profile feel more personal.
+                    </div>
+                  )}
+
+                  {pendingPhotos.map((photo, index) => (
+                    <div key={`${photo.publicId}-${index}`} className="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
+                      <img src={photo.url} alt={`Pending ${index + 1}`} className="h-40 w-full object-cover" />
+                      <div className="px-3 py-2 text-xs font-semibold text-emerald-400">Ready to save</div>
+                    </div>
+                  ))}
+                </div>
+
+                <label className="mt-4 flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-[#9C6BFF]/30 bg-[#9C6BFF]/10 px-4 py-3 text-sm font-semibold text-[#9C6BFF] transition hover:bg-[#9C6BFF]/20">
+                  <UploadCloud className="w-4 h-4" />
+                  <span>Add photos</span>
+                  <input type="file" accept="image/*" multiple onChange={handlePhotoSelection} className="hidden" />
+                </label>
+
+                {photoMessage ? (
+                  <p className="mt-3 text-sm text-white/70">{photoMessage}</p>
+                ) : null}
+
+                {pendingPhotos.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={handleSaveGallery}
+                    disabled={savingPhotos}
+                    className="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {savingPhotos ? "Saving..." : <><Plus className="w-4 h-4" /> Save gallery</>}
+                  </button>
+                ) : null}
               </div>
             </motion.section>
           </div>
