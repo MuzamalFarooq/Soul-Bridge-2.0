@@ -33,25 +33,30 @@ function LoginContent() {
     setLoading(true);
 
     try {
-      const redirectTo = typeof window !== "undefined" ? window.location.origin + "/dashboard" : "/dashboard";
-      const res = await signIn("credentials", {
-        email: email.toLowerCase().trim(),
-        password,
-        redirect: false,
-        callbackUrl: redirectTo,
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.toLowerCase().trim(),
+          password,
+        }),
       });
 
-      if (res?.error) {
-        if (res.error === "CredentialsSignin") {
-          setError("Invalid email address or password.");
-        } else {
-          setError(res.error || "Invalid email address or password.");
-        }
+      const data = await res.json();
+
+      if (!res.ok || !data?.success) {
+        setError(data?.error || "Invalid email address or password.");
         setLoading(false);
         return;
       }
 
-      router.push("/dashboard");
+      await signIn("credentials", {
+        email: email.toLowerCase().trim(),
+        password,
+        redirect: false,
+      });
+
+      router.replace("/dashboard");
       router.refresh();
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
