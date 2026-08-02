@@ -16,17 +16,17 @@ export default withAuth(
     
     // Redirect logged-in users away from auth pages
     if (isAuth && isAuthPage) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+      return NextResponse.redirect(new URL("/discover", req.url));
     }
 
     // Enforce onboarding profile completion
-    if (isAuth && !token.completed && path !== "/onboarding" && !path.startsWith("/api")) {
+    if (isAuth && !token.completed && path !== "/onboarding" && path !== "/discover" && !path.startsWith("/api")) {
       return NextResponse.redirect(new URL("/onboarding", req.url));
     }
 
     // Role-based authorization for the Admin Console
     if (path.startsWith("/admin") && token?.role !== "ADMIN") {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+      return NextResponse.redirect(new URL("/discover", req.url));
     }
 
     return NextResponse.next();

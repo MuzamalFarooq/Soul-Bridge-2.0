@@ -33,32 +33,38 @@ function LoginContent() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email.toLowerCase().trim(),
-          password,
-        }),
-      });
+      const cleanEmail = email.toLowerCase().trim();
 
-      const data = await res.json();
-
-      if (!res.ok || !data?.success) {
-        setError(data?.error || "Invalid email address or password.");
-        setLoading(false);
-        return;
-      }
-
-      await signIn("credentials", {
-        email: email.toLowerCase().trim(),
+      const result = await signIn("credentials", {
+        email: cleanEmail,
         password,
         redirect: false,
       });
 
-      router.replace("/dashboard");
+      if (!result || result.error) {
+        if (result?.error === "CredentialsSignin") {
+          setError("Invalid email address or password.");
+        } else {
+          setError(result?.error || "Failed to sign in. Please check your credentials.");
+        }
+        setLoading(false);
+        return;
+      }
+
+      try {
+        await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: cleanEmail, password }),
+        });
+      } catch (syncErr) {
+        console.error("Auth sync error:", syncErr);
+      }
+
+      router.replace("/discover");
       router.refresh();
     } catch (err) {
+      console.error("Login page submit error:", err);
       setError("An unexpected error occurred. Please try again.");
       setLoading(false);
     }

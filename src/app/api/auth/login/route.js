@@ -66,8 +66,8 @@ export async function POST(request) {
 
     const response = NextResponse.json({ success: true, message: "Signed in successfully" });
     const cookieNames = process.env.NODE_ENV === "production"
-      ? ["__Secure-authjs.session-token", "authjs.session-token"]
-      : ["authjs.session-token"];
+      ? ["__Secure-authjs.session-token", "authjs.session-token", "next-auth.session-token", "__Secure-next-auth.session-token"]
+      : ["authjs.session-token", "next-auth.session-token"];
 
     for (const cookieName of cookieNames) {
       response.cookies.set(cookieName, encodedToken, {
