@@ -7,11 +7,8 @@ import crypto from "crypto";
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ success: false, error: "Unauthorized access" }, { status: 401 });
-    }
+    const userId = session?.user?.id || null;
 
-    const userId = session.user.id;
     const formData = await request.formData();
     const file = formData.get("file");
 
@@ -68,27 +65,37 @@ export async function POST(request) {
       publicId = `local_${Date.now()}`;
     }
 
-    // Check if user currently has any photos
-    const existingPhotosCount = await prisma.photo.count({ where: { userId } });
+    let photoResult = {
+      url: secureUrl,
+      publicId,
+      isProfile: true,
+    };
 
-    // Save uploaded photo record into Prisma database
-    const savedPhoto = await prisma.photo.create({
-      data: {
-        userId,
-        url: secureUrl,
-        publicId,
-        isProfile: existingPhotosCount === 0,
-      },
-    });
+    if (userId) {
+      // Check if user currently has any photos
+      const existingPhotosCount = await prisma.photo.count({ where: { userId } });
 
-    return NextResponse.json({
-      success: true,
-      photo: {
+      // Save uploaded photo record into Prisma database
+      const savedPhoto = await prisma.photo.create({
+        data: {
+          userId,
+          url: secureUrl,
+          publicId,
+          isProfile: existingPhotosCount === 0,
+        },
+      });
+
+      photoResult = {
         id: savedPhoto.id,
         url: savedPhoto.url,
         publicId: savedPhoto.publicId,
         isProfile: savedPhoto.isProfile,
-      },
+      };
+    }
+
+    return NextResponse.json({
+      success: true,
+      photo: photoResult,
       message: "Image uploaded to Cloudinary successfully!",
     });
   } catch (error) {

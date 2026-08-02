@@ -6,7 +6,8 @@ import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { 
   Heart, Sparkles, User, Calendar, MapPin, Compass, Briefcase, 
-  Camera, Check, ChevronRight, ChevronLeft, ArrowRight, Brain 
+  Camera, Check, ChevronRight, ChevronLeft, ArrowRight, Brain, 
+  UploadCloud, Loader2, X 
 } from "lucide-react";
 import { saveUserProfile, getAIBioAction } from "@/actions/profile";
 
@@ -17,7 +18,49 @@ export default function Onboarding() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [uploadingPhoto1, setUploadingPhoto1] = useState(false);
+  const [uploadingPhoto2, setUploadingPhoto2] = useState(false);
   const [error, setError] = useState("");
+
+  const handleFileUpload = async (e, photoKey) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (photoKey === "photo1") setUploadingPhoto1(true);
+    if (photoKey === "photo2") setUploadingPhoto2(true);
+    setError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload/cloudinary", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok && data?.success && data?.photo?.url) {
+        setFormData((prev) => ({ ...prev, [photoKey]: data.photo.url }));
+      } else {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setFormData((prev) => ({ ...prev, [photoKey]: reader.result }));
+        };
+        reader.readAsDataURL(file);
+      }
+    } catch (err) {
+      console.error("Onboarding photo upload error:", err);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData((prev) => ({ ...prev, [photoKey]: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      if (photoKey === "photo1") setUploadingPhoto1(false);
+      if (photoKey === "photo2") setUploadingPhoto2(false);
+    }
+  };
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -377,36 +420,74 @@ export default function Onboarding() {
         {step === 4 && (
           <div className="flex flex-col gap-5 animate-in fade-in duration-300">
             <h3 className="text-xl font-black text-white flex items-center gap-2">
-              <Camera className="w-5 h-5 text-[#FF4D8D]" /> Gallery & Social Links
+              <Camera className="w-5 h-5 text-[#FF4D8D]" /> Gallery & Profile Photo
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-white/70">Profile Avatar Photo URL</label>
-                <input
-                  type="text"
-                  name="photo1"
-                  value={formData.photo1}
-                  onChange={handleChange}
-                  className="px-4 py-3 rounded-2xl glass-input-lux text-xs text-white"
-                />
-                <div className="w-24 h-24 rounded-2xl overflow-hidden border border-white/20 mt-1 shadow-md">
-                  <img src={formData.photo1} alt="Preview 1" className="w-full h-full object-cover" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Photo 1 Uploader */}
+              <div className="flex flex-col gap-2 p-4 rounded-2xl glass-card-lux border border-white/10">
+                <label className="text-xs font-bold text-white/90 flex items-center justify-between">
+                  <span>Primary Profile Picture</span>
+                  <span className="text-[10px] text-[#FF4D8D] font-extrabold uppercase">Main Avatar</span>
+                </label>
+
+                <div className="h-44 w-full rounded-2xl overflow-hidden border border-white/20 relative bg-black/40 flex items-center justify-center">
+                  {formData.photo1 ? (
+                    <img src={formData.photo1} alt="Primary Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="text-white/40 text-xs font-medium">No photo selected</div>
+                  )}
+
+                  {uploadingPhoto1 && (
+                    <div className="absolute inset-0 bg-black/70 flex items-center justify-center gap-2 text-xs font-bold text-[#FF4D8D]">
+                      <Loader2 className="w-5 h-5 animate-spin" /> Uploading image...
+                    </div>
+                  )}
                 </div>
+
+                <label className="mt-1 flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] px-4 py-2.5 text-xs font-bold text-white shadow-md hover:scale-[1.02] transition-transform">
+                  <UploadCloud className="w-4 h-4" /> Upload Profile Photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={uploadingPhoto1}
+                    onChange={(e) => handleFileUpload(e, "photo1")}
+                    className="hidden"
+                  />
+                </label>
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-white/70">Secondary Gallery Photo URL</label>
-                <input
-                  type="text"
-                  name="photo2"
-                  value={formData.photo2}
-                  onChange={handleChange}
-                  className="px-4 py-3 rounded-2xl glass-input-lux text-xs text-white"
-                />
-                <div className="w-24 h-24 rounded-2xl overflow-hidden border border-white/20 mt-1 shadow-md">
-                  <img src={formData.photo2} alt="Preview 2" className="w-full h-full object-cover" />
+              {/* Photo 2 Uploader */}
+              <div className="flex flex-col gap-2 p-4 rounded-2xl glass-card-lux border border-white/10">
+                <label className="text-xs font-bold text-white/90 flex items-center justify-between">
+                  <span>Secondary Gallery Photo</span>
+                  <span className="text-[10px] text-white/50 font-bold uppercase">Gallery Slot</span>
+                </label>
+
+                <div className="h-44 w-full rounded-2xl overflow-hidden border border-white/20 relative bg-black/40 flex items-center justify-center">
+                  {formData.photo2 ? (
+                    <img src={formData.photo2} alt="Secondary Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="text-white/40 text-xs font-medium">No photo selected</div>
+                  )}
+
+                  {uploadingPhoto2 && (
+                    <div className="absolute inset-0 bg-black/70 flex items-center justify-center gap-2 text-xs font-bold text-[#9C6BFF]">
+                      <Loader2 className="w-5 h-5 animate-spin" /> Uploading image...
+                    </div>
+                  )}
                 </div>
+
+                <label className="mt-1 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-bold text-white hover:bg-white/20 transition-colors">
+                  <UploadCloud className="w-4 h-4 text-[#9C6BFF]" /> Upload Gallery Photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    disabled={uploadingPhoto2}
+                    onChange={(e) => handleFileUpload(e, "photo2")}
+                    className="hidden"
+                  />
+                </label>
               </div>
             </div>
           </div>

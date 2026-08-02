@@ -201,8 +201,12 @@ export default function Navbar() {
                   onClick={() => { setDropdownOpen(!dropdownOpen); setNotifOpen(false); }}
                   className="flex items-center gap-2.5 px-3 py-1.5 rounded-full glass-card-lux hover:border-[#FF4D8D]/50 transition-all duration-300 cursor-pointer"
                 >
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] flex items-center justify-center text-white text-xs font-black uppercase shadow-md">
-                    {session.user.fullName ? session.user.fullName[0] : "U"}
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] p-0.5 flex items-center justify-center text-white text-xs font-black uppercase shadow-md overflow-hidden shrink-0">
+                    {session.user.image ? (
+                      <img src={session.user.image} alt={session.user.fullName || "User"} className="w-full h-full object-cover rounded-full" />
+                    ) : (
+                      <span>{session.user.fullName ? session.user.fullName[0] : "U"}</span>
+                    )}
                   </div>
                   <span className="text-xs font-bold max-w-[100px] truncate text-white">
                     {session.user.fullName || "Account"}

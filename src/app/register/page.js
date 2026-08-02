@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Heart, Sparkles, AlertCircle, CheckCircle, Mail, Lock, ArrowRight, ShieldCheck, Eye, EyeOff } from "lucide-react";
+import { Heart, Sparkles, AlertCircle, CheckCircle, Mail, Lock, ArrowRight, ShieldCheck, Eye, EyeOff, Camera, UploadCloud, X, Loader2 } from "lucide-react";
 import { registerUser } from "@/actions/auth";
 
 export default function Register() {
@@ -12,11 +12,53 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [profilePic, setProfilePic] = useState("");
+  const [uploadingPic, setUploadingPic] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingPic(true);
+    setError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload/cloudinary", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok && data?.success && data?.photo?.url) {
+        setProfilePic(data.photo.url);
+      } else {
+        // Fallback convert to local base64 URL
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setProfilePic(reader.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    } catch (err) {
+      console.error("Profile picture upload error:", err);
+      // Fallback base64 conversion
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfilePic(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setUploadingPic(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,11 +84,11 @@ export default function Register() {
         const response = await fetch("/api/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: cleanEmail, password })
+          body: JSON.stringify({ email: cleanEmail, password, profilePic })
         });
         res = await response.json();
       } catch (fetchErr) {
-        res = await registerUser({ email: cleanEmail, password });
+        res = await registerUser({ email: cleanEmail, password, profilePic });
       }
       
       if (!res || !res.success) {
@@ -59,6 +101,7 @@ export default function Register() {
       setEmail("");
       setPassword("");
       setConfirmPassword("");
+      setProfilePic("");
       
       setTimeout(() => {
         router.push(`/verify-email?token=${res.verificationToken || "success"}`);
@@ -123,6 +166,61 @@ export default function Register() {
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {/* Profile Picture Upload Section */}
+          <div className="flex flex-col items-center justify-center my-1 gap-2">
+            <div className="relative group cursor-pointer">
+              <div className="w-24 h-24 rounded-full p-1 bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] shadow-lg flex items-center justify-center">
+                <div className="w-full h-full rounded-full bg-[#181820] overflow-hidden flex items-center justify-center relative">
+                  {profilePic ? (
+                    <img src={profilePic} alt="Profile preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="flex flex-col items-center text-white/50 gap-1 p-2 text-center">
+                      {uploadingPic ? (
+                        <Loader2 className="w-6 h-6 animate-spin text-[#FF4D8D]" />
+                      ) : (
+                        <>
+                          <Camera className="w-6 h-6 text-[#FF4D8D]" />
+                          <span className="text-[9px] font-bold">Add Photo</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {uploadingPic && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                      <Loader2 className="w-6 h-6 animate-spin text-[#FF4D8D]" />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <label className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] text-white flex items-center justify-center cursor-pointer shadow-md hover:scale-110 transition-transform">
+                <Camera className="w-4 h-4" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  disabled={loading || uploadingPic}
+                  className="hidden"
+                />
+              </label>
+
+              {profilePic && (
+                <button
+                  type="button"
+                  onClick={() => setProfilePic("")}
+                  className="absolute top-0 right-0 w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md hover:bg-rose-600 transition-colors"
+                  title="Remove photo"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            <span className="text-[11px] text-white/60 font-semibold">
+              {profilePic ? "Profile photo selected!" : "Upload profile picture (optional)"}
+            </span>
+          </div>
+
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold text-white/70 px-1">Email Address</label>
             <div className="relative">

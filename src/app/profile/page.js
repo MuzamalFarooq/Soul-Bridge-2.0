@@ -123,6 +123,48 @@ export default function ProfilePage() {
     }
   };
 
+  const primaryPhoto = galleryPhotos.find((p) => p.isProfile) || galleryPhotos[0];
+
+  const handleDirectAvatarUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setPhotoMessage("Updating profile picture...");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload/cloudinary", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data?.success && data?.photo) {
+        const newPhoto = data.photo;
+        if (newPhoto.id) {
+          await setPrimaryProfilePhotoAction(newPhoto.id);
+        }
+        setGalleryPhotos((prev) => [
+          { ...newPhoto, isProfile: true },
+          ...prev.map((p) => ({ ...p, isProfile: false })),
+        ]);
+        setPhotoMessage("Profile picture updated successfully!");
+      } else {
+        setPhotoMessage(data?.error || "Failed to upload profile picture.");
+      }
+    } catch (err) {
+      console.error("Avatar upload error:", err);
+      setPhotoMessage("Error updating profile picture.");
+    } finally {
+      setUploading(false);
+      event.target.value = "";
+    }
+  };
+
   const highlights = useMemo(() => [
     { label: "Matches", value: profileData?.matchesCount || 0, icon: Heart },
     { label: "Likes", value: profileData?.likesCount || 0, icon: Sparkles },
@@ -163,9 +205,34 @@ export default function ProfilePage() {
             >
               <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-[#FF4D8D] to-[#9C6BFF] flex items-center justify-center text-3xl font-black uppercase shadow-lg">
-                    {profile?.fullName ? profile.fullName[0] : (session?.user?.fullName ? session.user.fullName[0] : "U")}
+                  {/* Profile Picture / Avatar with Change Photo overlay button */}
+                  <div className="relative group">
+                    <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-[#FF4D8D] to-[#9C6BFF] p-0.5 shadow-lg flex items-center justify-center overflow-hidden">
+                      {primaryPhoto?.url ? (
+                        <img
+                          src={primaryPhoto.url}
+                          alt={profile?.fullName || "Profile photo"}
+                          className="w-full h-full object-cover rounded-[22px]"
+                        />
+                      ) : (
+                        <div className="w-full h-full rounded-[22px] bg-[#14141E] flex items-center justify-center text-3xl font-black uppercase text-white">
+                          {profile?.fullName ? profile.fullName[0] : (session?.user?.fullName ? session.user.fullName[0] : "U")}
+                        </div>
+                      )}
+                    </div>
+
+                    <label className="absolute -bottom-1 -right-1 p-2 rounded-2xl bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] text-white shadow-lg cursor-pointer hover:scale-110 active:scale-95 transition-transform flex items-center justify-center" title="Update Profile Picture">
+                      {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={uploading}
+                        onChange={handleDirectAvatarUpload}
+                        className="hidden"
+                      />
+                    </label>
                   </div>
+
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <h1 className="text-2xl font-black text-white">{profile?.fullName || session?.user?.fullName || "Your Profile"}</h1>

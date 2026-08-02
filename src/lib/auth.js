@@ -27,7 +27,7 @@ export const authOptions = {
 
         const user = await prisma.user.findUnique({
           where: { email: normalizedEmail },
-          include: { profile: true }
+          include: { profile: true, photos: { where: { isProfile: true }, take: 1 } }
         });
 
         if (!user || !user.passwordHash) {
@@ -44,6 +44,8 @@ export const authOptions = {
           throw new Error("Invalid password credentials");
         }
 
+        const primaryImage = user.photos?.[0]?.url || null;
+
         return {
           id: user.id,
           email: user.email,
@@ -52,6 +54,7 @@ export const authOptions = {
           fullName: user.profile?.fullName || null,
           completed: user.profile?.completed || false,
           premiumStatus: user.profile?.premiumStatus || "FREE",
+          image: primaryImage,
         };
       }
     })
@@ -84,6 +87,7 @@ export const authOptions = {
         token.fullName = user.fullName;
         token.completed = user.completed;
         token.premiumStatus = user.premiumStatus;
+        token.image = user.image;
       }
       
       // Dynamic profile updates during user session
@@ -92,6 +96,7 @@ export const authOptions = {
         if (session.username !== undefined) token.username = session.username;
         if (session.fullName !== undefined) token.fullName = session.fullName;
         if (session.premiumStatus !== undefined) token.premiumStatus = session.premiumStatus;
+        if (session.image !== undefined) token.image = session.image;
       }
 
       return token;
@@ -104,6 +109,7 @@ export const authOptions = {
         session.user.fullName = token.fullName;
         session.user.completed = token.completed;
         session.user.premiumStatus = token.premiumStatus;
+        session.user.image = token.image;
       }
       return session;
     }

@@ -13,7 +13,7 @@ function generateToken() {
  */
 export async function registerUser(data) {
   try {
-    const { email, password } = data;
+    const { email, password, profilePic } = data;
     if (!email || !password) {
       return { success: false, error: "Email and password are required" };
     }
@@ -36,27 +36,41 @@ export async function registerUser(data) {
     // Create User with nested Settings and Profile atomically
     const token = generateToken();
 
-    const user = await prisma.user.create({
-      data: {
-        email: normalizedEmail,
-        passwordHash,
-        emailVerified: new Date(), // Auto-verify email upon registration so user can immediately sign in
-        settings: {
-          create: {
-            darkMode: true,
-            pushNotifications: true,
-            emailNotifications: true,
-            invisibleMode: false,
-            privatePhotos: false
-          }
-        },
-        profile: {
-          create: {
-            completed: false,
-            premiumStatus: "FREE"
-          }
+    const userData = {
+      email: normalizedEmail,
+      passwordHash,
+      emailVerified: new Date(), // Auto-verify email upon registration so user can immediately sign in
+      settings: {
+        create: {
+          darkMode: true,
+          pushNotifications: true,
+          emailNotifications: true,
+          invisibleMode: false,
+          privatePhotos: false
+        }
+      },
+      profile: {
+        create: {
+          completed: false,
+          premiumStatus: "FREE"
         }
       }
+    };
+
+    if (profilePic) {
+      userData.photos = {
+        create: [
+          {
+            url: profilePic,
+            isProfile: true,
+            publicId: `profile_reg_${Date.now()}`
+          }
+        ]
+      };
+    }
+
+    const user = await prisma.user.create({
+      data: userData
     });
 
     // Create Verification Token record
