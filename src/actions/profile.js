@@ -207,3 +207,64 @@ export async function getProfileReviewAction() {
     return { success: false, error: "Failed to review profile" };
   }
 }
+
+/**
+ * Delete a profile photo by ID
+ */
+export async function deleteProfilePhotoAction(photoId) {
+  try {
+    const userId = await getUserId();
+    if (!userId) return { success: false, error: "Unauthorized" };
+
+    const photo = await prisma.photo.findUnique({ where: { id: photoId } });
+    if (!photo || photo.userId !== userId) {
+      return { success: false, error: "Photo not found or unauthorized" };
+    }
+
+    await prisma.photo.delete({ where: { id: photoId } });
+
+    // If deleted photo was primary, assign first remaining photo as primary
+    if (photo.isProfile) {
+      const firstRemaining = await prisma.photo.findFirst({ where: { userId } });
+      if (firstRemaining) {
+        await prisma.photo.update({
+          where: { id: firstRemaining.id },
+          data: { isProfile: true }
+        });
+      }
+    }
+
+    return { success: true, message: "Photo deleted successfully" };
+  } catch (error) {
+    console.error("Delete photo error:", error);
+    return { success: false, error: "Failed to delete photo" };
+  }
+}
+
+/**
+ * Set a photo as primary profile picture
+ */
+export async function setPrimaryProfilePhotoAction(photoId) {
+  try {
+    const userId = await getUserId();
+    if (!userId) return { success: false, error: "Unauthorized" };
+
+    // Reset all user's photos isProfile to false
+    await prisma.photo.updateMany({
+      where: { userId },
+      data: { isProfile: false }
+    });
+
+    // Set selected photo isProfile to true
+    await prisma.photo.update({
+      where: { id: photoId },
+      data: { isProfile: true }
+    });
+
+    return { success: true, message: "Primary photo updated successfully" };
+  } catch (error) {
+    console.error("Set primary photo error:", error);
+    return { success: false, error: "Failed to set primary photo" };
+  }
+}
+

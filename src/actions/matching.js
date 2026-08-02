@@ -77,6 +77,15 @@ export async function fetchDiscoverProfiles(filters = {}) {
     if (candidates.length > 0) {
       for (const cand of candidates) {
         const comp = await calculateCompatibilityScore(myProfile, cand);
+        let userPhotos = (cand.user.photos || []).map((p) => p.url);
+        
+        // Randomly shuffle candidate's uploaded photos for the explore deck presentation
+        if (userPhotos.length > 1) {
+          userPhotos = [...userPhotos].sort(() => Math.random() - 0.5);
+        } else if (userPhotos.length === 0) {
+          userPhotos = ["https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=600&fit=crop"];
+        }
+
         deck.push({
           id: cand.userId,
           fullName: cand.fullName,
@@ -89,7 +98,7 @@ export async function fetchDiscoverProfiles(filters = {}) {
           hobbies: cand.hobbies || [],
           relationshipGoal: cand.relationshipGoal || "Long-term",
           compatibility: comp.score,
-          photos: cand.user.photos.map(p => p.url) || ["https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300"]
+          photos: userPhotos
         });
       }
     } else {

@@ -4,11 +4,15 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
-import { ArrowLeft, BadgeCheck, CalendarDays, Compass, Crown, Heart, MapPin, Sparkles, UserRound, Briefcase, MessageCircle, ShieldCheck, Camera, Plus, UploadCloud } from "lucide-react";
+import { 
+  ArrowLeft, BadgeCheck, CalendarDays, Compass, Crown, Heart, MapPin, 
+  Sparkles, UserRound, Briefcase, MessageCircle, ShieldCheck, Camera, 
+  Plus, UploadCloud, Trash2, Star, CheckCircle2, Cloud, Loader2 
+} from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { getDashboardData } from "@/actions/dashboard";
-import { saveUserProfile } from "@/actions/profile";
+import { saveUserProfile, deleteProfilePhotoAction, setPrimaryProfilePhotoAction } from "@/actions/profile";
 
 export default function ProfilePage() {
   const { data: session } = useSession();
@@ -16,8 +20,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [galleryPhotos, setGalleryPhotos] = useState([]);
-  const [pendingPhotos, setPendingPhotos] = useState([]);
-  const [savingPhotos, setSavingPhotos] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [photoMessage, setPhotoMessage] = useState("");
 
   useEffect(() => {
@@ -44,67 +47,79 @@ export default function ProfilePage() {
   const isPremium = profile?.premiumStatus && profile?.premiumStatus !== "FREE";
   const completion = profileData?.completionPercentage || 0;
 
-  const handlePhotoSelection = async (event) => {
+  const handleCloudinaryUpload = async (event) => {
     const files = Array.from(event.target.files || []);
     if (!files.length) return;
 
-    if (galleryPhotos.length + pendingPhotos.length + files.length > 6) {
-      setPhotoMessage("You can add up to 6 photos in your gallery.");
+    if (galleryPhotos.length + files.length > 6) {
+      setPhotoMessage("You can upload up to 6 photos in your gallery.");
       event.target.value = "";
       return;
     }
 
-    try {
-      const newImages = await Promise.all(
-        files.map((file) => new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve({
-            url: reader.result,
-            publicId: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-            isProfile: false
-          });
-          reader.onerror = () => reject(new Error("Unable to read image"));
-          reader.readAsDataURL(file);
-        }))
-      );
+    setUploading(true);
+    setPhotoMessage("Uploading image to Cloudinary...");
 
-      setPendingPhotos((prev) => [...prev, ...newImages]);
-      setPhotoMessage(`${newImages.length} photo${newImages.length > 1 ? "s" : ""} ready to save.`);
+    try {
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/upload/cloudinary", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data?.success && data?.photo) {
+          setGalleryPhotos((prev) => [...prev, data.photo]);
+          setPhotoMessage("Image uploaded to Cloudinary successfully!");
+        } else {
+          setPhotoMessage(data?.error || "Failed to upload image to Cloudinary.");
+        }
+      }
     } catch (err) {
-      setPhotoMessage("One of the selected files could not be processed.");
+      console.error("Cloudinary upload error:", err);
+      setPhotoMessage("An error occurred while uploading your photo to Cloudinary.");
     } finally {
+      setUploading(false);
       event.target.value = "";
     }
   };
 
-  const handleSaveGallery = async () => {
-    if (!pendingPhotos.length) return;
-
+  const handleDeletePhoto = async (photoId) => {
     try {
-      setSavingPhotos(true);
-      setPhotoMessage("");
-
-      const normalizedPhotos = [...galleryPhotos, ...pendingPhotos].slice(0, 6).map((photo, index) => ({
-        ...photo,
-        isProfile: index === 0 && !galleryPhotos.some((item) => item.isProfile)
-      }));
-
-      const result = await saveUserProfile({
-        ...profile,
-        photos: normalizedPhotos
-      });
-
-      if (result?.success) {
-        setGalleryPhotos(normalizedPhotos);
-        setPendingPhotos([]);
-        setPhotoMessage("Your gallery has been updated.");
+      setPhotoMessage("Deleting photo...");
+      const res = await deleteProfilePhotoAction(photoId);
+      if (res.success) {
+        setGalleryPhotos((prev) => prev.filter((p) => p.id !== photoId));
+        setPhotoMessage("Photo deleted successfully.");
       } else {
-        setPhotoMessage(result?.error || "Unable to save your gallery.");
+        setPhotoMessage(res.error || "Failed to delete photo.");
       }
     } catch (err) {
-      setPhotoMessage("Unable to save your gallery right now.");
-    } finally {
-      setSavingPhotos(false);
+      setPhotoMessage("Error deleting photo.");
+    }
+  };
+
+  const handleSetPrimary = async (photoId) => {
+    try {
+      setPhotoMessage("Setting primary photo...");
+      const res = await setPrimaryProfilePhotoAction(photoId);
+      if (res.success) {
+        setGalleryPhotos((prev) =>
+          prev.map((p) => ({
+            ...p,
+            isProfile: p.id === photoId,
+          }))
+        );
+        setPhotoMessage("Primary profile photo updated.");
+      } else {
+        setPhotoMessage(res.error || "Failed to update primary photo.");
+      }
+    } catch (err) {
+      setPhotoMessage("Error setting primary photo.");
     }
   };
 
@@ -230,61 +245,96 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="mt-8 rounded-3xl border border-white/10 bg-[#101019] p-4">
+              <div className="mt-8 rounded-3xl border border-white/10 bg-[#101019] p-5">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <div className="flex items-center gap-2 text-sm font-semibold text-white">
-                      <Camera className="w-4 h-4 text-[#FF4D8D]" /> Instagram-style gallery
+                    <div className="flex items-center gap-2 text-sm font-extrabold text-white">
+                      <Cloud className="w-4 h-4 text-[#FF4D8D]" /> Cloudinary Photo Gallery
                     </div>
-                    <p className="mt-1 text-sm text-white/60">Share multiple moments so other users can see your personality.</p>
+                    <p className="mt-1 text-xs text-white/60 font-medium">
+                      Upload photos stored directly on Cloudinary. These will be shown randomly to other users in Explore!
+                    </p>
                   </div>
-                  <div className="rounded-full border border-[#FF4D8D]/30 bg-[#FF4D8D]/10 px-3 py-1 text-xs font-semibold text-[#FF4D8D]">
-                    {galleryPhotos.length + pendingPhotos.length}/6 photos
+                  <div className="rounded-full border border-[#FF4D8D]/30 bg-[#FF4D8D]/10 px-3 py-1 text-xs font-bold text-[#FF4D8D] shrink-0">
+                    {galleryPhotos.length}/6 photos
                   </div>
                 </div>
 
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
                   {galleryPhotos.length > 0 ? galleryPhotos.map((photo, index) => (
-                    <div key={photo.id || `${photo.url}-${index}`} className="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
-                      <img src={photo.url} alt={`Gallery ${index + 1}`} className="h-40 w-full object-cover" />
-                      {photo.isProfile && (
-                        <div className="px-3 py-2 text-xs font-semibold text-[#9C6BFF]">Primary photo</div>
-                      )}
+                    <div key={photo.id || photo.publicId || `${photo.url}-${index}`} className="relative group overflow-hidden rounded-2xl border border-white/10 bg-black/40 flex flex-col">
+                      <div className="h-44 w-full relative">
+                        <img src={photo.url} alt={`Cloudinary ${index + 1}`} className="h-full w-full object-cover" />
+                        
+                        {photo.isProfile && (
+                          <span className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] text-[10px] font-extrabold text-white flex items-center gap-1 shadow-md">
+                            <Star className="w-3 h-3 fill-current" /> Primary
+                          </span>
+                        )}
+
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2 backdrop-blur-xs">
+                          {!photo.isProfile && photo.id && (
+                            <button
+                              type="button"
+                              onClick={() => handleSetPrimary(photo.id)}
+                              className="px-2.5 py-1.5 rounded-xl bg-white/20 hover:bg-white text-white hover:text-black text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+                              title="Set as Primary Profile Photo"
+                            >
+                              <Star className="w-3.5 h-3.5" /> Make Primary
+                            </button>
+                          )}
+                          {photo.id && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePhoto(photo.id)}
+                              className="p-2 rounded-xl bg-rose-500/80 hover:bg-rose-600 text-white transition-all cursor-pointer"
+                              title="Delete Photo"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="p-2.5 bg-white/5 border-t border-white/10 flex items-center justify-between text-[10px] text-white/50 font-semibold">
+                        <span className="flex items-center gap-1 text-emerald-400">
+                          <CheckCircle2 className="w-3 h-3" /> Cloudinary Hosted
+                        </span>
+                        <span>{photo.publicId ? photo.publicId.slice(0, 14) : `photo_${index+1}`}</span>
+                      </div>
                     </div>
                   )) : (
-                    <div className="sm:col-span-2 rounded-2xl border border-dashed border-white/15 bg-white/5 p-5 text-center text-sm text-white/60">
-                      No photos yet. Add a few to make your profile feel more personal.
+                    <div className="sm:col-span-2 rounded-2xl border border-dashed border-white/15 bg-white/5 p-6 text-center text-xs text-white/60 font-medium">
+                      No Cloudinary photos uploaded yet. Click below to add your first photo.
                     </div>
                   )}
-
-                  {pendingPhotos.map((photo, index) => (
-                    <div key={`${photo.publicId}-${index}`} className="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
-                      <img src={photo.url} alt={`Pending ${index + 1}`} className="h-40 w-full object-cover" />
-                      <div className="px-3 py-2 text-xs font-semibold text-emerald-400">Ready to save</div>
-                    </div>
-                  ))}
                 </div>
 
-                <label className="mt-4 flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-[#9C6BFF]/30 bg-[#9C6BFF]/10 px-4 py-3 text-sm font-semibold text-[#9C6BFF] transition hover:bg-[#9C6BFF]/20">
-                  <UploadCloud className="w-4 h-4" />
-                  <span>Add photos</span>
-                  <input type="file" accept="image/*" multiple onChange={handlePhotoSelection} className="hidden" />
+                <label className="mt-5 flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-[#9C6BFF]/40 bg-[#9C6BFF]/10 hover:bg-[#9C6BFF]/20 px-4 py-3.5 text-xs font-bold text-[#9C6BFF] transition-all">
+                  {uploading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-[#9C6BFF]" />
+                      <span>Uploading to Cloudinary...</span>
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud className="w-4 h-4 text-[#9C6BFF]" />
+                      <span>Upload Photo to Cloudinary</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        multiple 
+                        disabled={uploading || galleryPhotos.length >= 6} 
+                        onChange={handleCloudinaryUpload} 
+                        className="hidden" 
+                      />
+                    </>
+                  )}
                 </label>
 
-                {photoMessage ? (
-                  <p className="mt-3 text-sm text-white/70">{photoMessage}</p>
-                ) : null}
-
-                {pendingPhotos.length > 0 ? (
-                  <button
-                    type="button"
-                    onClick={handleSaveGallery}
-                    disabled={savingPhotos}
-                    className="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
-                  >
-                    {savingPhotos ? "Saving..." : <><Plus className="w-4 h-4" /> Save gallery</>}
-                  </button>
-                ) : null}
+                {photoMessage && (
+                  <p className="mt-3 text-xs text-center text-white/70 font-semibold">{photoMessage}</p>
+                )}
               </div>
             </motion.section>
           </div>
