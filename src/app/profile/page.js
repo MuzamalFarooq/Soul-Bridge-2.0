@@ -249,10 +249,10 @@ export default function ProfilePage() {
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2 text-sm font-extrabold text-white">
-                      <Cloud className="w-4 h-4 text-[#FF4D8D]" /> Cloudinary Photo Gallery
+                      <Cloud className="w-4 h-4 text-[#FF4D8D]" /> Photo Gallery
                     </div>
                     <p className="mt-1 text-xs text-white/60 font-medium">
-                      Upload photos stored directly on Cloudinary. These will be shown randomly to other users in Explore!
+                      Upload photos These will be shown randomly to other users in Explore!
                     </p>
                   </div>
                   <div className="rounded-full border border-[#FF4D8D]/30 bg-[#FF4D8D]/10 px-3 py-1 text-xs font-bold text-[#FF4D8D] shrink-0">
@@ -305,7 +305,7 @@ export default function ProfilePage() {
                     </div>
                   )) : (
                     <div className="sm:col-span-2 rounded-2xl border border-dashed border-white/15 bg-white/5 p-6 text-center text-xs text-white/60 font-medium">
-                      No Cloudinary photos uploaded yet. Click below to add your first photo.
+                      No  photos uploaded yet. Click below to add your first photo.
                     </div>
                   )}
                 </div>
@@ -319,7 +319,7 @@ export default function ProfilePage() {
                   ) : (
                     <>
                       <UploadCloud className="w-4 h-4 text-[#9C6BFF]" />
-                      <span>Upload Photo to Cloudinary</span>
+                      <span>Upload Photo</span>
                       <input 
                         type="file" 
                         accept="image/*" 
