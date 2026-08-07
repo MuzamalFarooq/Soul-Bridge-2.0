@@ -323,3 +323,221 @@ export async function undoLastSwipeAction() {
     return { success: false, error: "Failed to undo swipe" };
   }
 }
+
+/**
+ * Fetch pending connection requests sent to the active user
+ */
+export async function fetchPendingConnectionRequests() {
+  try {
+    const userId = await getUserId();
+    if (!userId) return { success: false, error: "Unauthorized" };
+
+    const myProfile = await prisma.profile.findUnique({ where: { userId } });
+
+    // Find likes/requests sent to this user where the user has not swiped/liked back yet
+    const incomingLikes = await prisma.like.findMany({
+      where: {
+        swipedId: userId,
+        type: { in: ["LIKE", "SUPERLIKE"] }
+      },
+      orderBy: { createdAt: "desc" }
+    });
+
+    const myLikes = await prisma.like.findMany({
+      where: { swiperId: userId },
+      select: { swipedId: true }
+    });
+    const myLikedIds = new Set(myLikes.map(l => l.swipedId));
+
+    const pendingRequests = [];
+    for (const like of incomingLikes) {
+      if (!myLikedIds.has(like.swiperId)) {
+        const requesterProfile = await prisma.profile.findUnique({
+          where: { userId: like.swiperId },
+          include: { user: { include: { photos: true } } }
+        });
+
+        if (requesterProfile) {
+          const comp = await calculateCompatibilityScore(myProfile, requesterProfile);
+          pendingRequests.push({
+            id: like.id,
+            requesterId: like.swiperId,
+            fullName: requesterProfile.fullName || "Connection Candidate",
+            age: requesterProfile.age || 25,
+            gender: requesterProfile.gender,
+            profession: requesterProfile.profession || "Member",
+            bio: requesterProfile.bio || "Sent you a connection request.",
+            photo: requesterProfile.user.photos[0]?.url || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
+            compatibility: comp.score,
+            requestType: like.type,
+            createdAt: like.createdAt
+          });
+        }
+      }
+    }
+
+    // Mock connection request if empty for instant testing
+    if (pendingRequests.length === 0) {
+      pendingRequests.push({
+        id: "req_mock_1",
+        requesterId: "mock_discover_1",
+        fullName: "Vanessa Thorne",
+        age: 25,
+        gender: "Female",
+        profession: "Architect & Artist",
+        bio: "Hey! I felt a strong compatibility with your profile and sent a connection request.",
+        photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
+        compatibility: 96,
+        requestType: "SUPERLIKE",
+        createdAt: new Date()
+      });
+    }
+
+    return { success: true, requests: pendingRequests };
+  } catch (error) {
+    console.error("Fetch pending requests error:", error);
+    return { success: false, error: "Failed to load connection requests" };
+  }
+}
+
+/**
+ * Accept a pending connection request and establish connection
+ */
+export async function acceptConnectionRequest({ requesterId }) {
+  try {
+    const userId = await getUserId();
+    if (!userId) return { success: false, error: "Unauthorized" };
+
+    if (requesterId.startsWith("mock_")) {
+      return {
+        success: true,
+        convoId: "mock_convo_1",
+        matchData: {
+          id: `mock_match_${Date.now()}`,
+          user1Id: userId,
+          user2Id: requesterId,
+          fullName: "Vanessa Thorne",
+          photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150"
+        }
+      };
+    }
+
+    // Save mutual LIKE record from user -> requester
+    await prisma.like.upsert({
+      where: {
+        swiperId_swipedId: {
+          swiperId: userId,
+          swipedId: requesterId
+        }
+      },
+      update: { type: "LIKE" },
+      create: {
+        swiperId: userId,
+        swipedId: requesterId,
+        type: "LIKE"
+      }
+    });
+
+    // Create Match and Conversation
+    const sortedIds = [userId, requesterId].sort();
+    
+    let match = await prisma.match.findFirst({
+      where: { user1Id: sortedIds[0], user2Id: sortedIds[1] }
+    });
+    if (!match) {
+      match = await prisma.match.create({
+        data: {
+          user1Id: sortedIds[0],
+          user2Id: sortedIds[1]
+        }
+      });
+    }
+
+    let convo = await prisma.conversation.findFirst({
+      where: { user1Id: sortedIds[0], user2Id: sortedIds[1] }
+    });
+    if (!convo) {
+      convo = await prisma.conversation.create({
+        data: {
+          user1Id: sortedIds[0],
+          user2Id: sortedIds[1],
+          lastMessageText: "Connection established! You can now send messages and SMS.",
+          lastMessageAt: new Date()
+        }
+      });
+    }
+
+    // Create Notifications
+    try {
+      await prisma.notification.create({
+        data: {
+          userId: requesterId,
+          type: "MATCH",
+          content: "Your connection request was accepted! You can now message & SMS.",
+          link: `/chat?convo=${convo.id}`
+        }
+      });
+      await prisma.notification.create({
+        data: {
+          userId,
+          type: "MATCH",
+          content: "Connection established! Start chatting or sending SMS.",
+          link: `/chat?convo=${convo.id}`
+        }
+      });
+    } catch (nErr) {}
+
+    const requesterProfile = await prisma.profile.findUnique({
+      where: { userId: requesterId },
+      include: { user: { include: { photos: true } } }
+    });
+
+    return {
+      success: true,
+      convoId: convo.id,
+      matchData: {
+        id: match.id,
+        user1Id: userId,
+        user2Id: requesterId,
+        fullName: requesterProfile?.fullName || "Connection Partner",
+        photo: requesterProfile?.user.photos[0]?.url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150"
+      }
+    };
+  } catch (error) {
+    console.error("Accept connection request error:", error);
+    return { success: false, error: "Failed to accept connection request" };
+  }
+}
+
+/**
+ * Decline a pending connection request
+ */
+export async function declineConnectionRequest({ requesterId }) {
+  try {
+    const userId = await getUserId();
+    if (!userId) return { success: false, error: "Unauthorized" };
+
+    if (!requesterId.startsWith("mock_")) {
+      // Record PASS like from user to requester
+      await prisma.like.upsert({
+        where: {
+          swiperId_swipedId: {
+            swiperId: userId,
+            swipedId: requesterId
+          }
+        },
+        update: { type: "PASS" },
+        create: {
+          swiperId: userId,
+          swipedId: requesterId,
+          type: "PASS"
+        }
+      });
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Decline connection request error:", error);
+    return { success: false, error: "Failed to decline request" };
+  }
+}

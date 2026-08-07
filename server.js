@@ -54,6 +54,24 @@ app.prepare().then(() => {
       }
     });
 
+    // Handle instant SMS text messages
+    socket.on('send_sms', (smsData) => {
+      const { receiverId } = smsData;
+      const recipientSocketId = onlineUsers.get(receiverId);
+      if (recipientSocketId) {
+        io.to(recipientSocketId).emit('new_sms', smsData);
+        io.to(recipientSocketId).emit('new_message', smsData);
+      }
+    });
+
+    // Handle Connection Request Accepted event
+    socket.on('accept_connection', ({ requesterId, acceptorData, convoId }) => {
+      const recipientSocketId = onlineUsers.get(requesterId);
+      if (recipientSocketId) {
+        io.to(recipientSocketId).emit('connection_accepted', { acceptorData, convoId });
+      }
+    });
+
     // Handle typing indicators
     socket.on('typing', ({ conversationId, senderId, receiverId, isTyping }) => {
       const recipientSocketId = onlineUsers.get(receiverId);

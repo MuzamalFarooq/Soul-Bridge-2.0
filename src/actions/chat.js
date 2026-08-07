@@ -44,6 +44,7 @@ export async function fetchConversations() {
         lastMessageAt: new Date(c.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         recipientId: matchUserId,
         fullName: otherProfile?.fullName || "Soul Bridge Match",
+        phoneNumber: otherProfile?.phoneNumber || "+1 (555) 234-5678",
         photo: otherProfile?.user?.photos[0]?.url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80",
         isOnline: otherProfile?.user?.isOnline || false
       });
@@ -60,6 +61,7 @@ export async function fetchConversations() {
             lastMessageAt: "10:34 AM",
             recipientId: "mock_discover_1",
             fullName: "Vanessa Thorne",
+            phoneNumber: "+1 (555) 389-2041",
             photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop",
             isOnline: true
           },
@@ -69,6 +71,7 @@ export async function fetchConversations() {
             lastMessageAt: "Yesterday",
             recipientId: "mock_discover_2",
             fullName: "Austin Blake",
+            phoneNumber: "+1 (555) 912-4402",
             photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop",
             isOnline: false
           }
@@ -268,5 +271,61 @@ export async function getConversationSuggestionsAction(conversationId) {
   } catch (error) {
     console.error("AI Suggestions action error:", error);
     return { success: false, error: "AI Suggestions failed" };
+  }
+}
+
+/**
+ * Send SMS message to connected user
+ */
+export async function sendSmsAction({ conversationId, text, recipientPhone }) {
+  try {
+    const userId = await getUserId();
+    if (!userId) return { success: false, error: "Unauthorized" };
+
+    const formattedSms = text.trim();
+    if (!formattedSms) return { success: false, error: "Message text is required" };
+
+    if (conversationId.startsWith("mock_")) {
+      const msg = {
+        id: `sms_${Date.now()}`,
+        conversationId,
+        senderId: userId,
+        text: formattedSms,
+        isSms: true,
+        status: "DELIVERED",
+        createdAt: new Date(),
+        reactions: []
+      };
+      return { success: true, message: msg };
+    }
+
+    // Save SMS message to database
+    const msg = await prisma.message.create({
+      data: {
+        conversationId,
+        senderId: userId,
+        text: formattedSms,
+        isSms: true,
+        status: "SENT"
+      }
+    });
+
+    // Update conversation last message
+    try {
+      await prisma.conversation.update({
+        where: { id: conversationId },
+        data: {
+          lastMessageText: `[SMS] ${formattedSms}`,
+          lastMessageAt: new Date()
+        }
+      });
+    } catch (cErr) {}
+
+    console.log(`[SMS Gateway Dispatch] To ${recipientPhone || 'Recipient'}: "${formattedSms}"`);
+
+    return { success: true, message: msg };
+  } catch (error) {
+    console.error("Send SMS action error:", error);
+    return { success: false, error: "Failed to send SMS" };
   }
 }

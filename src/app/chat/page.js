@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { MessageCircle, Heart, Star, Sparkles, Send, ShieldAlert, CircleUser } from "lucide-react";
+import { MessageCircle, Heart, Star, Sparkles, Send, ShieldAlert, CircleUser, UserCheck } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChatWindow from "@/components/chat/ChatWindow";
+import ConnectionRequestsModal from "@/components/chat/ConnectionRequestsModal";
+import CelebrationModal from "@/components/chat/CelebrationModal";
 import { fetchConversations } from "@/actions/chat";
 
 function ChatContent() {
@@ -16,6 +18,10 @@ function ChatContent() {
   const [selectedConvo, setSelectedConvo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Connection Requests & Celebration State
+  const [requestsModalOpen, setRequestsModalOpen] = useState(false);
+  const [celebrationData, setCelebrationData] = useState(null);
 
   const loadChats = async () => {
     setLoading(true);
@@ -44,6 +50,19 @@ function ChatContent() {
     loadChats();
   }, [initialConvoId]);
 
+  const handleConnectionAccepted = async (matchData, convoId) => {
+    setRequestsModalOpen(false);
+    setCelebrationData(matchData);
+    
+    // Refresh chats to include newly connected thread
+    const res = await fetchConversations();
+    if (res.success && res.conversations) {
+      setConversations(res.conversations);
+      const target = res.conversations.find((c) => c.id === convoId || c.recipientId === matchData.user2Id);
+      if (target) setSelectedConvo(target);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -53,11 +72,22 @@ function ChatContent() {
           
           {/* LEFT THREADS PANE */}
           <div className={`flex flex-col border-r border-white/5 p-4 ${selectedConvo ? "hidden md:flex" : "flex"}`}>
-            <div className="px-2 mb-6">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                My Messages <MessageCircle className="w-5 h-5 text-primary-pink" />
-              </h2>
-              <p className="text-[10px] text-foreground/50 uppercase tracking-wider font-semibold mt-1">Active Discussions</p>
+            <div className="px-2 mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  My Messages <MessageCircle className="w-5 h-5 text-primary-pink" />
+                </h2>
+                <p className="text-[10px] text-foreground/50 uppercase tracking-wider font-semibold mt-1">Active Discussions</p>
+              </div>
+
+              {/* Connection Requests Trigger Button */}
+              <button
+                onClick={() => setRequestsModalOpen(true)}
+                className="px-3 py-1.5 rounded-full bg-[#FF4D8D]/15 hover:bg-[#FF4D8D] text-[#FF4D8D] hover:text-white text-[10px] font-bold border border-[#FF4D8D]/30 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                title="View Requests"
+              >
+                <UserCheck className="w-3.5 h-3.5" /> Requests
+              </button>
             </div>
 
             {loading && (
@@ -143,6 +173,22 @@ function ChatContent() {
       </main>
 
       <Footer />
+
+      {/* Connection Requests Modal */}
+      <ConnectionRequestsModal
+        isOpen={requestsModalOpen}
+        onClose={() => setRequestsModalOpen(false)}
+        onConnectionAccepted={handleConnectionAccepted}
+      />
+
+      {/* Celebration Modal when request accepted */}
+      {celebrationData && (
+        <CelebrationModal
+          matchData={celebrationData}
+          onClose={() => setCelebrationData(null)}
+          onChat={() => setCelebrationData(null)}
+        />
+      )}
     </div>
   );
 }

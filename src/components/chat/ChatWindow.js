@@ -6,9 +6,9 @@ import { useSocket } from "@/context/SocketContext";
 import { 
   Send, Phone, Video, Star, Smile, Image, Mic, MoreVertical, 
   CornerUpLeft, CheckCheck, Crown, ShieldAlert, Sparkles, Brain,
-  PhoneCall, PhoneOff, VideoOff, Volume2, Camera
+  PhoneCall, PhoneOff, VideoOff, Volume2, Camera, Smartphone, MessageSquare
 } from "lucide-react";
-import { fetchMessages, sendMessageAction, markMessagesReadAction, addMessageReactionAction, getConversationSuggestionsAction } from "@/actions/chat";
+import { fetchMessages, sendMessageAction, sendSmsAction, markMessagesReadAction, addMessageReactionAction, getConversationSuggestionsAction } from "@/actions/chat";
 
 export default function ChatWindow({ conversation, onBack }) {
   const { data: session } = useSession();
@@ -21,6 +21,7 @@ export default function ChatWindow({ conversation, onBack }) {
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [partnerTyping, setPartnerTyping] = useState(false);
+  const [isSmsMode, setIsSmsMode] = useState(false);
   
   // AI Suggestions
   const [aiSuggestions, setAiSuggestions] = useState([]);
@@ -95,17 +96,19 @@ export default function ChatWindow({ conversation, onBack }) {
     };
 
     socket.on("new_message", handleNewMessage);
+    socket.on("new_sms", handleNewMessage);
     socket.on("typing_status", handleTypingStatus);
     socket.on("messages_read", handleMessagesRead);
 
     return () => {
       socket.off("new_message", handleNewMessage);
+      socket.off("new_sms", handleNewMessage);
       socket.off("typing_status", handleTypingStatus);
       socket.off("messages_read", handleMessagesRead);
     };
   }, [socket, conversation.id]);
 
-  // 3. Handle sending text
+  // 3. Handle sending text or SMS
   const handleSend = async (e) => {
     if (e) e.preventDefault();
     if (!inputText.trim()) return;
@@ -130,6 +133,7 @@ export default function ChatWindow({ conversation, onBack }) {
       conversationId: conversation.id,
       senderId: session.user.id,
       text: textToSend,
+      isSms: isSmsMode,
       createdAt: new Date(),
       status: "SENT",
       reactions: []
@@ -139,21 +143,37 @@ export default function ChatWindow({ conversation, onBack }) {
     setTimeout(scrollToBottom, 50);
 
     try {
-      const res = await sendMessageAction({
-        conversationId: conversation.id,
-        text: textToSend
-      });
-
-      if (res.success) {
-        // Swap optimistic msg with real one
-        setMessages((prev) => 
-          prev.map((m) => m.id === tempId ? res.message : m)
-        );
-        // Emit to socket
-        socket?.emit("send_message", {
-          ...res.message,
-          receiverId: conversation.recipientId
+      if (isSmsMode) {
+        const res = await sendSmsAction({
+          conversationId: conversation.id,
+          text: textToSend,
+          recipientPhone: conversation.phoneNumber
         });
+
+        if (res.success) {
+          setMessages((prev) => 
+            prev.map((m) => m.id === tempId ? res.message : m)
+          );
+          socket?.emit("send_sms", {
+            ...res.message,
+            receiverId: conversation.recipientId
+          });
+        }
+      } else {
+        const res = await sendMessageAction({
+          conversationId: conversation.id,
+          text: textToSend
+        });
+
+        if (res.success) {
+          setMessages((prev) => 
+            prev.map((m) => m.id === tempId ? res.message : m)
+          );
+          socket?.emit("send_message", {
+            ...res.message,
+            receiverId: conversation.recipientId
+          });
+        }
       }
     } catch (err) {
       console.error("Message send failed:", err);
@@ -245,14 +265,45 @@ export default function ChatWindow({ conversation, onBack }) {
               {conversation.fullName}
               {conversation.fullName.includes("Vanessa") && <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />}
             </h3>
-            <span className="text-[9px] text-foreground/50 font-semibold uppercase">
-              {isPartnerOnline ? "Active Now" : "Offline"}
-            </span>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-[9px] text-foreground/50 font-semibold uppercase">
+                {isPartnerOnline ? "Active Now" : "Offline"}
+              </span>
+              <span className="text-[9px] px-2 py-0.2 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold flex items-center gap-1">
+                <Smartphone className="w-2.5 h-2.5" /> {conversation.phoneNumber || "+1 (555) 234-5678"}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Action icons */}
-        <div className="flex items-center gap-3">
+        {/* Action icons & SMS Mode Toggle */}
+        <div className="flex items-center gap-2">
+          {/* SMS / Chat mode switch */}
+          <div className="flex items-center bg-black/40 p-1 rounded-full border border-white/10 text-[10px] font-bold">
+            <button
+              type="button"
+              onClick={() => setIsSmsMode(false)}
+              className={`px-3 py-1 rounded-full transition-all flex items-center gap-1 cursor-pointer ${
+                !isSmsMode 
+                  ? "bg-gradient-premium text-white shadow-md" 
+                  : "text-foreground/60 hover:text-white"
+              }`}
+            >
+              <MessageSquare className="w-3 h-3" /> Chat
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsSmsMode(true)}
+              className={`px-3 py-1 rounded-full transition-all flex items-center gap-1 cursor-pointer ${
+                isSmsMode 
+                  ? "bg-emerald-600 text-white shadow-md" 
+                  : "text-foreground/60 hover:text-white"
+              }`}
+            >
+              <Smartphone className="w-3 h-3" /> SMS
+            </button>
+          </div>
+
           <button
             onClick={() => initiateCall(conversation.recipientId, conversation.fullName, "voice")}
             className="p-2 rounded-xl hover:bg-white/10 text-foreground/80 hover:text-primary-pink transition-all cursor-pointer"
@@ -277,17 +328,27 @@ export default function ChatWindow({ conversation, onBack }) {
           <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-foreground/40">
             <Heart className="w-10 h-10 text-primary-pink/20 fill-primary-pink/5 mb-2" />
             <p className="text-xs font-semibold">Matched on Soul Bridge</p>
-            <p className="text-[10px] opacity-80 mt-1 max-w-[200px]">Send a greeting message or trigger Gemini AI Suggestions below.</p>
+            <p className="text-[10px] opacity-80 mt-1 max-w-[200px]">Connection active. Send standard messages or toggle SMS mode above.</p>
           </div>
         ) : (
           messages.map((m) => {
             const isMe = m.senderId === session.user.id;
             return (
               <div key={m.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"} max-w-[80%] ${isMe ? "self-end" : "self-start"} group`}>
+                {m.isSms && (
+                  <span className="text-[8px] font-black uppercase text-emerald-400 tracking-wider mb-0.5 flex items-center gap-1 px-1">
+                    <Smartphone className="w-2.5 h-2.5" /> SMS Text Message
+                  </span>
+                )}
+                
                 <div className={`p-3 rounded-2xl text-xs relative ${
-                  isMe 
-                    ? "bg-gradient-premium text-white rounded-tr-none" 
-                    : "bg-white/10 text-foreground border border-white/5 rounded-tl-none"
+                  m.isSms
+                    ? isMe 
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-tr-none border border-emerald-400/30"
+                      : "bg-emerald-950/80 text-emerald-100 border border-emerald-500/30 rounded-tl-none"
+                    : isMe 
+                      ? "bg-gradient-premium text-white rounded-tr-none" 
+                      : "bg-white/10 text-foreground border border-white/5 rounded-tl-none"
                 }`}>
                   <p>{m.text}</p>
 

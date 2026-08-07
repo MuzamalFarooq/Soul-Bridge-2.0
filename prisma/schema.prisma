@@ -71,6 +71,7 @@ model Profile {
   occupation       String?
   lookingFor       String?
   personalityType  String?   // e.g. INTJ, ENFP
+  phoneNumber      String?
   completed        Boolean   @default(false)
   
   premiumStatus    String    @default("FREE") // FREE, GOLD, PLATINUM
@@ -132,6 +133,7 @@ model Message {
   text           String?
   imageUrl       String?
   audioUrl       String?
+  isSms          Boolean      @default(false)
   status         String       @default("SENT") // SENT, DELIVERED, READ
   createdAt      DateTime     @default(now())
   repliedToId    String?      @db.ObjectId
