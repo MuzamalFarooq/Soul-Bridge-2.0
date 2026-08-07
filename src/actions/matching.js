@@ -102,56 +102,66 @@ export async function fetchDiscoverProfiles(filters = {}) {
         });
       }
     } else {
-      // Mock Swiper Pool if database is empty so discovery always works
+      // Mock Swiper Pool of Pakistani users if database is empty
       deck = [
         {
           id: "mock_discover_1",
-          fullName: "Vanessa Thorne",
+          fullName: "Ayesha Khan",
           age: 25,
           gender: "Female",
-          city: "Manhattan",
-          country: "USA",
-          profession: "Architect & Artist",
-          bio: "Designing buildings by day, painting canvases by night. Let's explore museums and share deep thoughts.",
-          hobbies: ["Painting", "Architecture", "Coffee", "Museums"],
+          city: "Lahore",
+          country: "Pakistan",
+          profession: "Fashion Designer & Stylist",
+          bio: "Designing contemporary ethnic wear by day, exploring Lahore's culinary scenes by night. Looking for a respectful partner.",
+          hobbies: ["Fashion Design", "Culinary Arts", "Coffee", "Museums"],
           relationshipGoal: "Long-term",
           compatibility: 96,
           photos: [
-            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=600&fit=crop",
-            "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=600&fit=crop"
+            "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=800&fit=crop"
           ]
         },
         {
           id: "mock_discover_2",
-          fullName: "Austin Blake",
+          fullName: "Hamza Chaudhry",
           age: 28,
           gender: "Male",
-          city: "Austin",
-          country: "USA",
-          profession: "Sound Producer",
-          bio: "Music is my life. Looking for a partner to join live gigs, share vinyl records, and hike on Sundays.",
-          hobbies: ["Music", "Hiking", "Vinyls", "Tacos"],
-          relationshipGoal: "Short-term",
-          compatibility: 89,
+          city: "Lahore",
+          country: "Pakistan",
+          profession: "Tech Entrepreneur & Founder",
+          bio: "Building startups and playing squash on weekends. Big fan of Sufi music, street food in Old Anarkali, and travel.",
+          hobbies: ["Startups", "Squash", "Sufi Music", "Foodie Trips"],
+          relationshipGoal: "Marriage",
+          compatibility: 93,
           photos: [
-            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop",
-            "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=600&fit=crop"
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=600&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=600&h=800&fit=crop"
           ]
         },
         {
           id: "mock_discover_3",
-          fullName: "Elena Rostova",
-          age: 24,
+          fullName: "Fatima Zahra",
+          age: 26,
           gender: "Female",
-          city: "New York",
-          country: "USA",
-          profession: "Editorial Writer",
-          bio: "Book nerd with a traveling soul. Looking for a genuine counterpart to write our own chapter.",
-          hobbies: ["Reading", "Writing", "Travel", "Cats"],
+          city: "Islamabad",
+          country: "Pakistan",
+          profession: "Software Engineer",
+          bio: "Building cloud architecture and hiking the Margalla Hills on weekends. Chai lover and book nerd.",
+          hobbies: ["Cloud Computing", "Hiking", "Chai", "Reading"],
           relationshipGoal: "Marriage",
-          compatibility: 92,
+          compatibility: 91,
           photos: [
-            "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=600&fit=crop"
+            "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=600&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=600&h=800&fit=crop",
+            "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=600&h=800&fit=crop"
           ]
         }
       ];
