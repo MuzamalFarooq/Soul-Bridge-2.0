@@ -68,7 +68,7 @@ function ChatContent() {
       <Navbar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8 relative z-10 flex flex-col">
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-8 min-h-[580px] rounded-3xl overflow-hidden glass-card border border-white/5 shadow-2xl p-2 bg-black/5">
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-8 min-h-145 rounded-3xl overflow-hidden glass-card border border-white/5 shadow-2xl p-2 bg-black/5">
           
           {/* LEFT THREADS PANE */}
           <div className={`flex flex-col border-r border-white/5 p-4 ${selectedConvo ? "hidden md:flex" : "flex"}`}>
