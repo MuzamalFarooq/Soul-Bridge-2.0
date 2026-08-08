@@ -86,7 +86,7 @@ export default function Footer() {
             <input
               type="email"
               placeholder="Enter your email"
-              className="flex-1 px-4 py-2.5 rounded-xl glass-input-lux text-xs text-white placeholder-white/40"
+              className="flex-1 px-4 py-2.5 rounded-xl glass-input-lux text-xs  placeholder-white/40"
               required
             />
             <button
