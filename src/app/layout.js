@@ -7,7 +7,7 @@ import BottomNav from "@/components/ui/BottomNav";
 
 export const metadata = {
   title: "Soul Bridge | Premium World-Class AI Matchmaking Platform",
-  description: "Experience the ultimate luxury dating application. Soul Bridge combines Apple-level polish, 3D interactive graphics, and Gemini AI compatibility analysis.",
+  description: "Soul Bridge is an AI-powered dating and matchmaking platform that helps you discover meaningful connections with intelligent compatibility matching and real-time chat.",
   keywords: ["dating app", "luxury dating", "AI matching", "Soul Bridge", "find love", "chat real-time"],
   icons: {
     icon: [
@@ -19,7 +19,7 @@ export const metadata = {
   },
   openGraph: {
     title: "Soul Bridge | Premium World-Class Dating",
-    description: "Discover deep, meaningful connections with Gemini AI compatibility scoring, interactive 3D matching, and real-time socket chat.",
+    description: "Soul Bridge is an AI-powered dating and matchmaking platform that helps you discover meaningful connections with intelligent compatibility matching and real-time chat.",
     url: "https://soulbridge.muzamal.site",
     siteName: "Soul Bridge",
     type: "website",
@@ -27,7 +27,7 @@ export const metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Soul Bridge | Premium World-Class Dating",
-    description: "Discover deep, meaningful connections with Gemini AI compatibility scoring.",
+    description: "Soul Bridge is an AI-powered dating and matchmaking platform that helps you discover meaningful connections with intelligent compatibility matching and real-time chat.",
   }
 };
 
