@@ -15,7 +15,7 @@ export default function Footer() {
             <div className="relative flex items-center justify-center">
               <Heart className="w-7 h-7 text-[#FF4D8D] fill-[#FF4D8D] group-hover:scale-110 transition-transform filter drop-shadow-[0_0_10px_rgba(255,77,141,0.6)]" />
             </div>
-            <span className="text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#FF4D8D] via-[#FFB6C1] to-[#9C6BFF]">
+            <span className="text-2xl font-black tracking-tight text-transparent bg-clip-text bg-linear-to-r from-[#FF4D8D] via-[#FFB6C1] to-[#9C6BFF]">
               Soul Bridge
             </span>
           </Link>
