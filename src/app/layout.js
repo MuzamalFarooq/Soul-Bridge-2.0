@@ -34,7 +34,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="h-full antialiased dark" style={{ colorScheme: "dark" }}>
-      <body className="min-h-full flex flex-col font-sans select-none overflow-x-hidden bg-[#09090B] text-foreground">
+      <body className="min-h-full flex flex-col font-sans select-none overflow-x-hidden bg-dark-bg text-foreground">
         {/* Animated Aurora Backdrop Mesh */}
         <div className="aurora-backdrop">
           <div className="aurora-blob aurora-blob-1" />
