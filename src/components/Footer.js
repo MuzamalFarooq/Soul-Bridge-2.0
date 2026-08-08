@@ -6,7 +6,7 @@ import { Heart, Mail, Sparkles, Shield, ArrowRight } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="relative z-10 glass-panel-lux border-t border-white/10 mt-auto bg-[#09090B]/90 backdrop-blur-2xl">
+    <footer className="relative z-10 glass-panel-lux border-t border-white/10 mt-auto bg-dark/90 backdrop-blur-2xl">
       <div className="max-w-7xl mx-auto px-6 md:px-8 py-16 grid grid-cols-1 md:grid-cols-4 gap-10">
         
         {/* Brand Column */}
