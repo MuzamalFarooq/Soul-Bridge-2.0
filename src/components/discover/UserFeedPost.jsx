@@ -259,7 +259,7 @@ export default function UserFeedPost({ candidate, onOpenMessage }) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="border-t border-white/10 bg-white/[0.02] p-4 sm:p-5 overflow-hidden"
+            className="border-t border-white/10 bg-white/2 p-4 sm:p-5 overflow-hidden"
           >
             <h4 className="text-xs font-bold text-foreground/70 uppercase tracking-wider mb-3 flex items-center gap-1.5">
               <MessageCircle className="w-3.5 h-3.5 text-primary-pink" /> Comments ({commentsList.length})
