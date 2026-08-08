@@ -184,7 +184,7 @@ export default function UserFeedPost({ candidate, onOpenMessage }) {
       </div>
 
       {/* 3. ACTION BUTTONS BAR (LIKE, COMMENT, MESSAGE) BELOW IMAGE */}
-      <div className="p-4 sm:p-5 flex items-center justify-between border-b border-white/5 bg-white/[0.02]">
+      <div className="p-4 sm:p-5 flex items-center justify-between border-b border-white/5 bg-white/2a">
         <div className="flex items-center gap-5">
           {/* LIKE BUTTON */}
           <button
