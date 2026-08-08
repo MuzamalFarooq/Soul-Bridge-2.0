@@ -91,7 +91,7 @@ export default function Footer() {
             />
             <button
               type="submit"
-              className="p-2.5 rounded-xl bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] text-white hover:opacity-90 transition-opacity cursor-pointer shadow-md"
+              className="p-2.5 rounded-xl bg-linear-to-r from-[#FF4D8D] to-[#9C6BFF] text-white hover:opacity-90 transition-opacity cursor-pointer shadow-md"
             >
               <ArrowRight className="w-4 h-4" />
             </button>
