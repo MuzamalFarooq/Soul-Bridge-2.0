@@ -47,7 +47,7 @@ function VerifyEmailContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 relative z-10 bg-[#09090B]">
-      <div className="absolute w-[500px] h-[500px] bg-radial from-[#FF4D8D]/20 via-[#9C6BFF]/10 to-transparent blur-[120px] pointer-events-none" />
+      <div className="absolute w-125 h-125 bg-radial from-[#FF4D8D]/20 via-[#9C6BFF]/10 to-transparent blur-[120px] pointer-events-none" />
 
       <motion.div 
         initial={{ opacity: 0, y: 20, scale: 0.96 }}
