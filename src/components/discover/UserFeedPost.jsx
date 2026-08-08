@@ -125,7 +125,7 @@ export default function UserFeedPost({ candidate, onOpenMessage }) {
       </div>
 
       {/* 2. MEDIA / IMAGE SECTION */}
-      <div className="relative w-full h-100 sm:h-[480px] bg-slate-950 overflow-hidden group select-none">
+      <div className="relative w-full h-100 sm:h-90 bg-slate-950 overflow-hidden group select-none">
         <img
           src={candidate.photos[photoIndex] || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600"}
           alt={`${candidate.fullName}'s photo`}
