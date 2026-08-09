@@ -37,6 +37,7 @@ model User {
   favoritedBy     Favorite[]     @relation("FavoritedUsers")
   settings        Settings?
   activityLogs    ActivityLog[]
+  comments        Comment[]      @relation("UserComments")
 }
 
 model Profile {
@@ -234,3 +235,15 @@ model Settings {
   invisibleMode      Boolean @default(false)
   privatePhotos      Boolean @default(false)
 }
+
+model Comment {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  targetId    String   // Candidate / post user ID
+  authorId    String?  @db.ObjectId
+  author      User?    @relation("UserComments", fields: [authorId], references: [id], onDelete: Cascade)
+  authorName  String
+  authorPhoto String?
+  text        String
+  createdAt   DateTime @default(now())
+}
+

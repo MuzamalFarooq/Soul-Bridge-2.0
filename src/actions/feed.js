@@ -11,44 +11,97 @@ async function getUserId() {
   return session?.user?.id;
 }
 
-// In-memory persistent mock storage for session comments & likes if DB tables are sparse
+// In-memory persistent mock storage for session likes
 const memoryFeedLikes = new Set();
-const memoryFeedComments = {
+
+// Initial seed comments for mock posts if database has no comments yet
+const initialSeedComments = {
   mock_discover_1: [
     {
-      id: "c1",
-      userName: "Hamza Chaudhry",
-      userPhoto: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
-      text: "Stunning fashion work! Loved the ethnic collection 🎨",
-      createdAt: "2 hours ago"
+      authorName: "Hamza Chaudhry",
+      authorPhoto: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
+      text: "Stunning fashion work! Loved the ethnic collection 🎨"
     },
     {
-      id: "c2",
-      userName: "Fatima Zahra",
-      userPhoto: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=100",
-      text: "Lahore street food visits are the best! Let's grab chai sometime.",
-      createdAt: "1 hour ago"
+      authorName: "Fatima Zahra",
+      authorPhoto: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=100",
+      text: "Lahore street food visits are the best! Let's grab chai sometime."
     }
   ],
   mock_discover_2: [
     {
-      id: "c3",
-      userName: "Ayesha Khan",
-      userPhoto: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100",
-      text: "Old Anarkali street food is unmatched! Best of luck with your startup.",
-      createdAt: "3 hours ago"
+      authorName: "Ayesha Khan",
+      authorPhoto: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100",
+      text: "Old Anarkali street food is unmatched! Best of luck with your startup."
     }
   ],
   mock_discover_3: [
     {
-      id: "c4",
-      userName: "Zainab Malik",
-      userPhoto: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=100",
-      text: "Margalla Hills hiking trail 3 is so peaceful! Love your vibe.",
-      createdAt: "4 hours ago"
+      authorName: "Zainab Malik",
+      authorPhoto: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=100",
+      text: "Margalla Hills hiking trail 3 is so peaceful! Love your vibe."
     }
   ]
 };
+
+// Format relative time helper
+function formatTimeAgo(date) {
+  if (!date) return "Just now";
+  const diffInSeconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
+  if (diffInSeconds < 60) return "Just now";
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays}d ago`;
+}
+
+/**
+ * Retrieve database comments for a target user / post ID.
+ * Seeds initial mock comments if DB is empty for a mock post.
+ */
+export async function getPostCommentsFromDb(targetId) {
+  try {
+    let dbComments = await prisma.comment.findMany({
+      where: { targetId: String(targetId) },
+      orderBy: { createdAt: "desc" }
+    });
+
+    // Seed mock comments into database if empty for mock posts
+    if (dbComments.length === 0 && initialSeedComments[targetId]) {
+      const seedData = initialSeedComments[targetId];
+      for (const item of seedData) {
+        await prisma.comment.create({
+          data: {
+            targetId: String(targetId),
+            authorName: item.authorName,
+            authorPhoto: item.authorPhoto,
+            text: item.text
+          }
+        }).catch(() => {});
+      }
+
+      // Re-fetch after seeding
+      dbComments = await prisma.comment.findMany({
+        where: { targetId: String(targetId) },
+        orderBy: { createdAt: "desc" }
+      });
+    }
+
+    return dbComments.map((c) => ({
+      id: c.id,
+      userName: c.authorName || "Soul Bridge Member",
+      userPhoto: c.authorPhoto || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100",
+      text: c.text,
+      createdAt: formatTimeAgo(c.createdAt),
+      authorId: c.authorId
+    }));
+  } catch (error) {
+    console.error("Error fetching post comments from DB:", error);
+    return [];
+  }
+}
 
 /**
  * Fetch discovery feed items for vertical feed
@@ -57,17 +110,13 @@ export async function fetchDiscoverFeed(filters = {}) {
   try {
     const userId = await getUserId();
     
-    // Fetch profiles from database if available
     let candidates = [];
     let myProfile = null;
 
     if (userId) {
       myProfile = await prisma.profile.findUnique({ where: { userId } }).catch(() => null);
 
-      const dbFilter = { completed: true };
-      if (userId) {
-        dbFilter.userId = { not: userId };
-      }
+      const dbFilter = { completed: true, userId: { not: userId } };
 
       if (filters.gender && filters.gender !== "Everyone") {
         dbFilter.gender = filters.gender;
@@ -94,7 +143,7 @@ export async function fetchDiscoverFeed(filters = {}) {
 
         const candId = cand.userId;
         const isLiked = memoryFeedLikes.has(`${userId}_${candId}`);
-        const comments = memoryFeedComments[candId] || [];
+        const comments = await getPostCommentsFromDb(candId);
 
         candidates.push({
           id: candId,
@@ -118,9 +167,9 @@ export async function fetchDiscoverFeed(filters = {}) {
       }
     }
 
-    // Fallback Mock Pakistani feed pool if candidates are low
+    // Fallback Mock Pakistani feed pool if candidates are low or unauthenticated
     if (candidates.length === 0) {
-      candidates = [
+      const mockPool = [
         {
           id: "mock_discover_1",
           userId: "mock_discover_1",
@@ -139,9 +188,7 @@ export async function fetchDiscoverFeed(filters = {}) {
             "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=750&h=950&fit=crop",
             "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=750&h=950&fit=crop"
           ],
-          likesCount: 148 + (memoryFeedLikes.has(`${userId || 'anon'}_mock_discover_1`) ? 1 : 0),
-          isLiked: memoryFeedLikes.has(`${userId || 'anon'}_mock_discover_1`),
-          comments: memoryFeedComments["mock_discover_1"] || [],
+          likesCount: 148,
           postedAt: "2 hours ago"
         },
         {
@@ -162,9 +209,7 @@ export async function fetchDiscoverFeed(filters = {}) {
             "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=750&h=950&fit=crop",
             "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=750&h=950&fit=crop"
           ],
-          likesCount: 192 + (memoryFeedLikes.has(`${userId || 'anon'}_mock_discover_2`) ? 1 : 0),
-          isLiked: memoryFeedLikes.has(`${userId || 'anon'}_mock_discover_2`),
-          comments: memoryFeedComments["mock_discover_2"] || [],
+          likesCount: 192,
           postedAt: "4 hours ago"
         },
         {
@@ -185,9 +230,7 @@ export async function fetchDiscoverFeed(filters = {}) {
             "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=750&h=950&fit=crop",
             "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=750&h=950&fit=crop"
           ],
-          likesCount: 167 + (memoryFeedLikes.has(`${userId || 'anon'}_mock_discover_3`) ? 1 : 0),
-          isLiked: memoryFeedLikes.has(`${userId || 'anon'}_mock_discover_3`),
-          comments: memoryFeedComments["mock_discover_3"] || [],
+          likesCount: 167,
           postedAt: "6 hours ago"
         },
         {
@@ -207,12 +250,21 @@ export async function fetchDiscoverFeed(filters = {}) {
             "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=750&h=950&fit=crop",
             "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=750&h=950&fit=crop"
           ],
-          likesCount: 135 + (memoryFeedLikes.has(`${userId || 'anon'}_mock_discover_4`) ? 1 : 0),
-          isLiked: memoryFeedLikes.has(`${userId || 'anon'}_mock_discover_4`),
-          comments: memoryFeedComments["mock_discover_4"] || [],
+          likesCount: 135,
           postedAt: "8 hours ago"
         }
       ];
+
+      for (const item of mockPool) {
+        const isLiked = memoryFeedLikes.has(`${userId || 'anon'}_${item.id}`);
+        const comments = await getPostCommentsFromDb(item.id);
+        candidates.push({
+          ...item,
+          likesCount: item.likesCount + (isLiked ? 1 : 0),
+          isLiked: isLiked,
+          comments: comments
+        });
+      }
     }
 
     return { success: true, feed: candidates };
@@ -258,7 +310,7 @@ export async function togglePostLikeAction({ targetUserId }) {
 }
 
 /**
- * Add a comment to a user feed post
+ * Add a comment to a user feed post & persist directly in Prisma database
  */
 export async function addPostCommentAction({ targetUserId, commentText }) {
   try {
@@ -266,10 +318,12 @@ export async function addPostCommentAction({ targetUserId, commentText }) {
     const cleanText = commentText?.trim();
     if (!cleanText) return { success: false, error: "Comment text cannot be empty." };
 
-    let authorName = "You";
+    let authorName = "Soul Bridge Member";
     let authorPhoto = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100";
+    let authorId = null;
 
     if (userId) {
+      authorId = userId;
       const myProf = await prisma.profile.findUnique({
         where: { userId },
         include: { user: { include: { photos: true } } }
@@ -277,27 +331,36 @@ export async function addPostCommentAction({ targetUserId, commentText }) {
 
       if (myProf) {
         authorName = myProf.fullName || "Soul Bridge Member";
-        authorPhoto = myProf.user?.photos[0]?.url || authorPhoto;
+        if (myProf.user?.photos && myProf.user.photos.length > 0) {
+          authorPhoto = myProf.user.photos[0].url;
+        }
       }
     }
 
-    const newComment = {
-      id: `comment_${Date.now()}`,
-      userName: authorName,
-      userPhoto: authorPhoto,
-      text: cleanText,
-      createdAt: "Just now"
+    // Save comment directly into database Comment model
+    const newCommentDb = await prisma.comment.create({
+      data: {
+        targetId: String(targetUserId),
+        authorId: authorId,
+        authorName: authorName,
+        authorPhoto: authorPhoto,
+        text: cleanText
+      }
+    });
+
+    const newCommentFormatted = {
+      id: newCommentDb.id,
+      userName: newCommentDb.authorName,
+      userPhoto: newCommentDb.authorPhoto,
+      text: newCommentDb.text,
+      createdAt: "Just now",
+      authorId: newCommentDb.authorId
     };
 
-    if (!memoryFeedComments[targetUserId]) {
-      memoryFeedComments[targetUserId] = [];
-    }
-    memoryFeedComments[targetUserId].unshift(newComment);
-
-    return { success: true, comment: newComment };
+    return { success: true, comment: newCommentFormatted };
   } catch (error) {
     console.error("Add post comment error:", error);
-    return { success: false, error: "Failed to post comment" };
+    return { success: false, error: "Failed to post comment to database" };
   }
 }
 
@@ -308,7 +371,6 @@ export async function getOrCreateConversationForUser({ targetUserId }) {
   try {
     const userId = await getUserId();
     if (!userId) {
-      // Mock conversation fallback for sandbox guest mode
       return {
         success: true,
         conversationId: "mock_convo_1",
