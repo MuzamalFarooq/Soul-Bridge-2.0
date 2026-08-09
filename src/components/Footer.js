@@ -44,13 +44,13 @@ export default function Footer() {
           <Link href="/discover" className="text-xs text-white/70 hover:text-white transition-colors">
             Discover Matches
           </Link>
-          <Link href="#pricing" className="text-xs text-white/70 hover:text-white transition-colors">
+          <Link href="/#pricing" className="text-xs text-white/70 hover:text-white transition-colors">
             Premium Plans
           </Link>
-          <Link href="#how-it-works" className="text-xs text-white/70 hover:text-white transition-colors">
+          <Link href="/stories" className="text-xs text-white/70 hover:text-white transition-colors">
             Success Stories
           </Link>
-          <Link href="#" className="text-xs text-white/70 hover:text-white transition-colors">
+          <Link href="/safety" className="text-xs text-white/70 hover:text-white transition-colors">
             Safety Center
           </Link>
         </div>
@@ -60,16 +60,16 @@ export default function Footer() {
           <h4 className="text-xs font-bold tracking-widest text-[#9C6BFF] uppercase flex items-center gap-1">
             <Shield className="w-3.5 h-3.5" /> Company
           </h4>
-          <Link href="#" className="text-xs text-white/70 hover:text-white transition-colors">
+          <Link href="/about" className="text-xs text-white/70 hover:text-white transition-colors">
             About Us
           </Link>
-          <Link href="#" className="text-xs text-white/70 hover:text-white transition-colors">
+          <Link href="/privacy" className="text-xs text-white/70 hover:text-white transition-colors">
             Privacy Policy
           </Link>
-          <Link href="#" className="text-xs text-white/70 hover:text-white transition-colors">
+          <Link href="/privacy#sec-4" className="text-xs text-white/70 hover:text-white transition-colors">
             Terms of Service
           </Link>
-          <Link href="#" className="text-xs text-white/70 hover:text-white transition-colors">
+          <Link href="/safety" className="text-xs text-white/70 hover:text-white transition-colors">
             Security & Encryption
           </Link>
         </div>
