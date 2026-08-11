@@ -16,6 +16,21 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## 🔐 Admin Portal Credentials
+
+To access the Admin Portal (`/admin`):
+- **Email**: `admin@soulbridge.pk`
+- **Username**: `admin`
+- **Password**: `Admin123!`
+- **Role**: `ADMIN`
+
+Alternatively, on the `/login` page, click **"Fill Admin Credentials"** for instant sign in.
+
+To re-seed or reset database accounts including Admin:
+```bash
+node seed.js
+```
+
 You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

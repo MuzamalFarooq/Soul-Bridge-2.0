@@ -407,7 +407,62 @@ async function main() {
     }
   }
 
-  console.log("🎉 Successfully completed Pakistani profiles seeding!");
+  // --- SEED ADMIN ACCOUNT ---
+  const adminEmail = "admin@soulbridge.pk";
+  const adminPassword = "Admin123!";
+  const adminHashedPassword = await bcrypt.hash(adminPassword, 10);
+
+  let adminUser = await prisma.user.findUnique({
+    where: { email: adminEmail }
+  });
+
+  if (!adminUser) {
+    adminUser = await prisma.user.create({
+      data: {
+        email: adminEmail,
+        passwordHash: adminHashedPassword,
+        role: "ADMIN",
+        status: "ACTIVE",
+        profile: {
+          create: {
+            fullName: "Soul Bridge Administrator",
+            username: "admin",
+            gender: "Male",
+            interestedIn: "Everyone",
+            age: 30,
+            city: "Lahore",
+            country: "Pakistan",
+            profession: "System Administrator",
+            education: "BS Computer Science",
+            relationshipGoal: "Marriage",
+            bio: "Official Administrator of Soul Bridge Platform.",
+            hobbies: ["Administration", "Security", "Analytics"],
+            phoneNumber: "+92 300 0000000",
+            completed: true,
+            premiumStatus: "PLATINUM"
+          }
+        },
+        photos: {
+          create: [
+            {
+              url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&h=800&fit=crop",
+              publicId: "pk_seed_admin_1",
+              isProfile: true
+            }
+          ]
+        }
+      }
+    });
+    console.log("👑 Seeded Admin Account: admin@soulbridge.pk / Admin123!");
+  } else {
+    await prisma.user.update({
+      where: { id: adminUser.id },
+      data: { role: "ADMIN", passwordHash: adminHashedPassword }
+    });
+    console.log("👑 Admin Account synchronized: admin@soulbridge.pk / Admin123!");
+  }
+
+  console.log("🎉 Successfully completed Pakistani profiles & Admin seeding!");
 }
 
 main()

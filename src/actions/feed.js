@@ -373,13 +373,16 @@ export async function getOrCreateConversationForUser({ targetUserId }) {
     if (!userId) {
       return {
         success: true,
-        conversationId: "mock_convo_1",
+        conversationId: targetUserId.startsWith("mock_") 
+          ? `mock_convo_${targetUserId.replace("mock_discover_", "")}`
+          : "mock_convo_1",
         targetUserId
       };
     }
 
     if (targetUserId.startsWith("mock_")) {
-      const mockConvoId = targetUserId === "mock_discover_1" ? "mock_convo_1" : "mock_convo_2";
+      const mockNum = targetUserId.replace("mock_discover_", "");
+      const mockConvoId = `mock_convo_${mockNum || "1"}`;
       return {
         success: true,
         conversationId: mockConvoId,
@@ -389,7 +392,12 @@ export async function getOrCreateConversationForUser({ targetUserId }) {
 
     const sortedIds = [userId, targetUserId].sort();
     let convo = await prisma.conversation.findFirst({
-      where: { user1Id: sortedIds[0], user2Id: sortedIds[1] }
+      where: {
+        OR: [
+          { user1Id: sortedIds[0], user2Id: sortedIds[1] },
+          { user1Id: sortedIds[1], user2Id: sortedIds[0] }
+        ]
+      }
     });
 
     if (!convo) {

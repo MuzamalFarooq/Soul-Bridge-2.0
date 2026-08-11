@@ -51,7 +51,7 @@ export default function ChatWindow({ conversation, onBack }) {
     
     // Mark as read
     markMessagesReadAction(conversation.id);
-    if (socket) {
+    if (socket && session?.user?.id) {
       socket.emit("mark_read", {
         conversationId: conversation.id,
         senderId: session.user.id,
@@ -60,24 +60,31 @@ export default function ChatWindow({ conversation, onBack }) {
     }
 
     setAiSuggestions([]);
-  }, [conversation.id, socket]);
+  }, [conversation.id, socket, session?.user?.id]);
 
   // 2. Setup socket listeners for this specific chat
   useEffect(() => {
     if (!socket) return;
+    const currentUserId = session?.user?.id;
 
     const handleNewMessage = (msg) => {
       if (msg.conversationId === conversation.id) {
-        setMessages((prev) => [...prev, msg]);
+        setMessages((prev) => {
+          // Avoid duplicate messages if optimistic msg with same text/ID already exists
+          if (prev.some((m) => m.id === msg.id)) return prev;
+          return [...prev, msg];
+        });
         scrollToBottom();
         
-        // Auto mark read
+        // Auto mark read if received message
         markMessagesReadAction(conversation.id);
-        socket.emit("mark_read", {
-          conversationId: conversation.id,
-          senderId: session.user.id,
-          receiverId: conversation.recipientId
-        });
+        if (currentUserId) {
+          socket.emit("mark_read", {
+            conversationId: conversation.id,
+            senderId: currentUserId,
+            receiverId: conversation.recipientId
+          });
+        }
       }
     };
 
@@ -90,7 +97,7 @@ export default function ChatWindow({ conversation, onBack }) {
     const handleMessagesRead = ({ conversationId, readerId }) => {
       if (conversationId === conversation.id && readerId === conversation.recipientId) {
         setMessages((prev) => 
-          prev.map((m) => m.senderId === session.user.id ? { ...m, status: "READ" } : m)
+          prev.map((m) => (currentUserId && m.senderId === currentUserId) ? { ...m, status: "READ" } : m)
         );
       }
     };
@@ -106,7 +113,7 @@ export default function ChatWindow({ conversation, onBack }) {
       socket.off("typing_status", handleTypingStatus);
       socket.off("messages_read", handleMessagesRead);
     };
-  }, [socket, conversation.id]);
+  }, [socket, conversation.id, session?.user?.id]);
 
   // 3. Handle sending text or SMS
   const handleSend = async (e) => {
@@ -115,13 +122,14 @@ export default function ChatWindow({ conversation, onBack }) {
 
     const textToSend = inputText.trim();
     setInputText("");
+    const currentUserId = session?.user?.id || "my_user_id";
     
     // Stop typing indicator
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     setIsTyping(false);
     socket?.emit("typing", {
       conversationId: conversation.id,
-      senderId: session.user.id,
+      senderId: currentUserId,
       receiverId: conversation.recipientId,
       isTyping: false
     });
@@ -131,7 +139,7 @@ export default function ChatWindow({ conversation, onBack }) {
     const optimisticMsg = {
       id: tempId,
       conversationId: conversation.id,
-      senderId: session.user.id,
+      senderId: currentUserId,
       text: textToSend,
       isSms: isSmsMode,
       createdAt: new Date(),
@@ -183,14 +191,14 @@ export default function ChatWindow({ conversation, onBack }) {
   // 4. Handle typing triggers
   const handleInputChange = (e) => {
     setInputText(e.target.value);
-    
-    if (!socket) return;
+    const currentUserId = session?.user?.id;
+    if (!socket || !currentUserId) return;
 
     if (!isTyping) {
       setIsTyping(true);
       socket.emit("typing", {
         conversationId: conversation.id,
-        senderId: session.user.id,
+        senderId: currentUserId,
         receiverId: conversation.recipientId,
         isTyping: true
       });
@@ -202,7 +210,7 @@ export default function ChatWindow({ conversation, onBack }) {
       setIsTyping(false);
       socket.emit("typing", {
         conversationId: conversation.id,
-        senderId: session.user.id,
+        senderId: currentUserId,
         receiverId: conversation.recipientId,
         isTyping: false
       });

@@ -60,8 +60,14 @@ export function SocketProvider({ children }) {
 
     newSocket.on("connect", () => {
       console.log("WebSocket connected to Soul Bridge Server:", newSocket.id);
-      newSocket.emit("register", session.user.id);
+      if (session?.user?.id) {
+        newSocket.emit("register", session.user.id);
+      }
     });
+
+    if (newSocket.connected && session?.user?.id) {
+      newSocket.emit("register", session.user.id);
+    }
 
     newSocket.on("online_users_list", (users) => {
       setOnlineUsers(users);
@@ -79,6 +85,17 @@ export function SocketProvider({ children }) {
 
     newSocket.on("new_notification", (notif) => {
       addNotification(notif);
+    });
+
+    newSocket.on("new_message", (msg) => {
+      // Global notification if user receives a message
+      if (msg && msg.senderId !== session?.user?.id) {
+        addNotification({
+          type: "MESSAGE",
+          content: `New message: "${msg.text || 'Sent an attachment'}"`,
+          link: `/chat?convo=${msg.conversationId}`
+        });
+      }
     });
 
     // WebRTC Signaling listeners
@@ -113,6 +130,7 @@ export function SocketProvider({ children }) {
     setSocket(newSocket);
 
     return () => {
+      newSocket.off("new_message");
       newSocket.disconnect();
     };
   }, [session?.user?.id]);

@@ -10,9 +10,12 @@ import ConnectionRequestsModal from "@/components/chat/ConnectionRequestsModal";
 import CelebrationModal from "@/components/chat/CelebrationModal";
 import { fetchConversations } from "@/actions/chat";
 
+import { useSocket } from "@/context/SocketContext";
+
 function ChatContent() {
   const searchParams = useSearchParams();
   const initialConvoId = searchParams.get("convo");
+  const { socket } = useSocket();
 
   const [conversations, setConversations] = useState([]);
   const [selectedConvo, setSelectedConvo] = useState(null);
@@ -49,6 +52,49 @@ function ChatContent() {
   useEffect(() => {
     loadChats();
   }, [initialConvoId]);
+
+  // Live Socket listener to update thread list
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleIncoming = (msg) => {
+      if (!msg || !msg.conversationId) return;
+
+      setConversations((prev) => {
+        const index = prev.findIndex((c) => c.id === msg.conversationId);
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const textStr = msg.isSms ? `[SMS] ${msg.text}` : (msg.text || "Sent an attachment");
+
+        if (index !== -1) {
+          const updatedConvo = {
+            ...prev[index],
+            lastMessageText: textStr,
+            lastMessageAt: timeStr
+          };
+          const rest = prev.filter((_, i) => i !== index);
+          return [updatedConvo, ...rest];
+        } else {
+          // Re-fetch conversations if a thread from a new match arrived
+          loadChats();
+          return prev;
+        }
+      });
+    };
+
+    const handleConnAccepted = () => {
+      loadChats();
+    };
+
+    socket.on("new_message", handleIncoming);
+    socket.on("new_sms", handleIncoming);
+    socket.on("connection_accepted", handleConnAccepted);
+
+    return () => {
+      socket.off("new_message", handleIncoming);
+      socket.off("new_sms", handleIncoming);
+      socket.off("connection_accepted", handleConnAccepted);
+    };
+  }, [socket]);
 
   const handleConnectionAccepted = async (matchData, convoId) => {
     setRequestsModalOpen(false);

@@ -11,6 +11,33 @@ async function getUserId() {
   return session?.user?.id;
 }
 
+// In-memory store for mock conversation messages & rooms during session
+const mockMessagesStore = {
+  mock_convo_1: [
+    { id: "m1", conversationId: "mock_convo_1", senderId: "mock_discover_1", text: "Hey there! I saw you matched with me. I love your profile bio!", createdAt: new Date(Date.now() - 3600000), status: "READ" },
+    { id: "m2", conversationId: "mock_convo_1", senderId: "user_me", text: "Thanks Vanessa! I really liked your art previews. Do you paint often?", createdAt: new Date(Date.now() - 1800000), status: "READ" },
+    { id: "m3", conversationId: "mock_convo_1", senderId: "mock_discover_1", text: "Hey! I'd love to chat about painting sometime.", createdAt: new Date(Date.now() - 600000), status: "SENT" }
+  ],
+  mock_convo_2: [
+    { id: "m4", conversationId: "mock_convo_2", senderId: "mock_discover_2", text: "Hi! Loved your music interests in your onboarding profile.", createdAt: new Date(Date.now() - 7200000), status: "READ" },
+    { id: "m5", conversationId: "mock_convo_2", senderId: "user_me", text: "Hey Austin! Thanks, yes, I'm super into indie records.", createdAt: new Date(Date.now() - 3600000), status: "READ" },
+    { id: "m6", conversationId: "mock_convo_2", senderId: "mock_discover_2", text: "Did you listen to that new record yet?", createdAt: new Date(Date.now() - 1000000), status: "SENT" }
+  ],
+  mock_convo_3: [
+    { id: "m7", conversationId: "mock_convo_3", senderId: "mock_discover_3", text: "Hi! Margalla Hills hiking Trail 3 is so serene! Let's connect.", createdAt: new Date(Date.now() - 1200000), status: "SENT" }
+  ],
+  mock_convo_4: [
+    { id: "m8", conversationId: "mock_convo_4", senderId: "mock_discover_4", text: "Sunset breezes at Clifton beach are amazing. Hello!", createdAt: new Date(Date.now() - 1500000), status: "SENT" }
+  ]
+};
+
+const mockRoomsMeta = {
+  mock_convo_1: { recipientId: "mock_discover_1", fullName: "Ayesha Khan", phoneNumber: "+92 300 1234567", photo: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop", isOnline: true },
+  mock_convo_2: { recipientId: "mock_discover_2", fullName: "Hamza Chaudhry", phoneNumber: "+92 301 2345678", photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop", isOnline: false },
+  mock_convo_3: { recipientId: "mock_discover_3", fullName: "Fatima Zahra", phoneNumber: "+92 302 3456789", photo: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=80&h=80&fit=crop", isOnline: true },
+  mock_convo_4: { recipientId: "mock_discover_4", fullName: "Zainab Malik", phoneNumber: "+92 303 4567890", photo: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=80&h=80&fit=crop", isOnline: true }
+};
+
 /**
  * Fetch all conversations for active user
  */
@@ -44,7 +71,7 @@ export async function fetchConversations() {
         lastMessageAt: new Date(c.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         recipientId: matchUserId,
         fullName: otherProfile?.fullName || "Soul Bridge Match",
-        phoneNumber: otherProfile?.phoneNumber || "+1 (555) 234-5678",
+        phoneNumber: otherProfile?.phoneNumber || "+92 (300) 000-0000",
         photo: otherProfile?.user?.photos[0]?.url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80",
         isOnline: otherProfile?.user?.isOnline || false
       });
@@ -52,31 +79,23 @@ export async function fetchConversations() {
 
     // Return mock rooms if empty for easy testing
     if (detailedConv.length === 0) {
-      return {
-        success: true,
-        conversations: [
-          {
-            id: "mock_convo_1",
-            lastMessageText: "Hey! I'd love to chat about painting sometime.",
-            lastMessageAt: "10:34 AM",
-            recipientId: "mock_discover_1",
-            fullName: "Vanessa Thorne",
-            phoneNumber: "+1 (555) 389-2041",
-            photo: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop",
-            isOnline: true
-          },
-          {
-            id: "mock_convo_2",
-            lastMessageText: "Did you listen to that new record yet?",
-            lastMessageAt: "Yesterday",
-            recipientId: "mock_discover_2",
-            fullName: "Austin Blake",
-            phoneNumber: "+1 (555) 912-4402",
-            photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop",
-            isOnline: false
-          }
-        ]
-      };
+      const mockList = Object.keys(mockRoomsMeta).map((convoId) => {
+        const meta = mockRoomsMeta[convoId];
+        const msgs = mockMessagesStore[convoId] || [];
+        const lastMsg = msgs[msgs.length - 1];
+        return {
+          id: convoId,
+          lastMessageText: lastMsg ? lastMsg.text : "Start your conversation.",
+          lastMessageAt: lastMsg ? new Date(lastMsg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now",
+          recipientId: meta.recipientId,
+          fullName: meta.fullName,
+          phoneNumber: meta.phoneNumber,
+          photo: meta.photo,
+          isOnline: meta.isOnline
+        };
+      });
+
+      return { success: true, conversations: mockList };
     }
 
     return { success: true, conversations: detailedConv };
@@ -95,24 +114,10 @@ export async function fetchMessages(conversationId) {
     if (!userId) return { success: false, error: "Unauthorized" };
 
     if (conversationId.startsWith("mock_")) {
-      // Return mock message history
-      if (conversationId === "mock_convo_1") {
-        return {
-          success: true,
-          messages: [
-            { id: "m1", senderId: "mock_discover_1", text: "Hey there! I saw you matched with me. I love your profile bio!", createdAt: new Date(Date.now() - 3600000), status: "READ" },
-            { id: "m2", senderId: userId, text: "Thanks Vanessa! I really liked your art previews. Do you paint often?", createdAt: new Date(Date.now() - 1800000), status: "READ" },
-            { id: "m3", senderId: "mock_discover_1", text: "Hey! I'd love to chat about painting sometime.", createdAt: new Date(Date.now() - 600000), status: "SENT" }
-          ]
-        };
-      }
+      const msgs = mockMessagesStore[conversationId] || [];
       return {
         success: true,
-        messages: [
-          { id: "m4", senderId: "mock_discover_2", text: "Hi! Loved your music interests in your onboarding profile.", createdAt: new Date(Date.now() - 7200000), status: "READ" },
-          { id: "m5", senderId: userId, text: "Hey Austin! Thanks, yes, I'm super into indie records.", createdAt: new Date(Date.now() - 3600000), status: "READ" },
-          { id: "m6", senderId: "mock_discover_2", text: "Did you listen to that new record yet?", createdAt: new Date(Date.now() - 1000000), status: "SENT" }
-        ]
+        messages: msgs.map(m => ({ ...m, senderId: m.senderId === "user_me" ? userId : m.senderId }))
       };
     }
 
@@ -137,7 +142,6 @@ export async function sendMessageAction({ conversationId, text, imageUrl, audioU
     if (!userId) return { success: false, error: "Unauthorized" };
 
     if (conversationId.startsWith("mock_")) {
-      // Mock echo handler for testing
       const msg = {
         id: `msg_${Date.now()}`,
         conversationId,
@@ -149,6 +153,12 @@ export async function sendMessageAction({ conversationId, text, imageUrl, audioU
         createdAt: new Date(),
         repliedToId
       };
+      
+      if (!mockMessagesStore[conversationId]) {
+        mockMessagesStore[conversationId] = [];
+      }
+      mockMessagesStore[conversationId].push(msg);
+
       return { success: true, message: msg };
     }
 
