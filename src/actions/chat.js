@@ -77,28 +77,31 @@ export async function fetchConversations() {
       });
     }
 
-    // Return mock rooms if empty for easy testing
-    if (detailedConv.length === 0) {
-      const mockList = Object.keys(mockRoomsMeta).map((convoId) => {
-        const meta = mockRoomsMeta[convoId];
-        const msgs = mockMessagesStore[convoId] || [];
-        const lastMsg = msgs[msgs.length - 1];
-        return {
-          id: convoId,
-          lastMessageText: lastMsg ? lastMsg.text : "Start your conversation.",
-          lastMessageAt: lastMsg ? new Date(lastMsg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now",
-          recipientId: meta.recipientId,
-          fullName: meta.fullName,
-          phoneNumber: meta.phoneNumber,
-          photo: meta.photo,
-          isOnline: meta.isOnline
-        };
-      });
+    const mockList = Object.keys(mockRoomsMeta).map((convoId) => {
+      const meta = mockRoomsMeta[convoId];
+      const msgs = mockMessagesStore[convoId] || [];
+      const lastMsg = msgs[msgs.length - 1];
+      return {
+        id: convoId,
+        lastMessageText: lastMsg ? lastMsg.text : "Start your conversation.",
+        lastMessageAt: lastMsg ? new Date(lastMsg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now",
+        recipientId: meta.recipientId,
+        fullName: meta.fullName,
+        phoneNumber: meta.phoneNumber,
+        photo: meta.photo,
+        isOnline: meta.isOnline
+      };
+    });
 
-      return { success: true, conversations: mockList };
+    // Combine real database conversations with mock candidate conversations
+    const combinedConvos = [...detailedConv];
+    for (const mockItem of mockList) {
+      if (!combinedConvos.some(c => c.id === mockItem.id || c.recipientId === mockItem.recipientId)) {
+        combinedConvos.push(mockItem);
+      }
     }
 
-    return { success: true, conversations: detailedConv };
+    return { success: true, conversations: combinedConvos };
   } catch (error) {
     console.error("Fetch conversations error:", error);
     return { success: false, error: "Failed to load chats" };

@@ -32,12 +32,21 @@ function ChatContent() {
     try {
       const res = await fetchConversations();
       if (res.success) {
-        setConversations(res.conversations || []);
+        const allConvos = res.conversations || [];
+        setConversations(allConvos);
         
-        // Auto-select convo from query param if matched
-        if (initialConvoId && res.conversations) {
-          const matched = res.conversations.find((c) => c.id === initialConvoId);
-          if (matched) setSelectedConvo(matched);
+        // Auto-select convo from query param if matched, else select first available thread
+        if (allConvos.length > 0) {
+          if (initialConvoId) {
+            const matched = allConvos.find((c) => c.id === initialConvoId);
+            if (matched) {
+              setSelectedConvo(matched);
+            } else {
+              setSelectedConvo(allConvos[0]);
+            }
+          } else {
+            setSelectedConvo((prev) => prev || allConvos[0]);
+          }
         }
       } else {
         setError(res.error || "Failed to load active threads");

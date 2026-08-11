@@ -253,7 +253,9 @@ export default function ChatWindow({ conversation, onBack }) {
     }
   };
 
-  const isPartnerOnline = onlineUsers.includes(conversation.recipientId);
+  const isPartnerOnline = conversation?.recipientId ? onlineUsers.includes(conversation.recipientId) : false;
+  const displayName = conversation?.fullName || "Soul Bridge Partner";
+  const displayPhoto = conversation?.photo || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80";
 
   return (
     <div className="flex-1 flex flex-col h-[560px] glass-panel rounded-3xl border border-white/5 overflow-hidden relative">
@@ -264,21 +266,21 @@ export default function ChatWindow({ conversation, onBack }) {
           <button onClick={onBack} className="md:hidden text-xs mr-1 p-1 hover:bg-white/10 rounded-lg">✕</button>
           
           <div className="relative">
-            <img src={conversation.photo} alt={conversation.fullName} className="w-10 h-10 rounded-xl object-cover" />
+            <img src={displayPhoto} alt={displayName} className="w-10 h-10 rounded-xl object-cover" />
             <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background ${isPartnerOnline ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
           </div>
 
           <div>
             <h3 className="font-bold text-sm flex items-center gap-1.5">
-              {conversation.fullName}
-              {conversation.fullName.includes("Vanessa") && <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />}
+              {displayName}
+              {displayName.includes("Vanessa") && <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />}
             </h3>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-[9px] text-foreground/50 font-semibold uppercase">
                 {isPartnerOnline ? "Active Now" : "Offline"}
               </span>
               <span className="text-[9px] px-2 py-0.2 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold flex items-center gap-1">
-                <Smartphone className="w-2.5 h-2.5" /> {conversation.phoneNumber || "+1 (555) 234-5678"}
+                <Smartphone className="w-2.5 h-2.5" /> {conversation?.phoneNumber || "+92 (300) 000-0000"}
               </span>
             </div>
           </div>
