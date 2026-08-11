@@ -19,14 +19,16 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 ## 🔐 Admin Portal Credentials
 
 To access the Admin Portal (`/admin`):
-- **Email**: `admin@soulbridge.pk`
-- **Username**: `admin`
-- **Password**: `Admin123!`
+
+- **Email**: `########`
+- **Username**: `#####`
+- **Password**: `####`
 - **Role**: `ADMIN`
 
 Alternatively, on the `/login` page, click **"Fill Admin Credentials"** for instant sign in.
 
 To re-seed or reset database accounts including Admin:
+
 ```bash
 node seed.js
 ```
