@@ -131,7 +131,7 @@ export default function Navbar() {
                   aria-label="Notifications"
                 >
                   {unreadCount > 0 ? (
-                    <BellRing className="w-4 h-4 text-[#FF4D8D] animate-pulse" />
+                    <BellRing className="w-4 h-4 text-primary-pink animate-pulse" />
                   ) : (
                     <Bell className="w-4 h-4" />
                   )}
