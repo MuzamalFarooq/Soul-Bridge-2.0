@@ -147,7 +147,7 @@ export default function Navbar() {
                   <div className="absolute right-0 mt-3 w-[calc(100vw-2rem)] max-w-xs sm:w-80 rounded-3xl glass-card-lux p-3 shadow-2xl border border-white/10 animate-in fade-in zoom-in-95 duration-200 z-50 bg-[#09090B]/95">
                     <div className="px-3 py-2 border-b border-white/10 mb-1 flex items-center justify-between">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-white/80 flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-[#FF4D8D]" /> Notifications
+                        <Sparkles className="w-3.5 h-3.5 text-primary-pink" /> Notifications
                       </h4>
                       <span className="text-[10px] text-white/40 font-semibold">{notifications.length} Total</span>
                     </div>
