@@ -174,7 +174,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#09090B] text-white">
+      <div className="min-h-screen bg-dark-bg text-white">
         <Navbar />
         <main className="max-w-6xl mx-auto px-4 py-12 flex items-center justify-center min-h-[60vh]">
           <div className="w-10 h-10 border-4 border-[#FF4D8D] border-t-transparent rounded-full animate-spin" />
