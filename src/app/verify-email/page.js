@@ -109,7 +109,7 @@ function VerifyEmailContent() {
                 const tokenVal = document.getElementById("manual-token").value;
                 window.location.search = `?token=${tokenVal}`;
               }}
-              className="w-full py-3 rounded-2xl bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] text-white font-bold text-xs shadow-lg cursor-pointer"
+              className="w-full py-3 rounded-2xl bg-linear-to-r from-[#FF4D8D] to-[#9C6BFF] text-white font-bold text-xs shadow-lg cursor-pointer"
             >
               Verify Token Now
             </button>
