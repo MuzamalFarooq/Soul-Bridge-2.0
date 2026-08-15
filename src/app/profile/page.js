@@ -207,7 +207,7 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-4">
                   {/* Profile Picture / Avatar with Change Photo overlay button */}
                   <div className="relative group">
-                    <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-[#FF4D8D] to-[#9C6BFF] p-0.5 shadow-lg flex items-center justify-center overflow-hidden">
+                    <div className="w-24 h-24 rounded-3xl bg-linear-to-br from-[#FF4D8D] to-[#9C6BFF] p-0.5 shadow-lg flex items-center justify-center overflow-hidden">
                       {primaryPhoto?.url ? (
                         <img
                           src={primaryPhoto.url}
