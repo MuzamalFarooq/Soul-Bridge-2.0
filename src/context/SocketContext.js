@@ -195,8 +195,8 @@ export function SocketProvider({ children }) {
       socket.emit("call_user", {
         userToCall,
         signalData: offer,
-        from: session.user.id,
-        name: session.user.fullName || "Soul Bridge User",
+        from: session?.user?.id,
+        name: session?.user?.fullName || "Soul Bridge User",
         callType
       });
 

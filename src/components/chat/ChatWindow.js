@@ -54,7 +54,7 @@ export default function ChatWindow({ conversation, onBack }) {
     if (socket && session?.user?.id) {
       socket.emit("mark_read", {
         conversationId: conversation.id,
-        senderId: session.user.id,
+        senderId: session?.user?.id,
         receiverId: conversation.recipientId
       });
     }
@@ -342,7 +342,7 @@ export default function ChatWindow({ conversation, onBack }) {
           </div>
         ) : (
           messages.map((m) => {
-            const isMe = m.senderId === session.user.id;
+            const isMe = m.senderId === session?.user?.id;
             return (
               <div key={m.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"} max-w-[80%] ${isMe ? "self-end" : "self-start"} group`}>
                 {m.isSms && (

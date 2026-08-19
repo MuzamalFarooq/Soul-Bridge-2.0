@@ -319,7 +319,7 @@ export default function ProfilePage() {
                       <Cloud className="w-4 h-4 text-[#FF4D8D]" /> Photo Gallery
                     </div>
                     <p className="mt-1 text-xs text-white/60 font-medium">
-                      Upload photos These will be shown randomly to other users in Explore!
+                      Upload photos 
                     </p>
                   </div>
                   <div className="rounded-full border border-[#FF4D8D]/30 bg-[#FF4D8D]/10 px-3 py-1 text-xs font-bold text-[#FF4D8D] shrink-0">
