@@ -6,7 +6,8 @@ import { useSocket } from "@/context/SocketContext";
 import { 
   Send, Phone, Video, Star, Smile, Image, Mic, MoreVertical, 
   CornerUpLeft, CheckCheck, Crown, ShieldAlert, Sparkles, Brain,
-  PhoneCall, PhoneOff, VideoOff, Volume2, Camera, Smartphone, MessageSquare
+  PhoneCall, PhoneOff, VideoOff, Volume2, Camera, Smartphone, MessageSquare,
+  Heart
 } from "lucide-react";
 import { fetchMessages, sendMessageAction, sendSmsAction, markMessagesReadAction, addMessageReactionAction, getConversationSuggestionsAction } from "@/actions/chat";
 
