@@ -90,7 +90,7 @@ export default function TinderCard({ candidate, onSwipe, onUndo, canUndo }) {
             className="w-full h-full object-cover transition-opacity duration-300 pointer-events-none"
           />
           {/* Black shadow overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/35 pointer-events-none"></div>
+          <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/20 to-black/35 pointer-events-none"></div>
         </div>
 
         {/* Swipe stamps */}
