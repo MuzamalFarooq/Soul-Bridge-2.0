@@ -89,8 +89,8 @@ export default function Onboarding() {
     occupation: "",
     lookingFor: "",
     personalityType: "INTJ",
-    photo1: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
-    photo2: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop"
+    photo1: "",
+    photo2: ""
   });
 
   const handleChange = (e) => {
@@ -148,6 +148,14 @@ export default function Onboarding() {
     setLoading(true);
 
     try {
+      const userPhotos = [];
+      if (formData.photo1 && formData.photo1.trim()) {
+        userPhotos.push({ url: formData.photo1, isProfile: true });
+      }
+      if (formData.photo2 && formData.photo2.trim()) {
+        userPhotos.push({ url: formData.photo2, isProfile: userPhotos.length === 0 });
+      }
+
       const payload = {
         ...formData,
         height: formData.height ? parseFloat(formData.height) : undefined,
@@ -157,10 +165,7 @@ export default function Onboarding() {
         pets: formData.pets.split(",").map(s => s.trim()).filter(Boolean),
         favoriteMusic: formData.favoriteMusic.split(",").map(s => s.trim()).filter(Boolean),
         favoriteMovies: formData.favoriteMovies.split(",").map(s => s.trim()).filter(Boolean),
-        photos: [
-          { url: formData.photo1, isProfile: true },
-          { url: formData.photo2, isProfile: false }
-        ]
+        photos: userPhotos
       };
 
       const res = await saveUserProfile(payload);
@@ -431,11 +436,24 @@ export default function Onboarding() {
                   <span className="text-[10px] text-[#FF4D8D] font-extrabold uppercase">Main Avatar</span>
                 </label>
 
-                <div className="h-44 w-full rounded-2xl overflow-hidden border border-white/20 relative bg-black/40 flex items-center justify-center">
+                <div className="h-44 w-full rounded-2xl overflow-hidden border border-white/20 relative bg-black/40 flex flex-col items-center justify-center">
                   {formData.photo1 ? (
-                    <img src={formData.photo1} alt="Primary Preview" className="w-full h-full object-cover" />
+                    <>
+                      <img src={formData.photo1} alt="Primary Preview" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setFormData((prev) => ({ ...prev, photo1: "" }))}
+                        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/70 hover:bg-rose-600 text-white transition-colors cursor-pointer"
+                        title="Remove Photo"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </>
                   ) : (
-                    <div className="text-white/40 text-xs font-medium">No photo selected</div>
+                    <div className="flex flex-col items-center gap-2 text-white/40 p-4 text-center">
+                      <Camera className="w-8 h-8 opacity-40 text-[#FF4D8D]" />
+                      <span className="text-xs font-medium">No photo selected</span>
+                    </div>
                   )}
 
                   {uploadingPhoto1 && (
@@ -446,7 +464,7 @@ export default function Onboarding() {
                 </div>
 
                 <label className="mt-1 flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] px-4 py-2.5 text-xs font-bold text-white shadow-md hover:scale-[1.02] transition-transform">
-                  <UploadCloud className="w-4 h-4" /> Upload Profile Photo
+                  <UploadCloud className="w-4 h-4" /> {formData.photo1 ? "Change Profile Photo" : "Upload Profile Photo"}
                   <input
                     type="file"
                     accept="image/*"
@@ -464,11 +482,24 @@ export default function Onboarding() {
                   <span className="text-[10px] text-white/50 font-bold uppercase">Gallery Slot</span>
                 </label>
 
-                <div className="h-44 w-full rounded-2xl overflow-hidden border border-white/20 relative bg-black/40 flex items-center justify-center">
+                <div className="h-44 w-full rounded-2xl overflow-hidden border border-white/20 relative bg-black/40 flex flex-col items-center justify-center">
                   {formData.photo2 ? (
-                    <img src={formData.photo2} alt="Secondary Preview" className="w-full h-full object-cover" />
+                    <>
+                      <img src={formData.photo2} alt="Secondary Preview" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setFormData((prev) => ({ ...prev, photo2: "" }))}
+                        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/70 hover:bg-rose-600 text-white transition-colors cursor-pointer"
+                        title="Remove Photo"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </>
                   ) : (
-                    <div className="text-white/40 text-xs font-medium">No photo selected</div>
+                    <div className="flex flex-col items-center gap-2 text-white/40 p-4 text-center">
+                      <UploadCloud className="w-8 h-8 opacity-40 text-[#9C6BFF]" />
+                      <span className="text-xs font-medium">No photo selected</span>
+                    </div>
                   )}
 
                   {uploadingPhoto2 && (
@@ -479,7 +510,7 @@ export default function Onboarding() {
                 </div>
 
                 <label className="mt-1 flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-bold text-white hover:bg-white/20 transition-colors">
-                  <UploadCloud className="w-4 h-4 text-[#9C6BFF]" /> Upload Gallery Photo
+                  <UploadCloud className="w-4 h-4 text-[#9C6BFF]" /> {formData.photo2 ? "Change Gallery Photo" : "Upload Gallery Photo"}
                   <input
                     type="file"
                     accept="image/*"

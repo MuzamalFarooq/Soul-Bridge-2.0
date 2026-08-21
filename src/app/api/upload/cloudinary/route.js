@@ -72,7 +72,26 @@ export async function POST(request) {
     };
 
     if (userId) {
-      // Check if user currently has any photos
+      // Remove any default, mock, or unsplash placeholder photos for this user
+      try {
+        await prisma.photo.deleteMany({
+          where: {
+            userId,
+            OR: [
+              { url: { contains: "images.unsplash.com" } },
+              { url: { contains: "unsplash" } },
+              { publicId: { startsWith: "mock_" } },
+              { publicId: { startsWith: "profile_reg_" } },
+              { publicId: { contains: "default" } },
+              { publicId: { contains: "fallback" } },
+            ],
+          },
+        });
+      } catch (cleanupErr) {
+        console.error("Notice: Photo cleanup on upload:", cleanupErr);
+      }
+
+      // Check remaining real photos count
       const existingPhotosCount = await prisma.photo.count({ where: { userId } });
 
       // Save uploaded photo record into Prisma database

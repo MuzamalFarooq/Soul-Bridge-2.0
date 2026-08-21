@@ -23,13 +23,30 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [photoMessage, setPhotoMessage] = useState("");
 
+  const isDefaultPhoto = (photo) => {
+    if (!photo?.url) return true;
+    return (
+      photo.url.includes("images.unsplash.com") ||
+      photo.url.includes("unsplash") ||
+      (photo.publicId && (
+        photo.publicId.startsWith("mock_") ||
+        photo.publicId.startsWith("profile_reg_") ||
+        photo.publicId.includes("default") ||
+        photo.publicId.includes("fallback")
+      ))
+    );
+  };
+
   useEffect(() => {
     const loadProfile = async () => {
       try {
         const response = await getDashboardData();
         if (response?.success) {
           setProfileData(response.data);
-          setGalleryPhotos(response?.data?.profile?.user?.photos || []);
+          const rawPhotos = response?.data?.profile?.user?.photos || [];
+          const hasRealPhotos = rawPhotos.some(p => !isDefaultPhoto(p));
+          const userPhotos = hasRealPhotos ? rawPhotos.filter(p => !isDefaultPhoto(p)) : rawPhotos;
+          setGalleryPhotos(userPhotos);
         } else {
           setError(response?.error || "Unable to load your profile right now.");
         }
@@ -51,7 +68,9 @@ export default function ProfilePage() {
     const files = Array.from(event.target.files || []);
     if (!files.length) return;
 
-    if (galleryPhotos.length + files.length > 6) {
+    // Filter out default photos count from current total
+    const currentRealPhotos = galleryPhotos.filter(p => !isDefaultPhoto(p));
+    if (currentRealPhotos.length + files.length > 6) {
       setPhotoMessage("You can upload up to 6 photos in your gallery.");
       event.target.value = "";
       return;
@@ -73,8 +92,12 @@ export default function ProfilePage() {
         const data = await res.json();
 
         if (res.ok && data?.success && data?.photo) {
-          setGalleryPhotos((prev) => [...prev, data.photo]);
-          setPhotoMessage("Image uploaded to Cloudinary successfully!");
+          // Remove default images from gallery when user uploads real image
+          setGalleryPhotos((prev) => {
+            const nonDefault = prev.filter(p => !isDefaultPhoto(p));
+            return [...nonDefault, data.photo];
+          });
+          setPhotoMessage("Image uploaded successfully!");
         } else {
           setPhotoMessage(data?.error || "Failed to upload image to Cloudinary.");
         }
@@ -148,10 +171,14 @@ export default function ProfilePage() {
         if (newPhoto.id) {
           await setPrimaryProfilePhotoAction(newPhoto.id);
         }
-        setGalleryPhotos((prev) => [
-          { ...newPhoto, isProfile: true },
-          ...prev.map((p) => ({ ...p, isProfile: false })),
-        ]);
+        // Remove default photos and prepend new primary photo
+        setGalleryPhotos((prev) => {
+          const nonDefault = prev.filter(p => !isDefaultPhoto(p));
+          return [
+            { ...newPhoto, isProfile: true },
+            ...nonDefault.map((p) => ({ ...p, isProfile: false })),
+          ];
+        });
         setPhotoMessage("Profile picture updated successfully!");
       } else {
         setPhotoMessage(data?.error || "Failed to upload profile picture.");

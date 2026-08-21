@@ -142,22 +142,45 @@ export async function saveUserProfile(data) {
     });
 
     // 2. Clear old profile photos if updating, and insert new ones sequentially
-    if (photos && photos.length > 0) {
-      try {
-        await prisma.photo.deleteMany({ where: { userId } });
-      } catch (delErr) {}
-      
-      for (let idx = 0; idx < photos.length; idx++) {
-        const p = photos[idx];
-        await prisma.photo.create({
-          data: {
-            userId,
-            url: p.url || p,
-            publicId: p.publicId || `mock_cloudinary_${Date.now()}_${idx}`,
-            isProfile: idx === 0,
-            isPrivate: p.isPrivate || false
-          }
-        });
+    if (photos && Array.isArray(photos) && photos.length > 0) {
+      // Filter out invalid or default placeholder photos if user uploaded real photos
+      const validPhotos = photos.filter(p => {
+        const url = typeof p === "string" ? p : p?.url;
+        return url && typeof url === "string" && url.trim() !== "";
+      });
+
+      const isPlaceholder = (url) => {
+        if (!url || typeof url !== "string") return true;
+        return (
+          url.includes("images.unsplash.com") ||
+          url.includes("unsplash") ||
+          url.includes("dicebear")
+        );
+      };
+
+      const hasRealPhotos = validPhotos.some(p => !isPlaceholder(typeof p === "string" ? p : p?.url));
+      const photosToSave = hasRealPhotos
+        ? validPhotos.filter(p => !isPlaceholder(typeof p === "string" ? p : p?.url))
+        : validPhotos;
+
+      if (photosToSave.length > 0) {
+        try {
+          await prisma.photo.deleteMany({ where: { userId } });
+        } catch (delErr) {}
+        
+        for (let idx = 0; idx < photosToSave.length; idx++) {
+          const p = photosToSave[idx];
+          const url = typeof p === "string" ? p : p.url;
+          await prisma.photo.create({
+            data: {
+              userId,
+              url,
+              publicId: (typeof p === "object" && p?.publicId) ? p.publicId : `user_photo_${Date.now()}_${idx}`,
+              isProfile: idx === 0,
+              isPrivate: (typeof p === "object" && p?.isPrivate) || false
+            }
+          });
+        }
       }
     }
 
