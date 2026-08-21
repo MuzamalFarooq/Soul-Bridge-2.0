@@ -272,7 +272,7 @@ export default function Navbar() {
               </Link>
               <Link
                 href="/register"
-                className="text-xs font-bold px-6 py-2.5 rounded-full bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] text-white shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-105 active:scale-95 transition-all"
+                className="text-xs font-bold px-6 py-2.5 rounded-full bg-linear-to-r from-[#FF4D8D] to-[#9C6BFF] text-white shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-105 active:scale-95 transition-all"
               >
                 Join Free
               </Link>
