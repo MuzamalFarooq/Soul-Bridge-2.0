@@ -346,7 +346,7 @@ export default function Home() {
                 <li className="flex items-center gap-2 text-white/30">✕ Incognito invisible mode</li>
               </ul>
             </div>
-            <Link href="/register" className="w-full text-center py-3.5 rounded-full bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] text-white text-xs font-bold shadow-lg shadow-pink-500/25 hover:scale-105 transition-all">
+            <Link href="/register" className="w-full text-center py-3.5 rounded-full bg-linear-to-r from-[#FF4D8D] to-[#9C6BFF] text-white text-xs font-bold shadow-lg shadow-pink-500/25 hover:scale-105 transition-all">
               Upgrade to Gold
             </Link>
           </div>
