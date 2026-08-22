@@ -8,41 +8,94 @@ const fallbackSecret = "soul-bridge-jwt-super-secret-key-development-2026";
 export async function POST(request) {
   try {
     const body = await request.json();
-    const email = body?.email?.toLowerCase().trim();
+    const input = body?.email?.toLowerCase().trim();
     const password = body?.password;
 
-    if (!email || !password) {
+    if (!input || !password) {
       return NextResponse.json(
-        { success: false, error: "Email and password are required" },
+        { success: false, error: "Email/username and password are required" },
         { status: 400 }
       );
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email },
-      include: { profile: true }
-    });
+    const envAdminEmail = (process.env.ADMIN_EMAIL || "admin@soulbridge.pk").toLowerCase().trim();
+    const envAdminUsername = (process.env.ADMIN_USERNAME || "admin").toLowerCase().trim();
+    const envAdminPassword = process.env.ADMIN_PASSWORD || "Admin123!";
 
-    if (!user || !user.passwordHash) {
-      return NextResponse.json(
-        { success: false, error: "No account found with this email" },
-        { status: 401 }
-      );
-    }
+    let user;
 
-    if (user.status === "BANNED") {
-      return NextResponse.json(
-        { success: false, error: "Your account has been suspended by administration" },
-        { status: 403 }
-      );
-    }
+    // Check if credentials match admin configuration from .env
+    const isAdminMatch = (input === envAdminEmail || input === envAdminUsername) && password === envAdminPassword;
 
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-    if (!isPasswordValid) {
-      return NextResponse.json(
-        { success: false, error: "Invalid email address or password" },
-        { status: 401 }
-      );
+    if (isAdminMatch) {
+      user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: envAdminEmail },
+            { profile: { username: envAdminUsername } }
+          ]
+        },
+        include: { profile: true }
+      });
+
+      if (!user) {
+        const hashedPassword = await bcrypt.hash(envAdminPassword, 10);
+        user = await prisma.user.create({
+          data: {
+            email: envAdminEmail,
+            passwordHash: hashedPassword,
+            role: "ADMIN",
+            status: "ACTIVE",
+            profile: {
+              create: {
+                fullName: "Soul Bridge Administrator",
+                username: envAdminUsername,
+                completed: true,
+                premiumStatus: "PLATINUM"
+              }
+            }
+          },
+          include: { profile: true }
+        });
+      } else if (user.role !== "ADMIN") {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { role: "ADMIN" },
+          include: { profile: true }
+        });
+      }
+    } else {
+      user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: input },
+            { profile: { username: input } }
+          ]
+        },
+        include: { profile: true }
+      });
+
+      if (!user || !user.passwordHash) {
+        return NextResponse.json(
+          { success: false, error: "No account found with this email or username" },
+          { status: 401 }
+        );
+      }
+
+      if (user.status === "BANNED") {
+        return NextResponse.json(
+          { success: false, error: "Your account has been suspended by administration" },
+          { status: 403 }
+        );
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+      if (!isPasswordValid) {
+        return NextResponse.json(
+          { success: false, error: "Invalid email address or password" },
+          { status: 401 }
+        );
+      }
     }
 
     const tokenPayload = {

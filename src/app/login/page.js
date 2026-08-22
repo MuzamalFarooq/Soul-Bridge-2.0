@@ -61,7 +61,14 @@ function LoginContent() {
         console.error("Auth sync error:", syncErr);
       }
 
-      router.replace("/discover");
+      const callbackUrl = searchParams.get("callbackUrl");
+      if (callbackUrl) {
+        router.replace(callbackUrl);
+      } else if (cleanEmail === "admin" || cleanEmail.startsWith("admin@")) {
+        router.replace("/admin");
+      } else {
+        router.replace("/discover");
+      }
       router.refresh();
     } catch (err) {
       console.error("Login page submit error:", err);
@@ -109,12 +116,12 @@ function LoginContent() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4.5">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-white/70 px-1">Email Address</label>
+            <label className="text-xs font-bold text-white/70 px-1">Email or Username</label>
             <div className="relative">
               <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
               <input
-                type="email"
-                placeholder="you@example.com"
+                type="text"
+                placeholder="you@example.com or username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 rounded-2xl glass-input-lux text-xs text-white placeholder-white/40"

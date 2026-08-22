@@ -23,22 +23,88 @@ export const authOptions = {
           throw new Error("Please enter your email and password");
         }
 
-        const normalizedEmail = credentials.email.toLowerCase().trim();
+        const input = credentials.email.toLowerCase().trim();
+        const inputPassword = credentials.password;
 
-        const user = await prisma.user.findUnique({
-          where: { email: normalizedEmail },
+        const envAdminEmail = (process.env.ADMIN_EMAIL || "admin@soulbridge.pk").toLowerCase().trim();
+        const envAdminUsername = (process.env.ADMIN_USERNAME || "admin").toLowerCase().trim();
+        const envAdminPassword = process.env.ADMIN_PASSWORD || "Admin123!";
+
+        // Check if credentials match the configured admin credentials from .env
+        const isAdminMatch = (input === envAdminEmail || input === envAdminUsername) && inputPassword === envAdminPassword;
+
+        if (isAdminMatch) {
+          let adminUser = await prisma.user.findFirst({
+            where: {
+              OR: [
+                { email: envAdminEmail },
+                { profile: { username: envAdminUsername } }
+              ]
+            },
+            include: { profile: true, photos: { where: { isProfile: true }, take: 1 } }
+          });
+
+          if (!adminUser) {
+            const hashedPassword = await bcrypt.hash(envAdminPassword, 10);
+            adminUser = await prisma.user.create({
+              data: {
+                email: envAdminEmail,
+                passwordHash: hashedPassword,
+                role: "ADMIN",
+                status: "ACTIVE",
+                profile: {
+                  create: {
+                    fullName: "Soul Bridge Administrator",
+                    username: envAdminUsername,
+                    completed: true,
+                    premiumStatus: "PLATINUM"
+                  }
+                }
+              },
+              include: { profile: true, photos: { where: { isProfile: true }, take: 1 } }
+            });
+          } else if (adminUser.role !== "ADMIN") {
+            adminUser = await prisma.user.update({
+              where: { id: adminUser.id },
+              data: { role: "ADMIN" },
+              include: { profile: true, photos: { where: { isProfile: true }, take: 1 } }
+            });
+          }
+
+          const primaryImage = adminUser.photos?.[0]?.url || null;
+
+          return {
+            id: adminUser.id,
+            email: adminUser.email,
+            role: "ADMIN",
+            username: adminUser.profile?.username || envAdminUsername,
+            fullName: adminUser.profile?.fullName || "Soul Bridge Administrator",
+            completed: true,
+            premiumStatus: adminUser.profile?.premiumStatus || "PLATINUM",
+            image: primaryImage,
+          };
+        }
+
+        // Standard user lookup by email OR username
+        const user = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { email: input },
+              { profile: { username: input } }
+            ]
+          },
           include: { profile: true, photos: { where: { isProfile: true }, take: 1 } }
         });
 
         if (!user || !user.passwordHash) {
-          throw new Error("No account found with this email");
+          throw new Error("No account found with this email or username");
         }
 
         if (user.status === "BANNED") {
           throw new Error("Your account has been suspended by administration");
         }
 
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.passwordHash);
+        const isPasswordValid = await bcrypt.compare(inputPassword, user.passwordHash);
 
         if (!isPasswordValid) {
           throw new Error("Invalid password credentials");
