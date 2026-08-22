@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
-import { Heart, AlertCircle, Mail, Lock, Eye, EyeOff, Sparkles, ArrowRight } from "lucide-react";
+import { Heart, AlertCircle, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 
 function LoginContent() {
   const router = useRouter();
@@ -167,19 +167,7 @@ function LoginContent() {
           </button>
         </form>
 
-        <div className="mt-6 text-center border-t border-white/10 pt-4 flex flex-col gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              setEmail("admin@soulbridge.pk");
-              setPassword("Admin123!");
-            }}
-            className="w-full py-2 px-3 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 hover:text-white text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-            Fill Admin Credentials (admin@soulbridge.pk)
-          </button>
-
+        <div className="mt-6 text-center border-t border-white/10 pt-4">
           <p className="text-xs text-white/60 font-medium">
             Don't have an account?{" "}
             <Link href="/register" className="text-[#FF4D8D] font-bold hover:underline ml-1">
