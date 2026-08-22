@@ -551,3 +551,163 @@ export async function declineConnectionRequest({ requesterId }) {
     return { success: false, error: "Failed to decline request" };
   }
 }
+
+/**
+ * Fetch newly added people for the homepage live preview card stack
+ */
+export async function fetchNewlyAddedProfiles() {
+  try {
+    const recentProfiles = await prisma.profile.findMany({
+      where: { completed: true },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      include: { user: { include: { photos: true } } }
+    });
+
+    const formattedList = [];
+
+    if (recentProfiles && recentProfiles.length > 0) {
+      for (const p of recentProfiles) {
+        let photos = (p.user?.photos || []).map((photo) => photo.url).filter(Boolean);
+        if (photos.length === 0) {
+          photos = ["https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&h=800&fit=crop"];
+        }
+
+        formattedList.push({
+          id: p.userId,
+          fullName: p.fullName || "Soul Bridge Member",
+          age: p.age || 25,
+          gender: p.gender || "Not specified",
+          city: p.city || "Islamabad",
+          country: p.country || "Pakistan",
+          profession: p.profession || "Creative Professional",
+          bio: p.bio || "Looking to make meaningful connections and share great conversations.",
+          hobbies: Array.isArray(p.hobbies) ? p.hobbies : (typeof p.hobbies === "string" ? p.hobbies.split(",").map(s => s.trim()) : ["Travel", "Music", "Coffee"]),
+          relationshipGoal: p.relationshipGoal || "Long-term",
+          compatibility: Math.floor(Math.random() * 12) + 88, // 88% - 99%
+          photos: photos,
+          isNew: true,
+          badge: "Newly Joined"
+        });
+      }
+    }
+
+    // Default rich diverse showcase list of recent members
+    const showcaseProfiles = [
+      {
+        id: "mock_home_1",
+        fullName: "Sophia Al-Zahra",
+        age: 26,
+        gender: "Female",
+        city: "San Francisco",
+        country: "USA",
+        profession: "Architect & UI Designer",
+        bio: "Designing minimalist spaces by day, gallery hopping and crafting pour-over coffee by sunset.",
+        hobbies: ["Architecture", "Modern Art", "Pour-Over Coffee", "Pilates"],
+        relationshipGoal: "Long-term",
+        compatibility: 98,
+        photos: [
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&h=800&fit=crop"
+        ],
+        isNew: true,
+        badge: "Joined 15m ago"
+      },
+      {
+        id: "mock_home_2",
+        fullName: "Hamza Tariq",
+        age: 28,
+        gender: "Male",
+        city: "Lahore",
+        country: "Pakistan",
+        profession: "AI Research Scientist",
+        bio: "Training neural networks and hiking northern peaks. Big fan of Sufi poetry, vinyl records, and late-night street food.",
+        hobbies: ["Machine Learning", "Hiking", "Sufi Music", "Photography"],
+        relationshipGoal: "Marriage",
+        compatibility: 96,
+        photos: [
+          "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=600&h=800&fit=crop"
+        ],
+        isNew: true,
+        badge: "Active Now"
+      },
+      {
+        id: "mock_home_3",
+        fullName: "Ayla Nicole",
+        age: 24,
+        gender: "Female",
+        city: "London",
+        country: "UK",
+        profession: "Violinist & Sound Designer",
+        bio: "Exploring acoustic frequencies and indie bookshops. Looking for a kind soul with curiosity for deep conversations.",
+        hobbies: ["Classical Violin", "Book Clubs", "Tea Tasting", "Vintage Film"],
+        relationshipGoal: "Long-term",
+        compatibility: 94,
+        photos: [
+          "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=600&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=600&h=800&fit=crop"
+        ],
+        isNew: true,
+        badge: "Joined 1h ago"
+      },
+      {
+        id: "mock_home_4",
+        fullName: "Zayn Mirza",
+        age: 29,
+        gender: "Male",
+        city: "Dubai",
+        country: "UAE",
+        profession: "Product Strategist & Pilot",
+        bio: "Weekend aviation enthusiast, gourmet culinary explorer, and passionate about tech innovation and meaningful growth.",
+        hobbies: ["Aviation", "Gourmet Cooking", "Squash", "Travel"],
+        relationshipGoal: "Marriage",
+        compatibility: 92,
+        photos: [
+          "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=600&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=600&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=600&h=800&fit=crop"
+        ],
+        isNew: true,
+        badge: "Joined 2h ago"
+      },
+      {
+        id: "mock_home_5",
+        fullName: "Fatima Zahra",
+        age: 25,
+        gender: "Female",
+        city: "Islamabad",
+        country: "Pakistan",
+        profession: "Environmental Scientist",
+        bio: "Passionate about renewable energy and wilderness conservation. Weekend trail runner and chai connoisseur.",
+        hobbies: ["Trail Running", "Wildlife Care", "Chai", "Astronomy"],
+        relationshipGoal: "Marriage",
+        compatibility: 95,
+        photos: [
+          "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=600&h=800&fit=crop",
+          "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&h=800&fit=crop"
+        ],
+        isNew: true,
+        badge: "Active Now"
+      }
+    ];
+
+    // Merge database users first, followed by showcase users without duplicate IDs
+    const combined = [...formattedList];
+    for (const sc of showcaseProfiles) {
+      if (!combined.some(c => c.id === sc.id)) {
+        combined.push(sc);
+      }
+    }
+
+    return { success: true, profiles: combined };
+  } catch (error) {
+    console.error("fetchNewlyAddedProfiles error:", error);
+    return { success: false, error: "Failed to load newly added profiles" };
+  }
+}
+

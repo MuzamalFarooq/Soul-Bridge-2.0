@@ -175,6 +175,29 @@ export default function Onboarding() {
         return;
       }
 
+      // Save to recent new users cache for instant home card stack preview
+      try {
+        const newCardProfile = {
+          id: res.profile?.userId || `user_${Date.now()}`,
+          fullName: formData.fullName || "Soul Bridge Member",
+          age: formData.dob ? Math.abs(new Date(Date.now() - new Date(formData.dob).getTime()).getUTCFullYear() - 1970) : 25,
+          gender: formData.gender,
+          city: formData.city || "Islamabad",
+          country: formData.country || "Pakistan",
+          profession: formData.profession || "Professional",
+          bio: formData.bio || "Excited to meet new people on Soul Bridge!",
+          hobbies: formData.hobbies.split(",").map(s => s.trim()).filter(Boolean),
+          relationshipGoal: formData.relationshipGoal || "Long-term",
+          compatibility: 97,
+          photos: userPhotos.map(p => p.url).filter(Boolean),
+          isNew: true,
+          badge: "Just Joined ✨"
+        };
+        const existing = JSON.parse(localStorage.getItem("sb_recent_new_users") || "[]");
+        const updated = [newCardProfile, ...existing.filter(u => u.id !== newCardProfile.id)].slice(0, 10);
+        localStorage.setItem("sb_recent_new_users", JSON.stringify(updated));
+      } catch (e) {}
+
       await updateSession({
         completed: true,
         username: formData.username,
