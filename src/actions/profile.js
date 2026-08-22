@@ -291,3 +291,137 @@ export async function setPrimaryProfilePhotoAction(photoId) {
   }
 }
 
+/**
+ * Search users by full name or username
+ */
+export async function searchUsersAction(query) {
+  try {
+    if (!query || typeof query !== "string" || query.trim().length === 0) {
+      return { success: true, users: [] };
+    }
+
+    const cleanQuery = query.trim();
+
+    // Query matching profiles from DB
+    const profiles = await prisma.profile.findMany({
+      where: {
+        OR: [
+          { fullName: { contains: cleanQuery, mode: "insensitive" } },
+          { username: { contains: cleanQuery, mode: "insensitive" } },
+          { city: { contains: cleanQuery, mode: "insensitive" } },
+          { profession: { contains: cleanQuery, mode: "insensitive" } }
+        ]
+      },
+      take: 10,
+      include: {
+        user: {
+          include: {
+            photos: true
+          }
+        }
+      }
+    });
+
+    const results = profiles.map((p) => {
+      const primaryPhoto = p.user?.photos?.find((ph) => ph.isProfile) || p.user?.photos?.[0];
+      return {
+        id: p.userId || p.id,
+        userId: p.userId,
+        fullName: p.fullName || "Soul Bridge Member",
+        username: p.username || (p.fullName ? p.fullName.toLowerCase().replace(/\s+/g, "_") : "user"),
+        gender: p.gender,
+        age: p.age,
+        city: p.city,
+        country: p.country,
+        profession: p.profession,
+        avatar: primaryPhoto?.url || null,
+        bio: p.bio,
+        verificationBadge: p.verificationBadge || false,
+        premiumStatus: p.premiumStatus || "FREE",
+        isOnline: p.user?.isOnline || false,
+        relationshipGoal: p.relationshipGoal
+      };
+    });
+
+    return { success: true, users: results };
+  } catch (error) {
+    console.error("searchUsersAction error:", error);
+    return { success: false, error: "Failed to search users", users: [] };
+  }
+}
+
+/**
+ * Get public profile details of a user by ID or Username
+ */
+export async function getUserPublicProfile(identifier) {
+  try {
+    if (!identifier) return { success: false, error: "User identifier required" };
+
+    const profile = await prisma.profile.findFirst({
+      where: {
+        OR: [
+          { userId: identifier },
+          { username: identifier.toLowerCase().trim() }
+        ]
+      },
+      include: {
+        user: {
+          include: {
+            photos: {
+              orderBy: { createdAt: "desc" }
+            }
+          }
+        }
+      }
+    });
+
+    if (!profile) {
+      return { success: false, error: "User not found" };
+    }
+
+    const primaryPhoto = profile.user?.photos?.find((p) => p.isProfile) || profile.user?.photos?.[0];
+
+    return {
+      success: true,
+      user: {
+        id: profile.userId,
+        userId: profile.userId,
+        fullName: profile.fullName || "Soul Bridge Member",
+        username: profile.username || "user",
+        gender: profile.gender,
+        interestedIn: profile.interestedIn,
+        age: profile.age,
+        city: profile.city,
+        country: profile.country,
+        profession: profile.profession,
+        occupation: profile.occupation,
+        education: profile.education,
+        religion: profile.religion,
+        height: profile.height,
+        weight: profile.weight,
+        bio: profile.bio,
+        relationshipGoal: profile.relationshipGoal,
+        hobbies: profile.hobbies || [],
+        languages: profile.languages || [],
+        smoking: profile.smoking,
+        drinking: profile.drinking,
+        pets: profile.pets || [],
+        favoriteMusic: profile.favoriteMusic || [],
+        favoriteMovies: profile.favoriteMovies || [],
+        verificationBadge: profile.verificationBadge,
+        premiumStatus: profile.premiumStatus,
+        isOnline: profile.user?.isOnline || false,
+        avatar: primaryPhoto?.url || null,
+        photos: profile.user?.photos?.map((p) => ({
+          id: p.id,
+          url: p.url,
+          isProfile: p.isProfile
+        })) || []
+      }
+    };
+  } catch (error) {
+    console.error("getUserPublicProfile error:", error);
+    return { success: false, error: "Failed to fetch user profile" };
+  }
+}
+

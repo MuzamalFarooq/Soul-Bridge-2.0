@@ -8,8 +8,9 @@ import { useTheme } from "@/context/ThemeContext";
 import { useSocket } from "@/context/SocketContext";
 import { 
   Heart, Sun, Moon, Menu, X, User, LogOut, Shield, Crown, 
-  Bell, BellRing, MessageSquare, HeartHandshake, Eye, Settings, Sparkles 
+  Bell, BellRing, MessageSquare, HeartHandshake, Eye, Settings, Sparkles, Search 
 } from "lucide-react";
+import NavbarSearch from "@/components/NavbarSearch";
 
 const NOTIFICATION_ICONS = {
   MATCH: { icon: HeartHandshake, color: "text-[#FF4D8D]", bg: "bg-[#FF4D8D]/15" },
@@ -25,6 +26,7 @@ export default function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const { notifications } = useSocket();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [readCount, setReadCount] = useState(0);
@@ -74,11 +76,11 @@ export default function Navbar() {
       ];
 
   return (
-    <header className="sticky top-0 z-50 px-4 md:px-8 py-3.5 backdrop-blur-2xl bg-[#09090B]/75 border-b border-white/10 shadow-2xl transition-all">
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
+    <header className="sticky top-0 z-50 px-4 md:px-8 py-3.5 backdrop-blur-2xl bg-[#09090B]/85 border-b border-white/10 shadow-2xl transition-all">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 md:gap-6">
         
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-2.5 group cursor-pointer">
+        <Link href="/" className="flex items-center gap-2.5 group cursor-pointer shrink-0">
           <div className="relative flex items-center justify-center">
             <Heart className="w-8 h-8 text-[#FF4D8D] fill-[#FF4D8D] group-hover:scale-110 transition-all duration-300 filter drop-shadow-[0_0_12px_rgba(255,77,141,0.6)]" />
             <Heart className="w-8 h-8 text-[#9C6BFF] fill-[#9C6BFF] absolute inset-0 opacity-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-500 blur-sm" />
@@ -90,8 +92,13 @@ export default function Navbar() {
           </div>
         </Link>
 
+        {/* Desktop Search Bar */}
+        <div className="hidden sm:block flex-1 max-w-xs md:max-w-sm lg:max-w-md">
+          <NavbarSearch />
+        </div>
+
         {/* Desktop Nav Links */}
-        <nav className="hidden md:flex items-center gap-1.5 p-1 rounded-full glass-panel-lux border-white/10">
+        <nav className="hidden lg:flex items-center gap-1.5 p-1 rounded-full glass-panel-lux border-white/10 shrink-0">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -281,25 +288,52 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Controls */}
-        <div className="flex md:hidden items-center gap-2.5">
+        <div className="flex md:hidden items-center gap-2">
+          <button
+            onClick={() => {
+              setMobileSearchOpen(!mobileSearchOpen);
+              if (mobileMenuOpen) setMobileMenuOpen(false);
+            }}
+            className="p-2 rounded-full glass-panel-lux text-white/80 hover:text-white"
+            aria-label="Toggle Search"
+          >
+            <Search className="w-4 h-4 text-[#FF4D8D]" />
+          </button>
           <button
             onClick={toggleTheme}
             className="p-2 rounded-full glass-panel-lux text-white/80"
+            aria-label="Toggle Theme"
           >
             {theme === "dark" ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-indigo-300" />}
           </button>
           <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            onClick={() => {
+              setMobileMenuOpen(!mobileMenuOpen);
+              if (mobileSearchOpen) setMobileSearchOpen(false);
+            }}
             className="p-2 rounded-xl glass-panel-lux text-white"
+            aria-label="Toggle Menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </div>
 
+      {/* Mobile Search Overlay Bar */}
+      {mobileSearchOpen && (
+        <div className="sm:hidden px-4 pt-3 pb-2 border-t border-white/5 animate-in fade-in slide-in-from-top-2 duration-200">
+          <NavbarSearch isMobile onCloseMobile={() => setMobileSearchOpen(false)} />
+        </div>
+      )}
+
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="absolute top-full left-0 right-0 glass-card-lux border-b border-white/10 p-6 flex flex-col gap-3 shadow-2xl md:hidden animate-in fade-in slide-in-from-top-4 duration-300 z-50 bg-[#09090B]/95">
+          {/* Search bar inside drawer */}
+          <div className="pb-3 border-b border-white/5">
+            <NavbarSearch isMobile onCloseMobile={() => setMobileMenuOpen(false)} />
+          </div>
+
           {navLinks.map((link) => (
             <Link
               key={link.href}
