@@ -260,7 +260,8 @@ export default function HomeCardStackPreview() {
         </div>
 
         {/* 30s Countdown Indicator & Pause/Play */}
-        <div className="flex items-center gap-3">
+        
+        {/* <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 text-white/60 font-mono text-[11px]">
             <span>Next in</span>
             <span className="text-[#FF4D8D] font-bold w-5 text-center">{timeLeft}s</span>
@@ -280,7 +281,8 @@ export default function HomeCardStackPreview() {
           >
             {isPaused ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
           </button>
-        </div>
+        </div> */}
+
       </div>
 
       {/* Interactive Deck Area */}

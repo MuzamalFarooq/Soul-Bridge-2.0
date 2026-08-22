@@ -263,11 +263,21 @@ export default function Navbar() {
                       }}
                       className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl hover:bg-rose-500/20 text-rose-400 text-xs font-bold text-left transition-all cursor-pointer"
                     >
-                      <LogOut className="w-4 h-4" /> Log Out
+                      <LogOut className="w-4 h-4" /> Sign Out
                     </button>
                   </div>
                 )}
               </div>
+
+              {/* Direct Sign Out Button */}
+              <button
+                onClick={handleSignOut}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 hover:border-rose-500/50 text-rose-300 hover:text-rose-200 text-xs font-bold transition-all duration-200 shadow-sm cursor-pointer active:scale-95"
+                title="Sign Out"
+              >
+                <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                <span>Sign Out</span>
+              </button>
             </>
           ) : (
             <div className="flex items-center gap-3">
@@ -328,11 +338,33 @@ export default function Navbar() {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="absolute top-full left-0 right-0 glass-card-lux border-b border-white/10 p-6 flex flex-col gap-3 shadow-2xl md:hidden animate-in fade-in slide-in-from-top-4 duration-300 z-50 bg-[#09090B]/95">
+        <div className="absolute top-full left-0 right-0 glass-card-lux border-b border-white/10 p-6 flex flex-col gap-3 shadow-2xl md:hidden animate-in fade-in slide-in-from-top-4 duration-300 z-50 bg-[#09090B]/95 max-h-[85vh] overflow-y-auto">
           {/* Search bar inside drawer */}
           <div className="pb-3 border-b border-white/5">
             <NavbarSearch isMobile onCloseMobile={() => setMobileMenuOpen(false)} />
           </div>
+
+          {/* User Profile Header in Mobile Drawer if logged in */}
+          {session && (
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 mb-1">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] p-0.5 flex items-center justify-center text-white text-sm font-black uppercase shadow-md overflow-hidden shrink-0">
+                {session.user.image ? (
+                  <img src={session.user.image} alt={session.user.fullName || "User"} className="w-full h-full object-cover rounded-full" />
+                ) : (
+                  <span>{session.user.fullName ? session.user.fullName[0] : "U"}</span>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-bold text-white truncate">{session.user.fullName || "User"}</p>
+                  {session.user.premiumStatus && session.user.premiumStatus !== "FREE" && (
+                    <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />
+                  )}
+                </div>
+                <p className="text-xs text-white/50 truncate">{session.user.email}</p>
+              </div>
+            </div>
+          )}
 
           {navLinks.map((link) => (
             <Link
@@ -344,7 +376,43 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          {!session && (
+
+          {session ? (
+            <div className="flex flex-col gap-2 pt-2 border-t border-white/10">
+              {session.user.role === "ADMIN" && (
+                <Link
+                  href="/admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2.5 text-sm font-bold py-2 text-[#9C6BFF] hover:text-[#b48eff]"
+                >
+                  <Shield className="w-4 h-4" /> Admin Console
+                </Link>
+              )}
+              <Link
+                href="/profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2.5 text-sm font-bold py-2 text-white/80 hover:text-white"
+              >
+                <User className="w-4 h-4 text-[#FF4D8D]" /> My Profile
+              </Link>
+              <Link
+                href="/settings"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2.5 text-sm font-bold py-2 text-white/80 hover:text-white"
+              >
+                <Settings className="w-4 h-4" /> Settings
+              </Link>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleSignOut();
+                }}
+                className="w-full mt-2 flex items-center justify-center gap-2 py-3 rounded-2xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-400 text-xs font-bold transition-all cursor-pointer shadow-md"
+              >
+                <LogOut className="w-4 h-4" /> Sign Out
+              </button>
+            </div>
+          ) : (
             <div className="flex flex-col gap-2.5 pt-3">
               <Link
                 href="/login"

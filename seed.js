@@ -453,13 +453,13 @@ async function main() {
         }
       }
     });
-    console.log("👑 Seeded Admin Account: admin@soulbridge.pk / Admin123!");
+    // console.log("👑 Seeded Admin Account: admin@soulbridge.pk / Admin123!");
   } else {
     await prisma.user.update({
       where: { id: adminUser.id },
       data: { role: "ADMIN", passwordHash: adminHashedPassword }
     });
-    console.log("👑 Admin Account synchronized: admin@soulbridge.pk / Admin123!");
+    // console.log("👑 Admin Account synchronized: admin@soulbridge.pk / Admin123!");
   }
 
   console.log("🎉 Successfully completed Pakistani profiles & Admin seeding!");
