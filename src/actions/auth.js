@@ -1,11 +1,14 @@
 "use server";
 
+import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { sendPasswordResetEmail } from "@/lib/email";
+import { resolveAuthBaseUrl } from "@/lib/auth-url";
 
 // Generate a random token
 function generateToken() {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  return crypto.randomBytes(32).toString("hex");
 }
 
 /**
@@ -16,6 +19,10 @@ export async function registerUser(data) {
     const { email, password, profilePic } = data;
     if (!email || !password) {
       return { success: false, error: "Email and password are required" };
+    }
+
+    if (password.length < 6) {
+      return { success: false, error: "Password must be at least 6 characters long" };
     }
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -158,91 +165,134 @@ export async function verifyUserEmail(token) {
 }
 
 /**
- * Handle forgot password request
+ * Handle forgot password request securely
  */
 export async function forgotPasswordRequest(email) {
   try {
     if (!email) return { success: false, error: "Email is required" };
     const normalizedEmail = email.toLowerCase().trim();
 
-    const user = await prisma.user.findUnique({
-      where: { email: normalizedEmail }
-    });
-
-    if (!user) {
-      // Return success to prevent email enumeration, but in sandbox let's be explicit or return positive
-      return { success: true, message: "If that email exists, a reset link has been created." };
+    // Basic email format check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return { success: false, error: "Please enter a valid email address" };
     }
 
-    // Delete any existing reset tokens for this email
+    const user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      include: { profile: true }
+    });
+
+    // Always respond with generic success message to prevent user enumeration
+    const genericSuccessResponse = {
+      success: true,
+      message: "If an account exists with that email, a password reset link has been sent."
+    };
+
+    if (!user) {
+      return genericSuccessResponse;
+    }
+
+    // Generate cryptographically secure random token (32 bytes = 64 hex chars)
+    const rawToken = crypto.randomBytes(32).toString("hex");
+
+    // Hash the token with SHA-256 for secure database storage
+    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+
+    // Delete any existing PASSWORD_RESET tokens for this email to invalidate previous links
     await prisma.verificationToken.deleteMany({
       where: { email: normalizedEmail, type: "PASSWORD_RESET" }
     });
 
-    const token = generateToken();
+    // Reset token expires in 30 minutes
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+
     await prisma.verificationToken.create({
       data: {
         email: normalizedEmail,
-        token,
+        token: tokenHash,
         type: "PASSWORD_RESET",
-        expiresAt: new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+        expiresAt,
       }
     });
 
-    return { 
-      success: true, 
-      resetToken: token, // Returned for testing / routing purposes
-      message: "Reset token created successfully!" 
-    };
+    // Construct the reset URL using resolved application base URL
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || resolveAuthBaseUrl(process.env) || "https://soulbridge.muzamal.site";
+    const resetUrl = `${baseUrl.replace(/\/+$/, "")}/reset-password?token=${rawToken}`;
+
+    // Send the password reset email asynchronously
+    await sendPasswordResetEmail({
+      to: normalizedEmail,
+      resetUrl,
+      userName: user.profile?.fullName || user.profile?.username || undefined,
+    });
+
+    return genericSuccessResponse;
   } catch (error) {
-    console.error("Forgot password error:", error);
-    return { success: false, error: "Failed to process forgot password request" };
+    console.error("Forgot password server action error:", error);
+    return { success: false, error: "Unable to process password reset request right now. Please try again later." };
   }
 }
 
 /**
- * Reset password using token
+ * Reset password using single-use hashed token
  */
 export async function resetUserPassword(token, newPassword) {
   try {
-    if (!token || !newPassword) {
-      return { success: false, error: "Token and password are required" };
+    if (!token) {
+      return { success: false, error: "Reset token is missing" };
     }
 
-    const resetToken = await prisma.verificationToken.findFirst({
+    if (!newPassword || typeof newPassword !== "string") {
+      return { success: false, error: "New password is required" };
+    }
+
+    if (newPassword.length < 6) {
+      return { success: false, error: "Password must be at least 6 characters long" };
+    }
+
+    // Hash incoming token using SHA-256 to look up the stored tokenHash
+    const tokenHash = crypto.createHash("sha256").update(token.trim()).digest("hex");
+
+    const resetTokenRecord = await prisma.verificationToken.findFirst({
       where: {
-        token,
+        token: tokenHash,
         type: "PASSWORD_RESET"
       }
     });
 
-    if (!resetToken) {
-      return { success: false, error: "Invalid or expired token" };
+    if (!resetTokenRecord) {
+      return { success: false, error: "Invalid or expired reset token. Please request a new link." };
     }
 
-    if (new Date() > resetToken.expiresAt) {
-      await prisma.verificationToken.delete({ where: { id: resetToken.id } });
-      return { success: false, error: "Reset token has expired" };
+    if (new Date() > resetTokenRecord.expiresAt) {
+      try {
+        await prisma.verificationToken.delete({ where: { id: resetTokenRecord.id } });
+      } catch (_) {}
+      return { success: false, error: "Reset link has expired. Please request a new one." };
     }
 
-    // Hash password
+    // Hash password with bcryptjs matching Soul Bridge configuration
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(newPassword, salt);
 
-    // Update password and delete token
+    // Update user password and delete the used reset token in a transaction
     await prisma.$transaction([
       prisma.user.update({
-        where: { email: resetToken.email },
+        where: { email: resetTokenRecord.email },
         data: { passwordHash }
       }),
       prisma.verificationToken.delete({
-        where: { id: resetToken.id }
+        where: { id: resetTokenRecord.id }
       })
     ]);
 
-    return { success: true, message: "Password updated successfully! Please login with your new password." };
+    return { 
+      success: true, 
+      message: "Your password has been successfully reset! You can now log in with your new password." 
+    };
   } catch (error) {
-    console.error("Reset password error:", error);
-    return { success: false, error: "Failed to reset password" };
+    console.error("Reset password server action error:", error);
+    return { success: false, error: "Failed to reset password. Please try again." };
   }
 }

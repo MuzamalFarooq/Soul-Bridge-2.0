@@ -4,13 +4,12 @@ import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Heart, Lock, AlertCircle, CheckCircle, ArrowRight, Eye, EyeOff } from "lucide-react";
-import { resetUserPassword } from "@/actions/auth";
+import { Heart, Lock, AlertCircle, CheckCircle, ArrowRight, Eye, EyeOff, KeyRound } from "lucide-react";
 
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const token = searchParams.get("token") || "";
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -26,12 +25,7 @@ function ResetPasswordContent() {
     setSuccess("");
 
     if (!token) {
-      setError("Reset token is missing. Please check your recovery link.");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError("Reset token is missing from the link. Please request a new password reset email.");
       return;
     }
 
@@ -40,23 +34,39 @@ function ResetPasswordContent() {
       return;
     }
 
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const res = await resetUserPassword(token, password);
-      if (res.success) {
-        setSuccess(res.message);
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token: token.trim(),
+          newPassword: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setSuccess(data.message || "Your password has been successfully reset!");
         setPassword("");
         setConfirmPassword("");
-        
+
         setTimeout(() => {
           router.push("/login");
-        }, 2500);
+        }, 2000);
       } else {
-        setError(res.error || "Failed to reset password.");
+        setError(data.error || "Failed to reset password. Please try again.");
       }
     } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+      console.error("Reset password form error:", err);
+      setError("An unexpected network error occurred. Please check your connection.");
     } finally {
       setLoading(false);
     }
@@ -64,6 +74,7 @@ function ResetPasswordContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 relative z-10 bg-[#09090B]">
+      {/* Radial backdrop */}
       <div className="absolute w-[500px] h-[500px] bg-radial from-[#9C6BFF]/20 via-[#FF4D8D]/10 to-transparent blur-[120px] pointer-events-none" />
 
       <motion.div 
@@ -72,6 +83,7 @@ function ResetPasswordContent() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md glass-card-lux rounded-3xl p-8 md:p-10 border border-white/10 shadow-2xl relative"
       >
+        {/* Brand */}
         <div className="flex flex-col items-center mb-8 text-center">
           <Link href="/" className="flex items-center gap-2 mb-3 group">
             <Heart className="w-8 h-8 text-[#FF4D8D] fill-[#FF4D8D] group-hover:scale-110 transition-transform filter drop-shadow-[0_0_10px_rgba(255,77,141,0.6)]" />
@@ -81,10 +93,19 @@ function ResetPasswordContent() {
           </Link>
           <h2 className="text-2xl font-black text-white">Choose New Password</h2>
           <p className="text-xs text-white/60 mt-1 font-medium">
-            Enter your new password below to update credentials.
+            Enter your new secure password below to regain account access.
           </p>
         </div>
 
+        {/* Missing Token Alert */}
+        {!token && (
+          <div className="mb-6 p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-semibold flex items-center gap-2.5">
+            <KeyRound className="w-4 h-4 shrink-0" />
+            <span>Reset token is missing. Please click the link directly from your email.</span>
+          </div>
+        )}
+
+        {/* Error Notification */}
         {error && (
           <motion.div 
             initial={{ opacity: 0, height: 0 }}
@@ -96,30 +117,36 @@ function ResetPasswordContent() {
           </motion.div>
         )}
 
+        {/* Success Notification */}
         {success && (
           <motion.div 
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
-            className="flex items-center gap-2.5 p-3.5 mb-6 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold"
+            className="flex flex-col gap-1 p-3.5 mb-6 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold"
           >
-            <CheckCircle className="w-4 h-4 shrink-0" />
-            <span>{success} Redirecting to login...</span>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 shrink-0" />
+              <span>{success}</span>
+            </div>
+            <p className="text-[11px] opacity-90 mt-1 font-medium">
+              Redirecting you to login...
+            </p>
           </motion.div>
         )}
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4.5">
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold text-white/70 px-1">New Password</label>
             <div className="relative">
               <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Min 6 characters"
+                placeholder="At least 6 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full pl-10 pr-10 py-3 rounded-2xl glass-input-lux text-xs text-white placeholder-white/40"
                 required
-                disabled={loading || !token}
+                disabled={loading || !token || Boolean(success)}
               />
               <button
                 type="button"
@@ -137,12 +164,12 @@ function ResetPasswordContent() {
               <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
               <input
                 type={showConfirmPassword ? "text" : "password"}
-                placeholder="Repeat new password"
+                placeholder="Repeat your new password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full pl-10 pr-10 py-3 rounded-2xl glass-input-lux text-xs text-white placeholder-white/40"
                 required
-                disabled={loading || !token}
+                disabled={loading || !token || Boolean(success)}
               />
               <button
                 type="button"
@@ -156,7 +183,7 @@ function ResetPasswordContent() {
 
           <button
             type="submit"
-            disabled={loading || !token}
+            disabled={loading || !token || Boolean(success)}
             className="w-full py-3.5 mt-2 rounded-2xl bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] text-white font-bold text-xs shadow-xl shadow-pink-500/25 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading ? (
@@ -169,15 +196,9 @@ function ResetPasswordContent() {
           </button>
         </form>
 
-        {!token && (
-          <div className="mt-4 p-3 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 text-center text-xs font-semibold">
-            A valid token URL parameter is required to reset your password.
-          </div>
-        )}
-
         <div className="mt-8 text-center border-t border-white/10 pt-5">
           <p className="text-xs text-white/60 font-medium">
-            Remembered it?{" "}
+            Remembered your password?{" "}
             <Link href="/login" className="text-[#FF4D8D] font-bold hover:underline ml-1">
               Sign In
             </Link>

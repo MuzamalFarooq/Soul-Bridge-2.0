@@ -2,38 +2,41 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Heart, Key, AlertCircle, CheckCircle, Mail, ArrowRight } from "lucide-react";
-import { forgotPasswordRequest } from "@/actions/auth";
+import { Heart, Key, AlertCircle, CheckCircle, Mail, ArrowLeft } from "lucide-react";
 
 export default function ForgotPassword() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
+    setSuccess(false);
     setLoading(true);
 
     try {
-      const res = await forgotPasswordRequest(email);
-      if (res.success) {
-        setSuccess(`Reset token generated successfully.`);
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.toLowerCase().trim() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setSuccess(true);
+        setSuccessMessage(data.message || "If an account exists with that email, a password reset link has been sent.");
         setEmail("");
-        
-        setTimeout(() => {
-          router.push(`/reset-password?token=${res.resetToken}`);
-        }, 2500);
       } else {
-        setError(res.error || "Failed to request password reset.");
+        setError(data.error || "Unable to send password reset link. Please try again.");
       }
     } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+      console.error("Forgot password form error:", err);
+      setError("An unexpected network error occurred. Please check your connection.");
     } finally {
       setLoading(false);
     }
@@ -41,6 +44,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 relative z-10 bg-[#09090B]">
+      {/* Radial backdrop */}
       <div className="absolute w-[500px] h-[500px] bg-radial from-[#FF4D8D]/20 via-[#9C6BFF]/10 to-transparent blur-[120px] pointer-events-none" />
 
       <motion.div 
@@ -49,6 +53,7 @@ export default function ForgotPassword() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md glass-card-lux rounded-3xl p-8 md:p-10 border border-white/10 shadow-2xl relative"
       >
+        {/* Brand */}
         <div className="flex flex-col items-center mb-8 text-center">
           <Link href="/" className="flex items-center gap-2 mb-3 group">
             <Heart className="w-8 h-8 text-[#FF4D8D] fill-[#FF4D8D] group-hover:scale-110 transition-transform filter drop-shadow-[0_0_10px_rgba(255,77,141,0.6)]" />
@@ -58,10 +63,11 @@ export default function ForgotPassword() {
           </Link>
           <h2 className="text-2xl font-black text-white">Reset Password</h2>
           <p className="text-xs text-white/60 mt-1 font-medium">
-            Enter your email to generate a password recovery token.
+            Enter your email to receive a secure recovery link.
           </p>
         </div>
 
+        {/* Errors */}
         {error && (
           <motion.div 
             initial={{ opacity: 0, height: 0 }}
@@ -73,6 +79,7 @@ export default function ForgotPassword() {
           </motion.div>
         )}
 
+        {/* Success */}
         {success && (
           <motion.div 
             initial={{ opacity: 0, height: 0 }}
@@ -81,10 +88,10 @@ export default function ForgotPassword() {
           >
             <div className="flex items-center gap-2 font-bold">
               <CheckCircle className="w-4 h-4 shrink-0" />
-              <span>Reset Token Created!</span>
+              <span>Link Sent!</span>
             </div>
-            <p className="text-[11px] opacity-90 mt-1 font-medium">
-              Redirecting to password reset page...
+            <p className="text-[11px] opacity-90 mt-1 font-medium leading-relaxed">
+              {successMessage}
             </p>
           </motion.div>
         )}
@@ -122,12 +129,12 @@ export default function ForgotPassword() {
         </form>
 
         <div className="mt-8 text-center border-t border-white/10 pt-5">
-          <p className="text-xs text-white/60 font-medium">
-            Remember your password?{" "}
-            <Link href="/login" className="text-[#FF4D8D] font-bold hover:underline ml-1">
-              Sign In
-            </Link>
-          </p>
+          <Link 
+            href="/login" 
+            className="inline-flex items-center gap-1.5 text-xs text-white/70 font-bold hover:text-white transition-colors"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to Login
+          </Link>
         </div>
       </motion.div>
     </div>
