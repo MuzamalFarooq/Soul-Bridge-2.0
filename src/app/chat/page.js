@@ -188,6 +188,15 @@ function ChatContent() {
                         <div className="truncate">
                           <h4 className="font-bold text-xs truncate flex items-center gap-1">
                             {convo.fullName}
+                            {convo.isAI && (
+                              <span className={`text-[8px] px-1.5 py-0.2 rounded-full font-extrabold border ${
+                                isSelected 
+                                  ? "bg-white/20 text-white border-white/40" 
+                                  : "bg-primary-pink/15 text-primary-pink border-primary-pink/30"
+                              }`}>
+                                AI
+                              </span>
+                            )}
                             {convo.fullName.includes("Vanessa") && <Star className={`w-3 h-3 ${isSelected ? "text-white fill-white" : "text-yellow-400 fill-yellow-400"}`} />}
                           </h4>
                           <p className={`text-[10px] truncate mt-0.5 ${isSelected ? "text-white/80" : "text-foreground/60"}`}>

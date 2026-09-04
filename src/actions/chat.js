@@ -13,6 +13,9 @@ async function getUserId() {
 
 // In-memory store for mock conversation messages & rooms during session
 const mockMessagesStore = {
+  ai_companion: [
+    { id: "ai_m0", conversationId: "ai_companion", senderId: "ai_companion", text: "Hey there! I'm so happy you're here with me. How has your day been treating you? ❤️", createdAt: new Date(Date.now() - 300000), status: "READ" }
+  ],
   mock_convo_1: [
     { id: "m1", conversationId: "mock_convo_1", senderId: "mock_discover_1", text: "Hey there! I saw you matched with me. I love your profile bio!", createdAt: new Date(Date.now() - 3600000), status: "READ" },
     { id: "m2", conversationId: "mock_convo_1", senderId: "user_me", text: "Thanks Vanessa! I really liked your art previews. Do you paint often?", createdAt: new Date(Date.now() - 1800000), status: "READ" },
@@ -32,10 +35,11 @@ const mockMessagesStore = {
 };
 
 const mockRoomsMeta = {
-  mock_convo_1: { recipientId: "mock_discover_1", fullName: "Ayesha Khan", phoneNumber: "+92 300 1234567", photo: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop", isOnline: true },
-  mock_convo_2: { recipientId: "mock_discover_2", fullName: "Hamza Chaudhry", phoneNumber: "+92 301 2345678", photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop", isOnline: false },
-  mock_convo_3: { recipientId: "mock_discover_3", fullName: "Fatima Zahra", phoneNumber: "+92 302 3456789", photo: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=80&h=80&fit=crop", isOnline: true },
-  mock_convo_4: { recipientId: "mock_discover_4", fullName: "Zainab Malik", phoneNumber: "+92 303 4567890", photo: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=80&h=80&fit=crop", isOnline: true }
+  ai_companion: { recipientId: "ai_companion", fullName: "Aria (AI Romantic Companion)", phoneNumber: "AI Companion", photo: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop", isOnline: true, isAI: true },
+  mock_convo_1: { recipientId: "mock_discover_1", fullName: "Ayesha Khan", phoneNumber: "+92 300 1234567", photo: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop", isOnline: true, isAI: false },
+  mock_convo_2: { recipientId: "mock_discover_2", fullName: "Hamza Chaudhry", phoneNumber: "+92 301 2345678", photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop", isOnline: false, isAI: false },
+  mock_convo_3: { recipientId: "mock_discover_3", fullName: "Fatima Zahra", phoneNumber: "+92 302 3456789", photo: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=80&h=80&fit=crop", isOnline: true, isAI: false },
+  mock_convo_4: { recipientId: "mock_discover_4", fullName: "Zainab Malik", phoneNumber: "+92 303 4567890", photo: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=80&h=80&fit=crop", isOnline: true, isAI: false }
 };
 
 /**
@@ -73,7 +77,8 @@ export async function fetchConversations() {
         fullName: otherProfile?.fullName || "Soul Bridge Match",
         phoneNumber: otherProfile?.phoneNumber || "+92 (300) 000-0000",
         photo: otherProfile?.user?.photos[0]?.url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80",
-        isOnline: otherProfile?.user?.isOnline || false
+        isOnline: otherProfile?.user?.isOnline || false,
+        isAI: false
       });
     }
 
@@ -89,7 +94,8 @@ export async function fetchConversations() {
         fullName: meta.fullName,
         phoneNumber: meta.phoneNumber,
         photo: meta.photo,
-        isOnline: meta.isOnline
+        isOnline: meta.isOnline,
+        isAI: meta.isAI || false
       };
     });
 
@@ -116,7 +122,7 @@ export async function fetchMessages(conversationId) {
     const userId = await getUserId();
     if (!userId) return { success: false, error: "Unauthorized" };
 
-    if (conversationId.startsWith("mock_")) {
+    if (conversationId.startsWith("mock_") || conversationId === "ai_companion" || conversationId.startsWith("ai_")) {
       const msgs = mockMessagesStore[conversationId] || [];
       return {
         success: true,
@@ -144,7 +150,7 @@ export async function sendMessageAction({ conversationId, text, imageUrl, audioU
     const userId = await getUserId();
     if (!userId) return { success: false, error: "Unauthorized" };
 
-    if (conversationId.startsWith("mock_")) {
+    if (conversationId.startsWith("mock_") || conversationId === "ai_companion" || conversationId.startsWith("ai_")) {
       const msg = {
         id: `msg_${Date.now()}`,
         conversationId,
@@ -198,6 +204,33 @@ export async function sendMessageAction({ conversationId, text, imageUrl, audioU
 }
 
 /**
+ * Save AI generated response message
+ */
+export async function saveAiMessageAction({ conversationId, text }) {
+  try {
+    const msg = {
+      id: `ai_${Date.now()}`,
+      conversationId,
+      senderId: "ai_companion",
+      text,
+      status: "DELIVERED",
+      createdAt: new Date(),
+      reactions: []
+    };
+
+    if (!mockMessagesStore[conversationId]) {
+      mockMessagesStore[conversationId] = [];
+    }
+    mockMessagesStore[conversationId].push(msg);
+
+    return { success: true, message: msg };
+  } catch (error) {
+    console.error("Save AI message action error:", error);
+    return { success: false, error: "Failed to save AI message" };
+  }
+}
+
+/**
  * Mark messages in conversation as READ
  */
 export async function markMessagesReadAction(conversationId) {
@@ -205,7 +238,7 @@ export async function markMessagesReadAction(conversationId) {
     const userId = await getUserId();
     if (!userId) return { success: false };
 
-    if (conversationId.startsWith("mock_")) return { success: true };
+    if (conversationId.startsWith("mock_") || conversationId === "ai_companion" || conversationId.startsWith("ai_")) return { success: true };
 
     await prisma.message.updateMany({
       where: {

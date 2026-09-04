@@ -9,7 +9,15 @@ import {
   PhoneCall, PhoneOff, VideoOff, Volume2, Camera, Smartphone, MessageSquare,
   Heart
 } from "lucide-react";
-import { fetchMessages, sendMessageAction, sendSmsAction, markMessagesReadAction, addMessageReactionAction, getConversationSuggestionsAction } from "@/actions/chat";
+import { 
+  fetchMessages, 
+  sendMessageAction, 
+  saveAiMessageAction,
+  sendSmsAction, 
+  markMessagesReadAction, 
+  addMessageReactionAction, 
+  getConversationSuggestionsAction 
+} from "@/actions/chat";
 
 export default function ChatWindow({ conversation, onBack }) {
   const { data: session } = useSession();
@@ -42,6 +50,7 @@ export default function ChatWindow({ conversation, onBack }) {
   // 1. Fetch message history
   useEffect(() => {
     const loadMessages = async () => {
+      setAiSuggestions([]);
       const res = await fetchMessages(conversation.id);
       if (res.success) {
         setMessages(res.messages || []);
@@ -59,9 +68,7 @@ export default function ChatWindow({ conversation, onBack }) {
         receiverId: conversation.recipientId
       });
     }
-
-    setAiSuggestions([]);
-  }, [conversation.id, socket, session?.user?.id]);
+  }, [conversation.id, conversation.recipientId, socket, session?.user?.id]);
 
   // 2. Setup socket listeners for this specific chat
   useEffect(() => {
@@ -150,6 +157,85 @@ export default function ChatWindow({ conversation, onBack }) {
 
     setMessages((prev) => [...prev, optimisticMsg]);
     setTimeout(scrollToBottom, 50);
+
+    const isAiChat = conversation.isAI || conversation.id === "ai_companion" || conversation.recipientId === "ai_companion";
+
+    if (isAiChat) {
+      // 1. Save user message to conversation store
+      await sendMessageAction({
+        conversationId: conversation.id,
+        text: textToSend
+      });
+
+      // 2. Turn on partner typing indicator
+      setPartnerTyping(true);
+      setTimeout(scrollToBottom, 50);
+
+      // 3. Format conversation history for Groq API
+      const history = [...messages, optimisticMsg].map((m) => ({
+        role: m.senderId === "ai_companion" ? "assistant" : "user",
+        content: m.text || ""
+      }));
+
+      try {
+        const response = await fetch("/api/ai-chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            messages: history,
+            conversationId: conversation.id
+          })
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        let aiReplyText = "";
+        if (response.ok && data.success && data.message) {
+          aiReplyText = data.message;
+        } else {
+          aiReplyText = data.fallbackMessage || "Sorry, I couldn't reply right now. Please try again ❤️";
+        }
+
+        const savedAiMsg = await saveAiMessageAction({
+          conversationId: conversation.id,
+          text: aiReplyText
+        });
+
+        const finalMsg = savedAiMsg.success && savedAiMsg.message ? savedAiMsg.message : {
+          id: `ai_${Date.now()}`,
+          conversationId: conversation.id,
+          senderId: "ai_companion",
+          text: aiReplyText,
+          createdAt: new Date(),
+          status: "DELIVERED",
+          reactions: []
+        };
+
+        setMessages((prev) => [...prev, finalMsg]);
+      } catch (err) {
+        console.error("AI Chat generation error:", err);
+        const fallbackMsg = {
+          id: `ai_${Date.now()}`,
+          conversationId: conversation.id,
+          senderId: "ai_companion",
+          text: "Sorry, I couldn't reply right now. Please try again ❤️",
+          createdAt: new Date(),
+          status: "DELIVERED",
+          reactions: []
+        };
+        await saveAiMessageAction({
+          conversationId: conversation.id,
+          text: fallbackMsg.text
+        });
+        setMessages((prev) => [...prev, fallbackMsg]);
+      } finally {
+        setPartnerTyping(false);
+        setTimeout(scrollToBottom, 50);
+      }
+      return;
+    }
 
     try {
       if (isSmsMode) {
@@ -268,21 +354,28 @@ export default function ChatWindow({ conversation, onBack }) {
           
           <div className="relative">
             <img src={displayPhoto} alt={displayName} className="w-10 h-10 rounded-xl object-cover" />
-            <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background ${isPartnerOnline ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
+            <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background ${isPartnerOnline || conversation?.isAI ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
           </div>
 
           <div>
             <h3 className="font-bold text-sm flex items-center gap-1.5">
               {displayName}
+              {conversation?.isAI && <span className="text-[8px] bg-primary-pink/20 text-primary-pink border border-primary-pink/30 px-1.5 py-0.2 rounded-full font-extrabold ml-1">AI</span>}
               {displayName.includes("Vanessa") && <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />}
             </h3>
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-[9px] text-foreground/50 font-semibold uppercase">
-                {isPartnerOnline ? "Active Now" : "Offline"}
+                {conversation?.isAI ? "AI Romantic Companion" : (isPartnerOnline ? "Active Now" : "Offline")}
               </span>
-              <span className="text-[9px] px-2 py-0.2 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold flex items-center gap-1">
-                <Smartphone className="w-2.5 h-2.5" /> {conversation?.phoneNumber || "+92 (300) 000-0000"}
-              </span>
+              {conversation?.isAI ? (
+                <span className="text-[9px] px-2 py-0.2 rounded-full bg-primary-pink/15 border border-primary-pink/30 text-primary-pink font-bold flex items-center gap-1">
+                  <Sparkles className="w-2.5 h-2.5" /> Soul AI
+                </span>
+              ) : (
+                <span className="text-[9px] px-2 py-0.2 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold flex items-center gap-1">
+                  <Smartphone className="w-2.5 h-2.5" /> {conversation?.phoneNumber || "+92 (300) 000-0000"}
+                </span>
+              )}
             </div>
           </div>
         </div>
