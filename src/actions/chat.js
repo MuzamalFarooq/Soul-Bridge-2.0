@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { getConversationSuggestionsText } from "@/services/gemini";
+import { getConversationSuggestionsText } from "@/services/groq";
 
 // Helper to get active user ID
 async function getUserId() {
@@ -294,7 +294,7 @@ export async function addMessageReactionAction({ messageId, reaction }) {
 }
 
 /**
- * Call Gemini AI to get conversation reply advice
+ * Call Groq AI to get conversation reply advice
  */
 export async function getConversationSuggestionsAction(conversationId) {
   try {
@@ -306,7 +306,7 @@ export async function getConversationSuggestionsAction(conversationId) {
 
     const messages = msgsRes.messages;
     
-    // Map sender ID for Gemini context
+    // Map sender ID for Groq AI context
     const mapped = messages.map(m => ({
       senderId: m.senderId === userId ? "me" : "match",
       text: m.text || "Sent an attachment"

@@ -19,7 +19,7 @@ export default function Home() {
   const faqData = [
     {
       q: "How does the AI matching algorithm calculate compatibility?",
-      a: "Soul Bridge uses advanced Gemini AI to evaluate over 30 psychological markers, personal values, communication styles, and life goals to calculate exact compatibility match percentages."
+      a: "Soul Bridge uses advanced Groq AI to evaluate over 30 psychological markers, personal values, communication styles, and life goals to calculate exact compatibility match percentages."
     },
     {
       q: "Is my personal data and gallery photo privacy protected?",
@@ -27,7 +27,7 @@ export default function Home() {
     },
     {
       q: "What features are included in Gold & Platinum memberships?",
-      a: "Premium tiers include unlimited swipes, 5+ daily superlikes, see who liked you instantly, incognito mode, read receipts, priority matching, and unlimited Gemini AI dating coaching."
+      a: "Premium tiers include unlimited swipes, 5+ daily superlikes, see who liked you instantly, incognito mode, read receipts, priority matching, and unlimited Groq AI dating coaching."
     },
     {
       q: "Can I use Soul Bridge on mobile devices?",
@@ -52,7 +52,7 @@ export default function Home() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card-lux text-xs font-bold text-[#FF4D8D] mb-8 border border-[#FF4D8D]/30 shadow-lg shadow-pink-500/10"
           >
             <Sparkles className="w-4 h-4 text-[#FF4D8D] animate-spin" />
-            <span>Next-Gen Gemini AI Matchmaker</span>
+            <span>Next-Gen Groq AI Matchmaker</span>
           </motion.div>
           
           {/* Animated Headline */}
@@ -160,7 +160,7 @@ export default function Home() {
             </div>
             <h3 className="text-xl font-extrabold text-white">Create AI Profile</h3>
             <p className="text-xs text-white/70 leading-relaxed font-medium">
-              Complete our personality assessment. Use the integrated Gemini AI Bio Generator to craft an authentic summary of your traits and goals.
+              Complete our personality assessment. Use the integrated Groq AI Bio Generator to craft an authentic summary of your traits and goals.
             </p>
           </div>
 
@@ -180,7 +180,7 @@ export default function Home() {
             </div>
             <h3 className="text-xl font-extrabold text-white">Real-Time Interaction</h3>
             <p className="text-xs text-white/70 leading-relaxed font-medium">
-              Engage through private socket messaging, live WebRTC video calls, reactions, read receipts, and Gemini conversation assistance.
+              Engage through private socket messaging, live WebRTC video calls, reactions, read receipts, and Groq AI conversation assistance.
             </p>
           </div>
         </div>
@@ -199,7 +199,7 @@ export default function Home() {
           <div className="glass-card-lux rounded-3xl p-6 flex items-start gap-4">
             <Brain className="w-10 h-10 text-[#FF4D8D] shrink-0" />
             <div>
-              <h3 className="font-extrabold text-base mb-1 text-white">Gemini AI Coach</h3>
+              <h3 className="font-extrabold text-base mb-1 text-white">Groq AI Coach</h3>
               <p className="text-xs text-white/60 leading-relaxed">
                 Receive live advice on profile improvements and conversation icebreakers tailored to your match.
               </p>
@@ -293,7 +293,7 @@ export default function Home() {
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> Standard chat with matches</li>
                 <li className="flex items-center gap-2 text-white/30">✕ Advanced search filters</li>
                 <li className="flex items-center gap-2 text-white/30">✕ See who viewed your profile</li>
-                <li className="flex items-center gap-2 text-white/30">✕ Gemini AI dating coach</li>
+                <li className="flex items-center gap-2 text-white/30">✕ Groq AI dating coach</li>
               </ul>
             </div>
             <Link href="/register" className="w-full text-center py-3 rounded-full border border-white/20 text-xs font-bold text-white hover:bg-white/10 transition-all">
@@ -336,7 +336,7 @@ export default function Home() {
               <ul className="flex flex-col gap-3.5 text-xs text-white/80 mb-8 font-medium">
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> Everything in Gold</li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> Incognito & invisible mode</li>
-                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> Unlimited Gemini AI analysis</li>
+                <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> Unlimited Groq AI analysis</li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> Read receipts in chat</li>
                 <li className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400" /> Priority discovery deck placement</li>
               </ul>

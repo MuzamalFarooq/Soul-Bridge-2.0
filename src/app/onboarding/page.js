@@ -405,7 +405,7 @@ export default function Onboarding() {
         {step === 3 && (
           <div className="flex flex-col gap-5 animate-in fade-in duration-300">
             <h3 className="text-xl font-black text-white flex items-center gap-2">
-              <Brain className="w-5 h-5 text-[#FFB6C1]" /> Gemini AI Bio Assistant
+              <Brain className="w-5 h-5 text-[#FFB6C1]" /> Groq AI Bio Assistant
             </h3>
 
             <div className="flex flex-col gap-1.5">
@@ -429,7 +429,7 @@ export default function Onboarding() {
                   disabled={aiLoading}
                   className="flex items-center gap-1.5 text-[10px] bg-[#9C6BFF]/20 text-[#9C6BFF] border border-[#9C6BFF]/30 px-3 py-1 rounded-full hover:bg-[#9C6BFF] hover:text-white transition-all cursor-pointer font-bold disabled:opacity-50"
                 >
-                  <Sparkles className="w-3 h-3" /> {aiLoading ? "Generating AI Bio..." : "Generate with Gemini"}
+                  <Sparkles className="w-3 h-3" /> {aiLoading ? "Generating AI Bio..." : "Generate with Groq AI"}
                 </button>
               </div>
               <textarea

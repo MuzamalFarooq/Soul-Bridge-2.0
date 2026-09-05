@@ -220,7 +220,7 @@ export default function ChatWindow({ conversation, onBack }) {
           id: `ai_${Date.now()}`,
           conversationId: conversation.id,
           senderId: "ai_companion",
-          text: "Sorry, I couldn't reply right now. Please try again ❤️",
+          text: "Sorry my Love , I couldn't reply right now. Please try again ❤️",
           createdAt: new Date(),
           status: "DELIVERED",
           reactions: []
@@ -509,7 +509,7 @@ export default function ChatWindow({ conversation, onBack }) {
       {aiSuggestions.length > 0 && (
         <div className="p-3 bg-indigo-500/10 border-t border-indigo-500/25 flex flex-col gap-1.5 relative z-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <span className="text-[9px] font-bold text-indigo-300 flex items-center gap-1">
-            <Brain className="w-3 h-3 text-indigo-400" /> Gemini Conversation Suggestions:
+            <Brain className="w-3 h-3 text-indigo-400" /> Groq AI Conversation Suggestions:
           </span>
           <div className="flex flex-wrap gap-1.5">
             {aiSuggestions.map((sug, idx) => (
@@ -603,7 +603,7 @@ export default function ChatWindow({ conversation, onBack }) {
               </div>
 
               {/* WebRTC Video Frames */}
-              <div className="w-full flex-1 max-h-[300px] flex gap-4 my-4 relative">
+              <div className="w-full flex-1 max-h-75 flex gap-4 my-4 relative">
                 {/* Remote Video (fill screen) */}
                 <div className="flex-1 rounded-2xl bg-white/5 border border-white/10 overflow-hidden relative flex items-center justify-center">
                   <video

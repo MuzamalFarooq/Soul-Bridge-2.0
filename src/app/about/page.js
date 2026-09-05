@@ -23,7 +23,7 @@ export default function AboutPage() {
 
   const pillars = [
     {
-      title: "Gemini 2.0 AI Compatibility Engine",
+      title: "Groq AI Compatibility Engine",
       subtitle: "Beyond surface-level swipes",
       description: "Our neural matching model analyzes over 35 psychological dimensions, core values, communication dynamics, and long-term vision to compute meaningful alignment scores.",
       icon: Brain,
@@ -109,7 +109,7 @@ export default function AboutPage() {
 
   const milestones = [
     { year: "2023", title: "The Soul Bridge Spark", desc: "Soul Bridge was founded with a mission to replace addictive swipe mechanics with deep AI matchmaking." },
-    { year: "2024", title: "Gemini AI Engine Launch", desc: "Introduced multi-modal personality vectors, achieving a 98.4% compatibility satisfaction rate among early adopters." },
+    { year: "2024", title: "Groq AI Engine Launch", desc: "Introduced multi-modal personality vectors, achieving a 98.4% compatibility satisfaction rate among early adopters." },
     { year: "2025", title: "3D Virtual Lounge Rollout", desc: "Launched interactive 3D spatial date environments and real-time audio/video encrypted rooms." },
     { year: "2026", title: "Global Expansion", desc: "Over 50,000 matches facilitated across 120+ countries with industry-leading safety standards." }
   ];
@@ -148,7 +148,7 @@ export default function AboutPage() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="text-base md:text-xl text-white/70 max-w-3xl mx-auto leading-relaxed mb-12 font-medium"
         >
-          Soul Bridge was born out of a simple belief: online dating shouldn't feel like endless superficial swiping. We blend cutting-edge Gemini AI matchmaking, 3D interactive environments, and bank-grade privacy to foster authentic, lifelong love.
+          Soul Bridge was born out of a simple belief: online dating shouldn't feel like endless superficial swiping. We blend cutting-edge Groq AI matchmaking, 3D interactive environments, and bank-grade privacy to foster authentic, lifelong love.
         </motion.p>
 
         {/* Stats Grid */}

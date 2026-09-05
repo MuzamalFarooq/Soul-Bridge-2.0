@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { generateBioText, getProfileReviewText } from "@/services/gemini";
+import { generateBioText, getProfileReviewText } from "@/services/groq";
 
 /**
  * Helper to get current authenticated user ID

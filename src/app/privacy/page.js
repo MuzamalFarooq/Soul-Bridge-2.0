@@ -69,7 +69,7 @@ export default function PrivacyPolicyPage() {
     {
       id: "sec-2",
       category: "ai",
-      title: "2. How Gemini AI Processes Your Compatibility Vector",
+      title: "2. How Groq AI Processes Your Compatibility Vector",
       summary: "How our artificial intelligence engine calculates compatibility while preserving privacy.",
       content: [
         "Privacy-Preserving Vectorization: Soul Bridge converts your personality questionnaire responses and relationship preferences into anonymized high-dimensional mathematical vectors.",

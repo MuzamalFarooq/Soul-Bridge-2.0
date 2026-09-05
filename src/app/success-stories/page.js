@@ -42,7 +42,7 @@ export default function SuccessStoriesPage() {
     location: "New York, USA & London, UK",
     matchDate: "October 2024",
     compatibility: "99.4% SoulMatch",
-    quote: "Soul Bridge's Gemini AI predicted our values would align before we even exchanged our first message. We're now happily married!",
+    quote: "Soul Bridge's Groq AI predicted our values would align before we even exchanged our first message. We're now happily married!",
     story: "Samantha was working in Manhattan while Daniel lived in London. Conventional dating apps filter out long distance, but Soul Bridge matched us based on our shared vision for cognitive psychology and international travel. Our 3D lounge date lasted 4 hours! 6 months later, Daniel proposed under the Eiffel Tower.",
     image: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800",
     timeline: [
@@ -184,7 +184,7 @@ export default function SuccessStoriesPage() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="text-base md:text-xl text-white/70 max-w-3xl mx-auto leading-relaxed mb-10 font-medium"
         >
-          Discover how thousands of couples bypassed superficial swiping and found their forever soulmate through Gemini AI matchmaking and 3D date experiences.
+          Discover how thousands of couples bypassed superficial swiping and found their forever soulmate through Groq AI matchmaking and 3D date experiences.
         </motion.p>
 
         <motion.div

@@ -287,10 +287,10 @@ export default function Dashboard() {
 
             </div>
 
-            {/* Gemini AI Profile Coach Widget */}
+            {/* Groq AI Profile Coach Widget */}
             <div className="glass-card-lux rounded-3xl p-6 border border-white/10">
               <h3 className="font-extrabold text-xs mb-3 flex items-center gap-2 uppercase tracking-wider text-indigo-300">
-                <Sparkles className="w-4 h-4 text-indigo-400" /> Gemini AI Profile Audit Coach
+                <Sparkles className="w-4 h-4 text-indigo-400" /> Groq AI Profile Audit Coach
               </h3>
               <p className="text-xs text-white/70 leading-relaxed mb-4 font-medium">
                 Consult our AI dating coach to analyze your profile details and provide personalized suggestions to maximize match compatibility.

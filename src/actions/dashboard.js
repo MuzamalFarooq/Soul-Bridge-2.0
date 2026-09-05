@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { calculateCompatibilityScore } from "@/services/gemini";
+import { calculateCompatibilityScore } from "@/services/groq";
 
 // Helper to get active user
 async function getActiveUser() {

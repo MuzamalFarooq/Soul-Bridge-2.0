@@ -20,7 +20,7 @@ export default function Footer() {
             </span>
           </Link>
           <p className="text-xs text-white/60 leading-relaxed font-medium">
-            Bridging hearts and minds. Soul Bridge leverages state-of-the-art Gemini AI technology and 3D interactive matching to facilitate deep, lasting dating experiences.
+            Bridging hearts and minds. Soul Bridge leverages state-of-the-art Groq AI technology and 3D interactive matching to facilitate deep, lasting dating experiences.
           </p>
           <div className="flex items-center gap-3 mt-2 text-white/50">
             <Link href="https://www.instagram.com/tigerstyle786" target="_blank" rel="noopener noreferrer" className="p-2 rounded-full glass-panel-lux hover:text-[#FF4D8D] hover:border-[#FF4D8D]/40 transition-all" aria-label="Instagram">
