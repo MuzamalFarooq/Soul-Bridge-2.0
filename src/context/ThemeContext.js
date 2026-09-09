@@ -11,16 +11,15 @@ export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState("dark");
 
   useEffect(() => {
-    // Read from localStorage or system preference
-    const savedTheme = localStorage.getItem("soul-bridge-theme");
-    if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.className = savedTheme;
-    } else {
-      // Default to dark mode for premium look
-      setTheme("dark");
-      document.documentElement.className = "dark";
-    }
+    try {
+      const savedTheme = localStorage.getItem("soul-bridge-theme");
+      if (savedTheme && savedTheme !== "dark") {
+        setTheme(savedTheme);
+        document.documentElement.className = savedTheme;
+      } else {
+        document.documentElement.className = "dark";
+      }
+    } catch (_) {}
   }, []);
 
   const toggleTheme = () => {

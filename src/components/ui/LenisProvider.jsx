@@ -5,6 +5,8 @@ import React, { useEffect } from "react";
 export default function LenisProvider({ children }) {
   useEffect(() => {
     let lenis;
+    let rafId;
+
     const initLenis = async () => {
       try {
         const LenisModule = await import("lenis");
@@ -17,10 +19,10 @@ export default function LenisProvider({ children }) {
         });
 
         function raf(time) {
-          lenis.raf(time);
-          requestAnimationFrame(raf);
+          lenis?.raf(time);
+          rafId = requestAnimationFrame(raf);
         }
-        requestAnimationFrame(raf);
+        rafId = requestAnimationFrame(raf);
       } catch (err) {
         console.warn("Lenis smooth scroll initialization skipped:", err);
       }
@@ -29,6 +31,7 @@ export default function LenisProvider({ children }) {
     initLenis();
 
     return () => {
+      if (rafId) cancelAnimationFrame(rafId);
       if (lenis) lenis.destroy();
     };
   }, []);

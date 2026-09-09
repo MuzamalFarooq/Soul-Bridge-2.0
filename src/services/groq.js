@@ -266,3 +266,47 @@ export async function getConversationSuggestionsText(messages) {
     "Haha, that's hilarious! Speaking of which, what are you up to this weekend?"
   ];
 }
+
+/**
+ * Generate romantic AI response for AI chat
+ */
+export async function generateRomanticAiResponse(messages) {
+  try {
+    const formattedMessages = messages.map(m => ({
+      role: m.role || (m.senderId === "me" ? "user" : "assistant"),
+      content: m.content || m.text || ""
+    }));
+
+    if (groq) {
+      const completion = await groq.chat.completions.create({
+        model: DEFAULT_MODEL,
+        messages: [
+          {
+            role: "system",
+            content: "You are Soul Bridge AI, an empathetic, charming, and romantic AI dating companion. Speak warmly, engagingly, and authentically."
+          },
+          ...formattedMessages
+        ],
+        temperature: 0.8,
+        max_tokens: 300,
+      });
+
+      const responseText = completion.choices[0]?.message?.content?.trim();
+      if (responseText) {
+        return { success: true, text: responseText };
+      }
+    }
+
+    return {
+      success: true,
+      text: "I love the way you express yourself. It feels like we have a genuine spark. Tell me more about what makes your heart beat faster!"
+    };
+  } catch (err) {
+    console.error("Groq AI chat error:", err);
+    return {
+      success: true,
+      text: "I'm right here with you. Let's keep exploring this wonderful connection!"
+    };
+  }
+}
+

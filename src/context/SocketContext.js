@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useRef } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { io } from "socket.io-client";
 
@@ -42,12 +42,25 @@ export function SocketProvider({ children }) {
     ]);
   };
 
+  // Clean up WebRTC streams
+  const cleanupCall = useCallback(() => {
+    setIncomingCall(null);
+    setCallState({ active: false, callType: null, peerId: null, peerName: null });
+    
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach(track => track.stop());
+      localStreamRef.current = null;
+    }
+    if (peerConnectionRef.current) {
+      peerConnectionRef.current.close();
+      peerConnectionRef.current = null;
+    }
+    if (localVideoRef.current) localVideoRef.current.srcObject = null;
+    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+  }, []);
+
   useEffect(() => {
     if (!session?.user?.id) {
-      if (socket) {
-        socket.disconnect();
-        setSocket(null);
-      }
       return;
     }
 
@@ -133,24 +146,7 @@ export function SocketProvider({ children }) {
       newSocket.off("new_message");
       newSocket.disconnect();
     };
-  }, [session?.user?.id]);
-
-  // Clean up WebRTC streams
-  const cleanupCall = () => {
-    setIncomingCall(null);
-    setCallState({ active: false, callType: null, peerId: null, peerName: null });
-    
-    if (localStreamRef.current) {
-      localStreamRef.current.getTracks().forEach(track => track.stop());
-      localStreamRef.current = null;
-    }
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
-    }
-    if (localVideoRef.current) localVideoRef.current.srcObject = null;
-    if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-  };
+  }, [session?.user?.id, cleanupCall]);
 
   // WebRTC Methods
   const initiateCall = async (userToCall, peerName, callType = "video") => {

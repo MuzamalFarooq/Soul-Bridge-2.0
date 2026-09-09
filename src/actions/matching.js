@@ -559,7 +559,6 @@ export async function fetchNewlyAddedProfiles() {
   try {
     const recentProfiles = await prisma.profile.findMany({
       where: { completed: true },
-      orderBy: { createdAt: "desc" },
       take: 10,
       include: { user: { include: { photos: true } } }
     });

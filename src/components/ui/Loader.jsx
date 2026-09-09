@@ -5,14 +5,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Sparkles } from "lucide-react";
 
 export default function Loader() {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    try {
+      const hasLoaded = sessionStorage.getItem("soul-bridge-loader-shown");
+      if (!hasLoaded) {
+        setLoading(true);
+        const timer = setTimeout(() => {
+          setLoading(false);
+          sessionStorage.setItem("soul-bridge-loader-shown", "true");
+        }, 800);
+        return () => clearTimeout(timer);
+      }
+    } catch (_) {
       setLoading(false);
-    }, 1200);
-
-    return () => clearTimeout(timer);
+    }
   }, []);
 
   return (
