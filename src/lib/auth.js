@@ -1,4 +1,5 @@
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 import { resolveAuthBaseUrl } from "./auth-url";
@@ -12,6 +13,11 @@ if (process.env.NODE_ENV === "production" && resolvedAuthBaseUrl) {
 
 export const authOptions = {
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      allowDangerousEmailAccountLinking: true,
+    }),
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -127,6 +133,100 @@ export const authOptions = {
   ],
   trustHost: true,
   callbacks: {
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "google") {
+        if (!user?.email) return false;
+        const cleanEmail = user.email.toLowerCase().trim();
+
+        try {
+          let dbUser = await prisma.user.findUnique({
+            where: { email: cleanEmail },
+            include: { profile: true, photos: { where: { isProfile: true }, take: 1 } }
+          });
+
+          if (dbUser) {
+            if (dbUser.status === "BANNED") {
+              return false;
+            }
+
+            user.id = dbUser.id;
+            user.role = dbUser.role;
+            user.username = dbUser.profile?.username || null;
+            user.fullName = dbUser.profile?.fullName || user.name || null;
+            user.completed = dbUser.profile?.completed || false;
+            user.premiumStatus = dbUser.profile?.premiumStatus || "FREE";
+            user.image = dbUser.photos?.[0]?.url || user.image || null;
+          } else {
+            // Generate clean unique username from name or email
+            let baseUsername = (user.name || cleanEmail.split("@")[0])
+              .toLowerCase()
+              .replace(/[^a-z0-9]/g, "");
+            if (!baseUsername) baseUsername = "user";
+
+            let username = baseUsername;
+            let counter = 1;
+            while (await prisma.profile.findUnique({ where: { username } })) {
+              username = `${baseUsername}${Math.floor(Math.random() * 8999 + 1000)}`;
+              counter++;
+              if (counter > 10) break;
+            }
+
+            const newUser = await prisma.user.create({
+              data: {
+                email: cleanEmail,
+                emailVerified: new Date(),
+                role: "USER",
+                status: "ACTIVE",
+                settings: {
+                  create: {
+                    darkMode: true,
+                    pushNotifications: true,
+                    emailNotifications: true,
+                    invisibleMode: false,
+                    privatePhotos: false,
+                  }
+                },
+                profile: {
+                  create: {
+                    fullName: user.name || null,
+                    username: username,
+                    completed: false,
+                    premiumStatus: "FREE",
+                  }
+                },
+                ...(user.image ? {
+                  photos: {
+                    create: [
+                      {
+                        url: user.image,
+                        isProfile: true,
+                        publicId: `google_${Date.now()}`
+                      }
+                    ]
+                  }
+                } : {})
+              },
+              include: { profile: true, photos: { where: { isProfile: true }, take: 1 } }
+            });
+
+            user.id = newUser.id;
+            user.role = newUser.role;
+            user.username = newUser.profile?.username || null;
+            user.fullName = newUser.profile?.fullName || user.name || null;
+            user.completed = false;
+            user.premiumStatus = "FREE";
+            user.image = newUser.photos?.[0]?.url || user.image || null;
+          }
+
+          return true;
+        } catch (err) {
+          console.error("Google sign-in callback error:", err);
+          return false;
+        }
+      }
+
+      return true;
+    },
     async redirect({ url, baseUrl }) {
       if (!url) {
         return baseUrl;
@@ -154,6 +254,27 @@ export const authOptions = {
         token.completed = user.completed;
         token.premiumStatus = user.premiumStatus;
         token.image = user.image;
+      }
+
+      // Safety check: Ensure MongoDB ObjectId and profile fields exist on token
+      if ((!token.username || !token.id) && token.email) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: token.email.toLowerCase().trim() },
+            include: { profile: true, photos: { where: { isProfile: true }, take: 1 } }
+          });
+          if (dbUser) {
+            token.id = dbUser.id;
+            token.role = dbUser.role;
+            token.username = dbUser.profile?.username || null;
+            token.fullName = dbUser.profile?.fullName || null;
+            token.completed = dbUser.profile?.completed || false;
+            token.premiumStatus = dbUser.profile?.premiumStatus || "FREE";
+            token.image = dbUser.photos?.[0]?.url || token.image || null;
+          }
+        } catch (e) {
+          console.error("JWT user fetch error:", e);
+        }
       }
       
       // Dynamic profile updates during user session
