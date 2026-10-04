@@ -52,7 +52,7 @@ export default function Home() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card-lux text-xs font-bold text-[#FF4D8D] mb-8 border border-[#FF4D8D]/30 shadow-lg shadow-pink-500/10"
           >
             <Sparkles className="w-4 h-4 text-[#FF4D8D] animate-spin" />
-            <span>Next-Gen Groq AI Matchmaker</span>
+            <span>Soul Bridge AI Matchmaker</span>
           </motion.div>
           
           {/* Animated Headline */}
