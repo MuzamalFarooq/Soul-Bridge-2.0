@@ -63,7 +63,7 @@ export default function Home() {
             className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight leading-[1.1] mb-6"
           >
             Find the Bridge to Your <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF4D8D] via-[#FFB6C1] to-[#9C6BFF] filter drop-shadow-[0_0_25px_rgba(255,77,141,0.4)]">
+            <span className="text-transparent bg-clip-text bg-gray-50-to-r from-[#FF4D8D] via-[#FFB6C1] to-[#9C6BFF] filter drop-shadow-[0_0_25px_rgba(255,77,141,0.4)]">
               Ultimate Soulmate
             </span>
           </motion.h1>
