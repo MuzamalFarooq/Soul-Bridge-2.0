@@ -1,0 +1,18 @@
+{
+  "soulbridge-env-guard": {
+    "enabled": true,
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .agents/scripts/protect-env.js",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
+
