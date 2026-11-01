@@ -7,18 +7,21 @@ const ThemeContext = createContext({
   toggleTheme: () => {},
 });
 
+function applyTheme(nextTheme) {
+  document.documentElement.classList.toggle("light", nextTheme === "light");
+  document.documentElement.classList.toggle("dark", nextTheme !== "light");
+  document.documentElement.style.colorScheme = nextTheme;
+}
+
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState("dark");
 
   useEffect(() => {
     try {
       const savedTheme = localStorage.getItem("soul-bridge-theme");
-      if (savedTheme && savedTheme !== "dark") {
-        setTheme(savedTheme);
-        document.documentElement.className = savedTheme;
-      } else {
-        document.documentElement.className = "dark";
-      }
+      const nextTheme = savedTheme === "light" ? "light" : "dark";
+      setTheme(nextTheme);
+      applyTheme(nextTheme);
     } catch (_) {}
   }, []);
 
@@ -26,7 +29,7 @@ export function ThemeProvider({ children }) {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
     localStorage.setItem("soul-bridge-theme", newTheme);
-    document.documentElement.className = newTheme;
+    applyTheme(newTheme);
   };
 
   return (
