@@ -4,7 +4,13 @@ import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 import { resolveAuthBaseUrl } from "./auth-url";
 
-const resolvedAuthBaseUrl = resolveAuthBaseUrl(process.env);
+const resolvedAuthBaseUrl =
+  resolveAuthBaseUrl(process.env) ||
+  (process.env.NODE_ENV === "production" ? "https://soulbridge.muzamal.site" : undefined);
+
+if (process.env.NODE_ENV === "production" && (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET)) {
+  console.error("Google OAuth is not configured: set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in the deployment environment.");
+}
 
 if (process.env.NODE_ENV === "production" && resolvedAuthBaseUrl) {
   process.env.NEXTAUTH_URL = resolvedAuthBaseUrl;
@@ -146,7 +152,7 @@ export const authOptions = {
 
           if (dbUser) {
             if (dbUser.status === "BANNED") {
-              return false;
+              return "/login?error=GoogleAccountBlocked";
             }
 
             user.id = dbUser.id;
@@ -221,7 +227,7 @@ export const authOptions = {
           return true;
         } catch (err) {
           console.error("Google sign-in callback error:", err);
-          return false;
+          return "/login?error=GoogleAccountSetup";
         }
       }
 
@@ -312,4 +318,3 @@ export const authOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || "soul-bridge-jwt-super-secret-key-development-2026",
 };
-

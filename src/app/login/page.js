@@ -23,6 +23,10 @@ function LoginContent() {
       ? "Invalid email address or password."
       : authError === "OAuthSignin" || authError === "OAuthCallback"
       ? "Could not authenticate with Google. Please try again."
+      : authError === "GoogleAccountSetup"
+      ? "Google sign-in reached SoulBridge, but your account could not be created. Please try again or contact support."
+      : authError === "GoogleAccountBlocked"
+      ? "This account has been suspended. Please contact support."
       : authError
     : "";
 
