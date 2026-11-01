@@ -93,9 +93,20 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative z-10 bg-[#09090B]">
+    <div className="auth-page min-h-screen flex items-center justify-center px-4 py-12 relative z-10 bg-[#09090B]">
       {/* Radial backdrop */}
       <div className="absolute w-[500px] h-[500px] bg-radial from-[#FF4D8D]/20 via-[#9C6BFF]/10 to-transparent blur-[120px] pointer-events-none" />
+
+      <div className="auth-side-panel hidden md:flex" aria-hidden="true">
+        <div className="auth-side-content">
+          <Heart className="w-8 h-8 fill-current mb-5" />
+          <p className="text-xs uppercase tracking-[0.3em] opacity-75 mb-3">Soul Bridge</p>
+          <h1>Where Hearts<br />Connect</h1>
+          <p className="text-sm leading-relaxed opacity-80 max-w-xs mt-5">
+            Better conversations begin with people who value the same kind of connection.
+          </p>
+        </div>
+      </div>
 
       <motion.div 
         initial={{ opacity: 0, y: 20, scale: 0.96 }}

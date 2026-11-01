@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 const ThemeContext = createContext({
-  theme: "dark",
+  theme: "light",
   toggleTheme: () => {},
 });
 
@@ -14,16 +14,14 @@ function applyTheme(nextTheme) {
 }
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState("dark");
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === "undefined") return "light";
+    return window.localStorage.getItem("soul-bridge-theme") === "dark" ? "dark" : "light";
+  });
 
   useEffect(() => {
-    try {
-      const savedTheme = localStorage.getItem("soul-bridge-theme");
-      const nextTheme = savedTheme === "light" ? "light" : "dark";
-      setTheme(nextTheme);
-      applyTheme(nextTheme);
-    } catch (_) {}
-  }, []);
+    applyTheme(theme);
+  }, [theme]);
 
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
