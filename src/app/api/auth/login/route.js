@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { encode } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
-
-const fallbackSecret = "soul-bridge-jwt-super-secret-key-development-2026";
+import { getAuthSecret } from "@/lib/auth-secret";
 
 export async function POST(request) {
   try {
@@ -110,10 +109,9 @@ export async function POST(request) {
       premiumStatus: user.profile?.premiumStatus || "FREE",
     };
 
-    const secret = process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || fallbackSecret;
     const encodedToken = await encode({
       token: tokenPayload,
-      secret,
+      secret: getAuthSecret(),
       maxAge: 30 * 24 * 60 * 60,
     });
 

@@ -3,6 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 import { resolveAuthBaseUrl } from "./auth-url";
+import { getAuthSecret } from "./auth-secret";
 
 const resolvedAuthBaseUrl =
   resolveAuthBaseUrl(process.env) ||
@@ -316,5 +317,5 @@ export const authOptions = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET || "soul-bridge-jwt-super-secret-key-development-2026",
+  secret: getAuthSecret(),
 };

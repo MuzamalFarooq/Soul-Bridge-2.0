@@ -70,16 +70,6 @@ function LoginContent() {
         return;
       }
 
-      try {
-        await fetch("/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: cleanEmail, password }),
-        });
-      } catch (syncErr) {
-        console.error("Auth sync error:", syncErr);
-      }
-
       const callbackUrl = searchParams.get("callbackUrl");
       if (callbackUrl) {
         router.replace(callbackUrl);

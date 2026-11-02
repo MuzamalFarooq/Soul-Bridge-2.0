@@ -1,5 +1,6 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import { getAuthSecret } from "@/lib/auth-secret";
 
 export default withAuth(
   function proxy(req) {
@@ -32,6 +33,7 @@ export default withAuth(
     return NextResponse.next();
   },
   {
+    secret: getAuthSecret(),
     callbacks: {
       authorized: ({ token, req }) => {
         const path = req.nextUrl.pathname;
