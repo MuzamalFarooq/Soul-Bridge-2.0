@@ -352,7 +352,7 @@ export const authOptions = {
     },
     async jwt({ token, user, trigger, session }) {
       if (user) {
-        token.id = user.id;
+        token.sub = user.id;
         token.role = user.role;
         token.username = user.username;
         token.fullName = user.fullName;
@@ -361,8 +361,9 @@ export const authOptions = {
         token.image = user.image;
       }
 
-      // Always guarantee token.id is the MongoDB ObjectId, not an external provider numeric id
-      const isObjectId = typeof token.id === "string" && /^[0-9a-fA-F]{24}$/.test(token.id);
+      // Always guarantee token.sub is the MongoDB ObjectId, not an external provider numeric id
+      const tokenUserId = token.sub || token.id;
+      const isObjectId = typeof tokenUserId === "string" && /^[0-9a-fA-F]{24}$/.test(tokenUserId);
       const userEmail = (user?.email || token.email || "").toLowerCase().trim();
 
       if ((!isObjectId || !token.username) && userEmail) {
@@ -372,7 +373,7 @@ export const authOptions = {
             include: { profile: true, photos: { where: { isProfile: true }, take: 1 } }
           });
           if (dbUser) {
-            token.id = dbUser.id;
+            token.sub = dbUser.id;
             token.role = dbUser.role;
             token.username = dbUser.profile?.username || null;
             token.fullName = dbUser.profile?.fullName || token.name || null;
@@ -398,7 +399,7 @@ export const authOptions = {
     },
     async session({ session, token }) {
       if (token) {
-        session.user.id = token.id;
+        session.user.id = token.id || token.sub;
         session.user.role = token.role || "USER";
         session.user.username = token.username || null;
         session.user.fullName = token.fullName || session.user.name || null;

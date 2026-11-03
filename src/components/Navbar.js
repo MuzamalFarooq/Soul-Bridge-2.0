@@ -57,8 +57,12 @@ export default function Navbar() {
     }
   };
 
-  const handleSignOut = () => {
-    signOut({ callbackUrl: "/" });
+  const handleSignOut = async () => {
+    try {
+      await fetch("/api/auth/cleanup", { method: "POST" });
+    } finally {
+      await signOut({ callbackUrl: "/" });
+    }
   };
 
   const navLinks = session

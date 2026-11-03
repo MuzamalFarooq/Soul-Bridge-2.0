@@ -34,7 +34,7 @@ export async function POST(request) {
             { profile: { username: envAdminUsername } }
           ]
         },
-        include: { profile: true }
+        include: { profile: true, photos: { where: { isProfile: true }, take: 1 } }
       });
 
       if (!user) {
@@ -54,13 +54,13 @@ export async function POST(request) {
               }
             }
           },
-          include: { profile: true }
+          include: { profile: true, photos: { where: { isProfile: true }, take: 1 } }
         });
       } else if (user.role !== "ADMIN") {
         user = await prisma.user.update({
           where: { id: user.id },
           data: { role: "ADMIN" },
-          include: { profile: true }
+          include: { profile: true, photos: { where: { isProfile: true }, take: 1 } }
         });
       }
     } else {
@@ -71,7 +71,7 @@ export async function POST(request) {
             { profile: { username: input } }
           ]
         },
-        include: { profile: true }
+        include: { profile: true, photos: { where: { isProfile: true }, take: 1 } }
       });
 
       if (!user || !user.passwordHash) {
@@ -99,14 +99,13 @@ export async function POST(request) {
 
     const tokenPayload = {
       sub: user.id,
-      id: user.id,
-      role: user.role,
       email: user.email,
-      name: user.profile?.fullName || user.email,
+      role: user.role,
       username: user.profile?.username || null,
       fullName: user.profile?.fullName || null,
       completed: user.profile?.completed || false,
       premiumStatus: user.profile?.premiumStatus || "FREE",
+      image: user.photos?.[0]?.url || null,
     };
 
     const encodedToken = await encode({
@@ -116,18 +115,27 @@ export async function POST(request) {
     });
 
     const response = NextResponse.json({ success: true, message: "Signed in successfully" });
-    const cookieNames = process.env.NODE_ENV === "production"
-      ? ["__Secure-authjs.session-token", "authjs.session-token", "next-auth.session-token", "__Secure-next-auth.session-token"]
-      : ["authjs.session-token", "next-auth.session-token"];
+    const isProduction = process.env.NODE_ENV === "production";
+    const sessionCookieName = isProduction
+      ? "__Secure-next-auth.session-token"
+      : "next-auth.session-token";
+    const legacyCookieNames = [
+      "__Secure-authjs.session-token",
+      "authjs.session-token",
+      "next-auth.session-token",
+      "__Secure-next-auth.session-token",
+    ].filter((cookieName) => cookieName !== sessionCookieName);
 
-    for (const cookieName of cookieNames) {
-      response.cookies.set(cookieName, encodedToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-        maxAge: 30 * 24 * 60 * 60,
-      });
+    response.cookies.set(sessionCookieName, encodedToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60,
+    });
+
+    for (const cookieName of legacyCookieNames) {
+      response.cookies.delete(cookieName);
     }
 
     return response;
