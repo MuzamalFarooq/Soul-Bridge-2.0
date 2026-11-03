@@ -7,6 +7,15 @@ const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
 const port = parseInt(process.env.PORT, 10) || 3000;
 
+// Ensure NextAuth and proxy trust forwarded headers from reverse proxies (Nginx / Cloudflare)
+if (!process.env.AUTH_TRUST_HOST) {
+  process.env.AUTH_TRUST_HOST = "true";
+}
+
+if (!process.env.NEXTAUTH_URL && process.env.NEXT_PUBLIC_APP_URL) {
+  process.env.NEXTAUTH_URL = process.env.NEXT_PUBLIC_APP_URL;
+}
+
 // Initialize Next.js
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();

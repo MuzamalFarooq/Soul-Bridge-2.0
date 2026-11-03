@@ -5,6 +5,9 @@ import bcrypt from "bcryptjs";
 import { resolveAuthBaseUrl } from "./auth-url";
 import { getAuthSecret } from "./auth-secret";
 
+// Ensure reverse proxy headers are trusted for NextAuth
+process.env.AUTH_TRUST_HOST = "true";
+
 const resolvedAuthBaseUrl =
   resolveAuthBaseUrl(process.env) ||
   (process.env.NODE_ENV === "production" ? "https://soulbridge.muzamal.site" : undefined);
@@ -13,10 +16,19 @@ if (process.env.NODE_ENV === "production" && (!process.env.GOOGLE_CLIENT_ID || !
   console.error("Google OAuth is not configured: set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in the deployment environment.");
 }
 
-if (process.env.NODE_ENV === "production" && resolvedAuthBaseUrl) {
+if (resolvedAuthBaseUrl) {
   process.env.NEXTAUTH_URL = resolvedAuthBaseUrl;
   process.env.AUTH_URL = resolvedAuthBaseUrl;
 }
+
+const isProduction =
+  process.env.NODE_ENV === "production" ||
+  Boolean(resolvedAuthBaseUrl?.startsWith("https://")) ||
+  Boolean(process.env.NEXT_PUBLIC_APP_URL?.startsWith("https://"));
+
+const useSecureCookies = Boolean(isProduction);
+const cookiePrefix = useSecureCookies ? "__Secure-" : "";
+const hostPrefix = useSecureCookies ? "__Host-" : "";
 
 export const authOptions = {
   providers: [
@@ -43,7 +55,7 @@ export const authOptions = {
         const envAdminUsername = (process.env.ADMIN_USERNAME || "admin").toLowerCase().trim();
         const envAdminPassword = process.env.ADMIN_PASSWORD || "Admin123!";
 
-        // Check if credentials match the configured admin credentials from .env
+        // Check if credentials match configured admin credentials from environment
         const isAdminMatch = (input === envAdminEmail || input === envAdminUsername) && inputPassword === envAdminPassword;
 
         if (isAdminMatch) {
@@ -138,7 +150,55 @@ export const authOptions = {
       }
     })
   ],
-  trustHost: true,
+  useSecureCookies,
+  cookies: {
+    sessionToken: {
+      name: `${cookiePrefix}next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: useSecureCookies,
+      },
+    },
+    callbackUrl: {
+      name: `${cookiePrefix}next-auth.callback-url`,
+      options: {
+        sameSite: "lax",
+        path: "/",
+        secure: useSecureCookies,
+      },
+    },
+    csrfToken: {
+      name: `${hostPrefix}next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: useSecureCookies,
+      },
+    },
+    pkceCodeVerifier: {
+      name: `${cookiePrefix}next-auth.pkce.code_verifier`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: useSecureCookies,
+        maxAge: 60 * 15,
+      },
+    },
+    state: {
+      name: `${cookiePrefix}next-auth.state`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: useSecureCookies,
+        maxAge: 60 * 15,
+      },
+    },
+  },
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.provider === "google") {
@@ -156,26 +216,52 @@ export const authOptions = {
               return "/login?error=GoogleAccountBlocked";
             }
 
+            // Ensure verified email status from Google OAuth
+            if (!dbUser.emailVerified) {
+              await prisma.user.update({
+                where: { id: dbUser.id },
+                data: { emailVerified: new Date() }
+              });
+            }
+
+            // If account was created without a profile, guarantee profile exists
+            if (!dbUser.profile) {
+              const baseName = (user.name || cleanEmail.split("@")[0]).toLowerCase().replace(/[^a-z0-9]/g, "") || "user";
+              const uniqueSuffix = Math.random().toString(36).substring(2, 6);
+              const fallbackUsername = `${baseName}_${uniqueSuffix}`;
+
+              const createdProfile = await prisma.profile.create({
+                data: {
+                  userId: dbUser.id,
+                  fullName: user.name || cleanEmail.split("@")[0],
+                  username: fallbackUsername,
+                  completed: false,
+                  premiumStatus: "FREE",
+                }
+              });
+              dbUser.profile = createdProfile;
+            }
+
             user.id = dbUser.id;
             user.role = dbUser.role;
             user.username = dbUser.profile?.username || null;
             user.fullName = dbUser.profile?.fullName || user.name || null;
-            user.completed = dbUser.profile?.completed || false;
+            user.completed = Boolean(dbUser.profile?.completed);
             user.premiumStatus = dbUser.profile?.premiumStatus || "FREE";
             user.image = dbUser.photos?.[0]?.url || user.image || null;
           } else {
-            // Generate clean unique username from name or email
-            let baseUsername = (user.name || cleanEmail.split("@")[0])
-              .toLowerCase()
-              .replace(/[^a-z0-9]/g, "");
-            if (!baseUsername) baseUsername = "user";
-
-            let username = baseUsername;
+            // Generate clean, collision-free username
+            const baseClean = (user.name || cleanEmail.split("@")[0]).toLowerCase().replace(/[^a-z0-9]/g, "") || "user";
+            let username = baseClean;
             let counter = 1;
             while (await prisma.profile.findUnique({ where: { username } })) {
-              username = `${baseUsername}${Math.floor(Math.random() * 8999 + 1000)}`;
+              const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+              username = `${baseClean}${randomSuffix}`;
               counter++;
-              if (counter > 10) break;
+              if (counter > 10) {
+                username = `${baseClean}_${Date.now().toString(36)}`;
+                break;
+              }
             }
 
             const newUser = await prisma.user.create({
@@ -195,7 +281,7 @@ export const authOptions = {
                 },
                 profile: {
                   create: {
-                    fullName: user.name || null,
+                    fullName: user.name || cleanEmail.split("@")[0],
                     username: username,
                     completed: false,
                     premiumStatus: "FREE",
@@ -235,22 +321,34 @@ export const authOptions = {
       return true;
     },
     async redirect({ url, baseUrl }) {
+      const canonicalBase =
+        (process.env.NODE_ENV === "production" ? "https://soulbridge.muzamal.site" : null) ||
+        resolveAuthBaseUrl(process.env) ||
+        baseUrl ||
+        "https://soulbridge.muzamal.site";
+
       if (!url) {
-        return baseUrl;
+        return `${canonicalBase}/discover`;
       }
 
+      // Handle relative paths safely (e.g. "/discover" or "/onboarding")
       if (url.startsWith("/")) {
-        return `${baseUrl}${url}`;
+        return `${canonicalBase}${url}`;
       }
 
+      // Handle absolute URLs matching canonical or baseUrl origin
       try {
         const parsedUrl = new URL(url);
-        if (parsedUrl.origin === baseUrl) {
+        const parsedCanonical = new URL(canonicalBase);
+        if (
+          parsedUrl.origin === parsedCanonical.origin ||
+          (baseUrl && parsedUrl.origin === new URL(baseUrl).origin)
+        ) {
           return url;
         }
       } catch (_) {}
 
-      return baseUrl;
+      return `${canonicalBase}/discover`;
     },
     async jwt({ token, user, trigger, session }) {
       if (user) {
@@ -263,21 +361,24 @@ export const authOptions = {
         token.image = user.image;
       }
 
-      // Safety check: Ensure MongoDB ObjectId and profile fields exist on token
-      if ((!token.username || !token.id) && token.email) {
+      // Always guarantee token.id is the MongoDB ObjectId, not an external provider numeric id
+      const isObjectId = typeof token.id === "string" && /^[0-9a-fA-F]{24}$/.test(token.id);
+      const userEmail = (user?.email || token.email || "").toLowerCase().trim();
+
+      if ((!isObjectId || !token.username) && userEmail) {
         try {
           const dbUser = await prisma.user.findUnique({
-            where: { email: token.email.toLowerCase().trim() },
+            where: { email: userEmail },
             include: { profile: true, photos: { where: { isProfile: true }, take: 1 } }
           });
           if (dbUser) {
             token.id = dbUser.id;
             token.role = dbUser.role;
             token.username = dbUser.profile?.username || null;
-            token.fullName = dbUser.profile?.fullName || null;
-            token.completed = dbUser.profile?.completed || false;
+            token.fullName = dbUser.profile?.fullName || token.name || null;
+            token.completed = Boolean(dbUser.profile?.completed);
             token.premiumStatus = dbUser.profile?.premiumStatus || "FREE";
-            token.image = dbUser.photos?.[0]?.url || token.image || null;
+            token.image = dbUser.photos?.[0]?.url || token.image || token.picture || null;
           }
         } catch (e) {
           console.error("JWT user fetch error:", e);
@@ -298,12 +399,12 @@ export const authOptions = {
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id;
-        session.user.role = token.role;
-        session.user.username = token.username;
-        session.user.fullName = token.fullName;
-        session.user.completed = token.completed;
-        session.user.premiumStatus = token.premiumStatus;
-        session.user.image = token.image;
+        session.user.role = token.role || "USER";
+        session.user.username = token.username || null;
+        session.user.fullName = token.fullName || session.user.name || null;
+        session.user.completed = Boolean(token.completed);
+        session.user.premiumStatus = token.premiumStatus || "FREE";
+        session.user.image = token.image || session.user.image || null;
       }
       return session;
     }
