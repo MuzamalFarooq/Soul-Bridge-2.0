@@ -21,10 +21,15 @@ const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
-  const httpServer = createServer((req, res) => {
-    const parsedUrl = parse(req.url, true);
-    handle(req, res, parsedUrl);
-  });
+  const httpServer = createServer(
+    {
+      maxHeaderSize: 64 * 1024,
+    },
+    (req, res) => {
+      const parsedUrl = parse(req.url, true);
+      handle(req, res, parsedUrl);
+    }
+  );
 
   const io = new Server(httpServer, {
     cors: {
