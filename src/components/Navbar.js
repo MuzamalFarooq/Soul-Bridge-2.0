@@ -111,7 +111,7 @@ export default function Navbar() {
                 href={link.href}
                 className={`px-4 py-2 rounded-full text-xs font-semibold transition-all duration-300 ${
                   isActive
-                    ? "bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] text-white shadow-md shadow-pink-500/20"
+                    ? "bg-linear-to-r from-[#FF4D8D] to-[#9C6BFF] text-white shadow-md shadow-pink-500/20"
                     : "text-white/70 hover:text-white hover:bg-white/5"
                 }`}
               >
