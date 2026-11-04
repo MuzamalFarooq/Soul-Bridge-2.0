@@ -51,3 +51,17 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+### Vercel CI
+
+The [Vercel CI workflow](./.github/workflows/vercel.yml) runs on pull requests targeting `main` and on pushes to `main`.
+
+Configure these GitHub Actions secrets before enabling it:
+
+- `VERCEL_TOKEN`
+- `VERCEL_ORG_ID`
+- `VERCEL_PROJECT_ID`
+
+The workflow creates preview deployments for pull requests and production deployments for pushes to `main`. Configure the app's runtime variables in the corresponding Vercel project environments; do not commit them to the repository.
+
+The custom `server.js` Socket.io server is not run by Vercel's serverless deployment model. Keep a separate long-running Socket.io host and configure the client to use its public URL when deploying chat and call features.
