@@ -404,9 +404,10 @@ export default function Discover() {
 
       <Footer />
 
-      {/* Direct Messaging Quick Modal */}
+      {/* Direct Messaging Floating Chat */}
       {activeMessageCandidate && (
         <QuickMessageModal
+          key={activeMessageCandidate.id}
           candidate={activeMessageCandidate}
           onClose={() => setActiveMessageCandidate(null)}
         />
