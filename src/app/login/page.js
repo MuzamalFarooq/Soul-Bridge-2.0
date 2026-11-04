@@ -21,7 +21,7 @@ function LoginContent() {
   const queryError = authError
     ? authError === "CredentialsSignin"
       ? "Invalid email address or password."
-      : authError === "OAuthSignin" || authError === "OAuthCallback"
+      : authError === "OAuthSignin" || authError === "OAuthCallback" || authError === "AccessDenied"
       ? "Could not authenticate with Google. Please try again."
       : authError === "GoogleAccountSetup"
       ? "Google sign-in reached SoulBridge, but your account could not be created. Please try again or contact support."

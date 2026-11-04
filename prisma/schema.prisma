@@ -10,6 +10,8 @@ generator client {
 model User {
   id              String         @id @default(auto()) @map("_id") @db.ObjectId
   email           String         @unique
+  name            String?
+  image           String?
   passwordHash    String?
   emailVerified   DateTime?
   role            String         @default("USER") // USER, ADMIN
@@ -20,6 +22,7 @@ model User {
   updatedAt       DateTime       @updatedAt
 
   profile         Profile?
+  accounts        Account[]
   photos          Photo[]
   likesSent       Like[]         @relation("LikesSent")
   likesReceived   Like[]         @relation("LikesReceived")
@@ -38,6 +41,25 @@ model User {
   settings        Settings?
   activityLogs    ActivityLog[]
   comments        Comment[]      @relation("UserComments")
+}
+
+model Account {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String   @db.ObjectId
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
 }
 
 model Profile {
@@ -246,4 +268,3 @@ model Comment {
   text        String
   createdAt   DateTime @default(now())
 }
-

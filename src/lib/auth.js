@@ -1,5 +1,6 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 import { resolveAuthBaseUrl } from "./auth-url";
@@ -31,6 +32,7 @@ const cookiePrefix = useSecureCookies ? "__Secure-" : "";
 const hostPrefix = useSecureCookies ? "__Host-" : "";
 
 export const authOptions = {
+  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
@@ -203,12 +205,17 @@ export const authOptions = {
     async signIn({ user, account, profile }) {
       if (account?.provider === "google") {
         if (!user?.email) return false;
+        if (profile?.email_verified !== true) return false;
         const cleanEmail = user.email.toLowerCase().trim();
 
         try {
           let dbUser = await prisma.user.findUnique({
             where: { email: cleanEmail },
-            include: { profile: true, photos: { where: { isProfile: true }, take: 1 } }
+            include: {
+              profile: true,
+              settings: true,
+              photos: { where: { isProfile: true }, take: 1 }
+            }
           });
 
           if (dbUser) {
@@ -240,6 +247,41 @@ export const authOptions = {
                 }
               });
               dbUser.profile = createdProfile;
+            }
+
+            if (!dbUser.settings) {
+              await prisma.settings.create({
+                data: {
+                  userId: dbUser.id,
+                  darkMode: true,
+                  pushNotifications: true,
+                  emailNotifications: true,
+                  invisibleMode: false,
+                  privatePhotos: false,
+                }
+              });
+            }
+
+            if (user.image && !dbUser.photos?.[0]) {
+              const profilePhoto = await prisma.photo.create({
+                data: {
+                  userId: dbUser.id,
+                  url: user.image,
+                  isProfile: true,
+                  publicId: `google_${dbUser.id}`,
+                }
+              });
+              dbUser.photos = [profilePhoto];
+            }
+
+            if (user.name || user.image) {
+              await prisma.user.update({
+                where: { id: dbUser.id },
+                data: {
+                  ...(user.name ? { name: user.name } : {}),
+                  ...(user.image ? { image: user.image } : {}),
+                }
+              });
             }
 
             user.id = dbUser.id;

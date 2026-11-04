@@ -26,6 +26,15 @@ async function getSessionToken(req) {
     });
   }
 
+  // Clear compatibility path for sessions created by an older cookie policy.
+  if (!token) {
+    token = await getToken({
+      req,
+      secret,
+      cookieName: "__Host-next-auth.session-token",
+    });
+  }
+
   // 3. Fallback to default auto-detection
   if (!token) {
     token = await getToken({ req, secret });

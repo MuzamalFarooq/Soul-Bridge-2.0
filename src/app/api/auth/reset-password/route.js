@@ -84,7 +84,8 @@ export async function POST(request) {
       "__Secure-authjs.session-token",
       "authjs.session-token",
       "next-auth.session-token",
-      "__Secure-next-auth.session-token"
+      "__Secure-next-auth.session-token",
+      "__Host-next-auth.session-token"
     ];
 
     for (const cookieName of cookieNames) {

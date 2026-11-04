@@ -124,6 +124,7 @@ export async function POST(request) {
       "authjs.session-token",
       "next-auth.session-token",
       "__Secure-next-auth.session-token",
+      "__Host-next-auth.session-token",
     ].filter((cookieName) => cookieName !== sessionCookieName);
 
     response.cookies.set(sessionCookieName, encodedToken, {

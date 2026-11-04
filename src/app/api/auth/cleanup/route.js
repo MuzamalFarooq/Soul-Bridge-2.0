@@ -5,6 +5,7 @@ const sessionCookieNames = [
   "authjs.session-token",
   "next-auth.session-token",
   "__Secure-next-auth.session-token",
+  "__Host-next-auth.session-token",
 ];
 
 export async function POST() {
