@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { calculateCompatibilityScore } from "@/services/groq";
+import { getCachedPostComments, invalidatePostComments } from "@/lib/cache";
 
 // Helper to get active user ID
 async function getUserId() {
@@ -63,10 +64,7 @@ function formatTimeAgo(date) {
  */
 export async function getPostCommentsFromDb(targetId) {
   try {
-    let dbComments = await prisma.comment.findMany({
-      where: { targetId: String(targetId) },
-      orderBy: { createdAt: "desc" }
-    });
+    let dbComments = await getCachedPostComments(targetId);
 
     // Seed mock comments into database if empty for mock posts
     if (dbComments.length === 0 && initialSeedComments[targetId]) {
@@ -81,6 +79,8 @@ export async function getPostCommentsFromDb(targetId) {
           }
         }).catch(() => {});
       }
+
+      await invalidatePostComments(targetId);
 
       // Re-fetch after seeding
       dbComments = await prisma.comment.findMany({
@@ -347,6 +347,9 @@ export async function addPostCommentAction({ targetUserId, commentText }) {
         text: cleanText
       }
     });
+
+    // Invalidate comment cache in Upstash Redis and Next.js tags
+    await invalidatePostComments(targetUserId);
 
     const newCommentFormatted = {
       id: newCommentDb.id,

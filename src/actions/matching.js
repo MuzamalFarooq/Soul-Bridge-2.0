@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { calculateCompatibilityScore } from "@/services/groq";
+import { getCachedNewlyAddedProfiles } from "@/lib/cache";
 
 // Helper to get active user ID
 async function getUserId() {
@@ -557,11 +558,7 @@ export async function declineConnectionRequest({ requesterId }) {
  */
 export async function fetchNewlyAddedProfiles() {
   try {
-    const recentProfiles = await prisma.profile.findMany({
-      where: { completed: true },
-      take: 10,
-      include: { user: { include: { photos: true } } }
-    });
+    const recentProfiles = await getCachedNewlyAddedProfiles();
 
     const formattedList = [];
 

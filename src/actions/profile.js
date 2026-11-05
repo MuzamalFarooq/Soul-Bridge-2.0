@@ -4,6 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { generateBioText, getProfileReviewText } from "@/services/groq";
+import {
+  getCachedPublicProfile,
+  getCachedUserSearch,
+  invalidateUserProfile,
+} from "@/lib/cache";
 
 /**
  * Helper to get current authenticated user ID
@@ -184,6 +189,9 @@ export async function saveUserProfile(data) {
       }
     }
 
+    // Invalidate Redis cache & Next.js cache tags for this profile
+    await invalidateUserProfile(userId, data.username);
+
     return { success: true, message: "Profile saved successfully!" };
   } catch (error) {
     console.error("Save profile error:", error);
@@ -257,6 +265,8 @@ export async function deleteProfilePhotoAction(photoId) {
       }
     }
 
+    await invalidateUserProfile(userId);
+
     return { success: true, message: "Photo deleted successfully" };
   } catch (error) {
     console.error("Delete photo error:", error);
@@ -284,6 +294,8 @@ export async function setPrimaryProfilePhotoAction(photoId) {
       data: { isProfile: true }
     });
 
+    await invalidateUserProfile(userId);
+
     return { success: true, message: "Primary photo updated successfully" };
   } catch (error) {
     console.error("Set primary photo error:", error);
@@ -302,25 +314,8 @@ export async function searchUsersAction(query) {
 
     const cleanQuery = query.trim();
 
-    // Query matching profiles from DB
-    const profiles = await prisma.profile.findMany({
-      where: {
-        OR: [
-          { fullName: { contains: cleanQuery, mode: "insensitive" } },
-          { username: { contains: cleanQuery, mode: "insensitive" } },
-          { city: { contains: cleanQuery, mode: "insensitive" } },
-          { profession: { contains: cleanQuery, mode: "insensitive" } }
-        ]
-      },
-      take: 10,
-      include: {
-        user: {
-          include: {
-            photos: true
-          }
-        }
-      }
-    });
+    // Query matching profiles with Upstash Redis cache + MongoDB
+    const profiles = await getCachedUserSearch(cleanQuery);
 
     const results = profiles.map((p) => {
       const primaryPhoto = p.user?.photos?.find((ph) => ph.isProfile) || p.user?.photos?.[0];
@@ -357,23 +352,8 @@ export async function getUserPublicProfile(identifier) {
   try {
     if (!identifier) return { success: false, error: "User identifier required" };
 
-    const profile = await prisma.profile.findFirst({
-      where: {
-        OR: [
-          { userId: identifier },
-          { username: identifier.toLowerCase().trim() }
-        ]
-      },
-      include: {
-        user: {
-          include: {
-            photos: {
-              orderBy: { createdAt: "desc" }
-            }
-          }
-        }
-      }
-    });
+    // Multi-layer cache (Upstash Redis + Prisma MongoDB)
+    const profile = await getCachedPublicProfile(identifier);
 
     if (!profile) {
       return { success: false, error: "User not found" };

@@ -3,6 +3,11 @@
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import {
+  getCachedAdminStats,
+  invalidateAdminStats,
+  invalidateUserProfile,
+} from "@/lib/cache";
 
 // Helper to verify admin access
 async function requireAdmin() {
@@ -19,7 +24,8 @@ export async function getAdminStats() {
   try {
     await requireAdmin();
 
-    const [
+    const cached = await getCachedAdminStats();
+    const {
       totalUsers,
       activeUsers,
       bannedUsers,
@@ -28,22 +34,8 @@ export async function getAdminStats() {
       totalMessages,
       totalLikes,
       premiumUsers,
-      recentSignups
-    ] = await Promise.all([
-      prisma.user.count(),
-      prisma.user.count({ where: { status: "ACTIVE" } }),
-      prisma.user.count({ where: { status: "BANNED" } }),
-      prisma.user.count({ where: { emailVerified: { not: null } } }),
-      prisma.match.count(),
-      prisma.message.count(),
-      prisma.like.count({ where: { type: "LIKE" } }),
-      prisma.profile.count({ where: { premiumStatus: { not: "FREE" } } }),
-      prisma.user.findMany({
-        orderBy: { createdAt: "desc" },
-        take: 7,
-        select: { createdAt: true }
-      })
-    ]);
+      recentSignups = [],
+    } = cached;
 
     // Build signup trend (last 7 days)
     const signupTrend = Array.from({ length: 7 }, (_, i) => {
@@ -159,6 +151,9 @@ export async function updateUserStatusAction(userId, status) {
       data: { status }
     });
 
+    await invalidateAdminStats();
+    await invalidateUserProfile(userId);
+
     return { success: true, message: `User ${status === "BANNED" ? "banned" : "unbanned"} successfully.` };
   } catch (error) {
     console.error("Update user status error:", error);
@@ -181,6 +176,9 @@ export async function updateUserRoleAction(userId, role) {
       where: { id: userId },
       data: { role }
     });
+
+    await invalidateAdminStats();
+    await invalidateUserProfile(userId);
 
     return { success: true, message: `User role updated to ${role}.` };
   } catch (error) {

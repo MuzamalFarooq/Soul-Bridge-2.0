@@ -189,7 +189,7 @@ export default function QuickMessageModal({ candidate, onClose }) {
             <div className="flex flex-col text-left overflow-hidden pr-1">
               <span className="text-xs font-bold text-foreground truncate flex items-center gap-1">
                 {firstName}
-                <Sparkles className="w-3 h-3 text-[var(--sb-rose)] flex-shrink-0" />
+                <Sparkles className="w-3 h-3 text-(--sb-rose) shrink-0" />
               </span>
               <span className="text-[10px] text-foreground/50 truncate">
                 {sentSuccess ? "Message sent" : "Chat minimized"}
@@ -204,7 +204,7 @@ export default function QuickMessageModal({ candidate, onClose }) {
                   e.stopPropagation();
                   setIsMinimized(false);
                 }}
-                className="w-7 h-7 rounded-full bg-[var(--sb-blush)]/50 dark:bg-white/10 hover:bg-[var(--sb-wine)] hover:text-white flex items-center justify-center text-foreground/70 transition-all cursor-pointer"
+                className="w-7 h-7 rounded-full bg-(--sb-blush)/50 dark:bg-white/10 hover:bg-[var(--sb-wine)] hover:text-white flex items-center justify-center text-foreground/70 transition-all cursor-pointer"
                 title="Restore chat"
                 aria-label="Restore chat"
               >

@@ -117,7 +117,7 @@ export default function Footer() {
 
       <div className="border-t border-white/10 py-6 pb-24 md:pb-6 text-center">
         <p className="text-[11px] text-white/40 font-medium px-4">
-          © {new Date().getFullYear()} Soul Bridge Inc. All rights reserved. Crafted with ❤️ for true connections worldwide.
+          © 2026 Soul Bridge Inc. All rights reserved. Crafted with ❤️ for true connections worldwide.
         </p>
       </div>
     </footer>

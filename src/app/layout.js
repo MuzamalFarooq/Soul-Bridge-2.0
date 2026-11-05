@@ -1,4 +1,5 @@
 import "./globals.css";
+import { Suspense } from "react";
 import Providers from "@/components/Providers";
 import LenisProvider from "@/components/ui/LenisProvider";
 import CursorGlow from "@/components/ui/CursorGlow";
@@ -45,12 +46,14 @@ export default function RootLayout({ children }) {
         <LenisProvider>
           <Loader />
           <CursorGlow />
-          <Providers>
-            <div className="flex-1 flex flex-col relative z-10 pb-16 md:pb-0">
-              {children}
-            </div>
-            <BottomNav />
-          </Providers>
+          <Suspense fallback={null}>
+            <Providers>
+              <div className="flex-1 flex flex-col relative z-10 pb-16 md:pb-0">
+                {children}
+              </div>
+              <BottomNav />
+            </Providers>
+          </Suspense>
         </LenisProvider>
       </body>
     </html>

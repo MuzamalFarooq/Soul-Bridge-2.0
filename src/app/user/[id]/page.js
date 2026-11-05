@@ -13,7 +13,7 @@ import Footer from "@/components/Footer";
 import { getUserPublicProfile } from "@/actions/profile";
 import { submitSwipeAction } from "@/actions/matching";
 
-export default function UserPublicProfilePage() {
+function UserProfileContent() {
   const params = useParams();
   const router = useRouter();
   const userId = params?.id;
@@ -406,5 +406,13 @@ export default function UserPublicProfilePage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function UserPublicProfilePage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <UserProfileContent />
+    </React.Suspense>
   );
 }
