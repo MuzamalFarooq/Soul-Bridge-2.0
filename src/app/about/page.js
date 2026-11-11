@@ -148,7 +148,7 @@ export default function AboutPage() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="text-base md:text-xl text-white/70 max-w-3xl mx-auto leading-relaxed mb-12 font-medium"
         >
-          Soul Bridge was born out of a simple belief: online dating shouldn't feel like endless superficial swiping. We blend cutting-edge Groq AI matchmaking, 3D interactive environments, and bank-grade privacy to foster authentic, lifelong love.
+          Soul Bridge was born out of a simple belief: online dating should not feel like endless superficial swiping. We blend cutting-edge Groq AI matchmaking, 3D interactive environments, and bank-grade privacy to foster authentic, lifelong love.
         </motion.p>
 
         {/* Stats Grid */}

@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
+import { randomBytes } from "crypto";
 import bcrypt from "bcryptjs";
-import { encode } from "next-auth/jwt";
 import { prisma } from "@/lib/prisma";
-import { getAuthSecret } from "@/lib/auth-secret";
 
 export async function POST(request) {
   try {
@@ -97,21 +96,20 @@ export async function POST(request) {
       }
     }
 
-    const tokenPayload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-      username: user.profile?.username || null,
-      fullName: user.profile?.fullName || null,
-      completed: user.profile?.completed || false,
-      premiumStatus: user.profile?.premiumStatus || "FREE",
-      image: user.photos?.[0]?.url || null,
-    };
+    const sessionToken = randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
-    const encodedToken = await encode({
-      token: tokenPayload,
-      secret: getAuthSecret(),
-      maxAge: 30 * 24 * 60 * 60,
+    await prisma.session.upsert({
+      where: { sessionToken },
+      update: {
+        userId: user.id,
+        expires,
+      },
+      create: {
+        sessionToken,
+        userId: user.id,
+        expires,
+      },
     });
 
     const response = NextResponse.json({ success: true, message: "Signed in successfully" });
@@ -127,7 +125,7 @@ export async function POST(request) {
       "__Host-next-auth.session-token",
     ].filter((cookieName) => cookieName !== sessionCookieName);
 
-    response.cookies.set(sessionCookieName, encodedToken, {
+    response.cookies.set(sessionCookieName, sessionToken, {
       httpOnly: true,
       secure: isProduction,
       sameSite: "lax",

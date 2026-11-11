@@ -395,59 +395,35 @@ export const authOptions = {
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.sub = user.id;
-        token.role = user.role;
-        token.username = user.username;
-        token.fullName = user.fullName;
-        token.completed = user.completed;
-        token.premiumStatus = user.premiumStatus;
-        token.image = user.image;
+        token.role = user.role || "USER";
+        token.username = user.username || null;
+        token.fullName = user.fullName || null;
+        token.completed = Boolean(user.completed ?? false);
+        token.premiumStatus = user.premiumStatus || "FREE";
+        token.image = user.image || null;
+        token.email = user.email || token.email || null;
       }
 
-      // Always guarantee token.sub is the MongoDB ObjectId, not an external provider numeric id
-      const tokenUserId = token.sub || token.id;
-      const isObjectId = typeof tokenUserId === "string" && /^[0-9a-fA-F]{24}$/.test(tokenUserId);
-      const userEmail = (user?.email || token.email || "").toLowerCase().trim();
-
-      if ((!isObjectId || !token.username) && userEmail) {
-        try {
-          const dbUser = await prisma.user.findUnique({
-            where: { email: userEmail },
-            include: { profile: true, photos: { where: { isProfile: true }, take: 1 } }
-          });
-          if (dbUser) {
-            token.sub = dbUser.id;
-            token.role = dbUser.role;
-            token.username = dbUser.profile?.username || null;
-            token.fullName = dbUser.profile?.fullName || token.name || null;
-            token.completed = Boolean(dbUser.profile?.completed);
-            token.premiumStatus = dbUser.profile?.premiumStatus || "FREE";
-            token.image = dbUser.photos?.[0]?.url || token.image || token.picture || null;
-          }
-        } catch (e) {
-          console.error("JWT user fetch error:", e);
-        }
-      }
-      
-      // Dynamic profile updates during user session
       if (trigger === "update" && session) {
-        if (session.completed !== undefined) token.completed = session.completed;
-        if (session.username !== undefined) token.username = session.username;
-        if (session.fullName !== undefined) token.fullName = session.fullName;
-        if (session.premiumStatus !== undefined) token.premiumStatus = session.premiumStatus;
-        if (session.image !== undefined) token.image = session.image;
+        if (session.completed !== undefined) token.completed = Boolean(session.completed);
+        if (session.username !== undefined) token.username = session.username || null;
+        if (session.fullName !== undefined) token.fullName = session.fullName || null;
+        if (session.premiumStatus !== undefined) token.premiumStatus = session.premiumStatus || "FREE";
+        if (session.image !== undefined) token.image = session.image || null;
       }
 
       return token;
     },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id || token.sub;
-        session.user.role = token.role || "USER";
-        session.user.username = token.username || null;
-        session.user.fullName = token.fullName || session.user.name || null;
-        session.user.completed = Boolean(token.completed);
-        session.user.premiumStatus = token.premiumStatus || "FREE";
-        session.user.image = token.image || session.user.image || null;
+    async session({ session, user, token }) {
+      if (session.user) {
+        session.user.id = user?.id || token?.sub || session.user.id;
+        session.user.email = user?.email || token?.email || session.user.email;
+        session.user.role = user?.role || token?.role || "USER";
+        session.user.username = user?.username || token?.username || session.user.username || null;
+        session.user.fullName = user?.fullName || token?.fullName || session.user.name || null;
+        session.user.completed = Boolean(user?.completed ?? token?.completed ?? false);
+        session.user.premiumStatus = user?.premiumStatus || token?.premiumStatus || "FREE";
+        session.user.image = user?.image || token?.image || session.user.image || null;
       }
       return session;
     }
@@ -458,7 +434,7 @@ export const authOptions = {
     error: "/login"
   },
   session: {
-    strategy: "jwt",
+    strategy: "database",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: getAuthSecret(),

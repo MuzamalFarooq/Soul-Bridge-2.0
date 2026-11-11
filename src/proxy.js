@@ -1,52 +1,54 @@
 import { NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
-import { getAuthSecret } from "@/lib/auth-secret";
+import { prisma } from "@/lib/prisma";
 
-/**
- * Robust session token retrieval
- * Checks both HTTPS secure cookie and standard cookie to guarantee
- * compatibility across local development, production, and reverse-proxy setups.
- */
-async function getSessionToken(req) {
-  const secret = getAuthSecret();
+const sessionCookieNames = [
+  "__Secure-next-auth.session-token",
+  "next-auth.session-token",
+  "__Host-next-auth.session-token",
+  "__Secure-authjs.session-token",
+  "authjs.session-token",
+];
 
-  // 1. Check secure cookie (__Secure-next-auth.session-token)
-  let token = await getToken({
-    req,
-    secret,
-    cookieName: "__Secure-next-auth.session-token",
+async function getDatabaseSession(req) {
+  const sessionToken = sessionCookieNames
+    .map((cookieName) => req.cookies.get(cookieName)?.value)
+    .find(Boolean);
+
+  if (!sessionToken) {
+    return null;
+  }
+
+  const session = await prisma.session.findUnique({
+    where: { sessionToken },
+    include: {
+      user: {
+        include: {
+          profile: true,
+          photos: { where: { isProfile: true }, take: 1 },
+        },
+      },
+    },
   });
 
-  // 2. Check standard cookie (next-auth.session-token)
-  if (!token) {
-    token = await getToken({
-      req,
-      secret,
-      cookieName: "next-auth.session-token",
-    });
+  if (!session || session.expires <= new Date()) {
+    return null;
   }
 
-  // Clear compatibility path for sessions created by an older cookie policy.
-  if (!token) {
-    token = await getToken({
-      req,
-      secret,
-      cookieName: "__Host-next-auth.session-token",
-    });
-  }
-
-  // 3. Fallback to default auto-detection
-  if (!token) {
-    token = await getToken({ req, secret });
-  }
-
-  return token;
+  return {
+    id: session.user.id,
+    email: session.user.email,
+    role: session.user.role,
+    username: session.user.profile?.username || null,
+    fullName: session.user.profile?.fullName || session.user.name || null,
+    completed: Boolean(session.user.profile?.completed),
+    premiumStatus: session.user.profile?.premiumStatus || "FREE",
+    image: session.user.photos?.[0]?.url || session.user.image || null,
+  };
 }
 
 export default async function proxy(req) {
   const path = req.nextUrl.pathname;
 
-  // Static assets and internal next routes: pass through immediately
   if (
     path.startsWith("/_next") ||
     path.startsWith("/api/auth") ||
@@ -58,8 +60,8 @@ export default async function proxy(req) {
     return NextResponse.next();
   }
 
-  const token = await getSessionToken(req);
-  const isAuth = !!token;
+  const session = await getDatabaseSession(req);
+  const isAuth = !!session;
 
   const isAuthPage =
     path.startsWith("/login") ||
@@ -68,30 +70,25 @@ export default async function proxy(req) {
     path.startsWith("/forgot-password") ||
     path.startsWith("/reset-password");
 
-  // Redirect authenticated users away from auth pages to /discover
   if (isAuth && isAuthPage) {
     return NextResponse.redirect(new URL("/discover", req.url));
   }
 
-  // Allow public pages
   if (path === "/" || isAuthPage) {
     return NextResponse.next();
   }
 
-  // Protected pages: redirect unauthenticated users to /login
   if (!isAuth) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", path + req.nextUrl.search);
     return NextResponse.redirect(loginUrl);
   }
 
-  // Role-based authorization for Admin Console
-  if (path.startsWith("/admin") && token?.role !== "ADMIN") {
+  if (path.startsWith("/admin") && session.role !== "ADMIN") {
     return NextResponse.redirect(new URL("/discover", req.url));
   }
 
-  // Enforce profile completion, but allow /onboarding, /discover, and APIs
-  if (!token.completed && path !== "/onboarding" && path !== "/discover" && !path.startsWith("/api")) {
+  if (!session.completed && path !== "/onboarding" && path !== "/discover" && !path.startsWith("/api")) {
     return NextResponse.redirect(new URL("/onboarding", req.url));
   }
 
