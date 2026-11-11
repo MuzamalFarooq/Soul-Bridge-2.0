@@ -1,79 +1,180 @@
 /* eslint-disable @next/next/no-img-element */
-"use client";
+'use client';
 
-import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
   Send, 
   Sparkles, 
-  CheckCircle2, 
   Minus, 
   Maximize2, 
   ExternalLink,
-  MessageSquare
-} from "lucide-react";
-import Link from "next/link";
-import { getOrCreateConversationForUser } from "@/actions/feed";
-import { sendMessageAction } from "@/actions/chat";
-import { useSocket } from "@/context/SocketContext";
+  MessageSquare,
+  Check,
+  CheckCheck
+} from 'lucide-react';
+import Link from 'next/link';
+import { useSession } from 'next-auth/react';
+import { getOrCreateConversationForUser } from '@/actions/feed';
+import { sendMessageAction, fetchMessages, markMessagesReadAction } from '@/actions/chat';
+import { useSocket } from '@/context/SocketContext';
 
 const MAX_CHAR_COUNT = 500;
 
 const DEFAULT_ICEBREAKERS = [
-  "Hey! Loved your profile picture! ✨",
-  "Hi there! Would love to connect over chai ☕",
-  "Loved your interests! What's your favorite spot in town? 🌿",
+  "Hey! Loved your profile! ✨",
+  "Hi! Would love to connect over chai ☕",
+  "What's your favorite spot in town? 🌿",
   "Hey! How has your week been going so far?"
 ];
 
 /**
- * FloatingChatPopup / QuickMessageModal
+ * QuickMessageModal / FloatingChatPopup
  *
- * Premium floating direct messaging widget anchored to the bottom-right.
- * Replaces intrusive full-screen modal overlays while preserving Discover feed visibility.
+ * Premium floating direct messenger anchored safely above navigation bars.
+ * Supports continuous conversation, mobile virtual keyboards, safe-area insets,
+ * and real-time Socket.io updates without obscuring the Discover feed.
  */
 export default function QuickMessageModal({ candidate, onClose }) {
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
+
+  const [conversationId, setConversationId] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState("");
   const [sending, setSending] = useState(false);
-  const [sentSuccess, setSentSuccess] = useState(false);
-  const [createdConvoId, setCreatedConvoId] = useState(null);
   const [error, setError] = useState("");
   const [isMinimized, setIsMinimized] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
 
   const textareaRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  const scrollContainerRef = useRef(null);
 
-  // Real-time online presence from SocketContext
+  // Real-time presence via SocketContext
   let isOnline = false;
+  let socket = null;
   try {
     const socketCtx = useSocket();
+    socket = socketCtx?.socket || null;
     if (socketCtx?.onlineUsers && candidate?.id) {
       isOnline = socketCtx.onlineUsers.includes(candidate.id);
     }
-  } catch (err) {
-    // Graceful fallback if context isn't mounted
+  } catch (_) {
     isOnline = false;
   }
 
   const firstName = candidate?.fullName?.split(" ")[0] || "there";
   const avatarUrl = candidate?.photos?.[0] || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop";
 
-  const [prevCandidateId, setPrevCandidateId] = useState(candidate?.id);
-  if (candidate?.id !== prevCandidateId) {
-    setPrevCandidateId(candidate?.id);
-    setIsMinimized(false);
-    setSentSuccess(false);
-    setMessageText("");
-    setError("");
-    setCreatedConvoId(null);
-  }
+  // Scroll to bottom of message list smoothly
+  const scrollToBottom = useCallback((smooth = true) => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: smooth ? "smooth" : "auto", 
+        block: "nearest" 
+      });
+    }
+  }, []);
 
-  // Focus textarea when expanded
+  // 1. Listen for mobile virtual keyboard changes via Visual Viewport API
   useEffect(() => {
-    if (!isMinimized && !sentSuccess && textareaRef.current) {
+    if (typeof window === "undefined" || !window.visualViewport) return;
+
+    const handleViewportChange = () => {
+      const vv = window.visualViewport;
+      // Calculate how much keyboard is pushing up
+      const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      // Only treat as keyboard when offset is significant (usually >= 60px)
+      setKeyboardOffset(offset > 60 ? offset : 0);
+    };
+
+    window.visualViewport.addEventListener("resize", handleViewportChange);
+    window.visualViewport.addEventListener("scroll", handleViewportChange);
+
+    return () => {
+      window.visualViewport?.removeEventListener("resize", handleViewportChange);
+      window.visualViewport?.removeEventListener("scroll", handleViewportChange);
+    };
+  }, []);
+
+  // 2. Fetch or create conversation and load previous message history
+  useEffect(() => {
+    let isMounted = true;
+    const initChat = async () => {
+      if (!candidate?.id) return;
+      setLoadingHistory(true);
+      setError("");
+
+      try {
+        const convoRes = await getOrCreateConversationForUser({ targetUserId: candidate.id });
+        if (!isMounted) return;
+
+        if (convoRes?.success && convoRes.conversationId) {
+          setConversationId(convoRes.conversationId);
+          
+          // Load existing messages
+          const msgsRes = await fetchMessages(convoRes.conversationId);
+          if (isMounted && msgsRes?.success && Array.isArray(msgsRes.messages)) {
+            setMessages(msgsRes.messages);
+            markMessagesReadAction(convoRes.conversationId);
+          }
+        } else {
+          setError(convoRes?.error || "Could not open chat room.");
+        }
+      } catch (err) {
+        console.error("Error opening chat session:", err);
+        if (isMounted) setError("Could not load message history.");
+      } finally {
+        if (isMounted) setLoadingHistory(false);
+      }
+    };
+
+    initChat();
+    return () => {
+      isMounted = false;
+    };
+  }, [candidate?.id]);
+
+  // 3. Socket.io listeners for live incoming messages
+  useEffect(() => {
+    if (!socket || !conversationId) return;
+
+    socket.emit("join_room", conversationId);
+
+    const handleIncoming = (newMsg) => {
+      if (!newMsg) return;
+      if (newMsg.conversationId === conversationId) {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === newMsg.id)) return prev;
+          return [...prev, newMsg];
+        });
+        markMessagesReadAction(conversationId);
+      }
+    };
+
+    socket.on("new_message", handleIncoming);
+    socket.on("new_sms", handleIncoming);
+
+    return () => {
+      socket.off("new_message", handleIncoming);
+      socket.off("new_sms", handleIncoming);
+    };
+  }, [socket, conversationId]);
+
+  // 4. Auto-scroll on new messages or keyboard adjustments
+  useEffect(() => {
+    scrollToBottom(false);
+  }, [messages.length, keyboardOffset, scrollToBottom]);
+
+  // Focus textarea when expanding from minimized
+  useEffect(() => {
+    if (!isMinimized && textareaRef.current) {
       textareaRef.current.focus();
     }
-  }, [isMinimized, sentSuccess]);
+  }, [isMinimized]);
 
   // Handle ESC key to minimize or close
   useEffect(() => {
@@ -119,40 +220,80 @@ export default function QuickMessageModal({ candidate, onClose }) {
     setSending(true);
     setError("");
 
+    // Optimistic message entry
+    const tempId = `temp_${Date.now()}`;
+    const optimisticMsg = {
+      id: tempId,
+      conversationId,
+      senderId: currentUserId || "user_me",
+      text: cleanText,
+      createdAt: new Date().toISOString(),
+      status: "SENDING",
+    };
+
+    setMessages((prev) => [...prev, optimisticMsg]);
+    setMessageText("");
+    setTimeout(() => scrollToBottom(true), 50);
+
     try {
-      // 1. Get or create conversation for the target user
-      const convoRes = await getOrCreateConversationForUser({ targetUserId: candidate.id });
+      let activeConvoId = conversationId;
+      if (!activeConvoId) {
+        const convoRes = await getOrCreateConversationForUser({ targetUserId: candidate.id });
+        if (convoRes?.success && convoRes.conversationId) {
+          activeConvoId = convoRes.conversationId;
+          setConversationId(activeConvoId);
+        } else {
+          throw new Error(convoRes?.error || "Could not open conversation room.");
+        }
+      }
 
-      if (convoRes?.success && convoRes.conversationId) {
-        setCreatedConvoId(convoRes.conversationId);
+      // Send the message to server action
+      const res = await sendMessageAction({
+        conversationId: activeConvoId,
+        text: cleanText
+      });
 
-        // 2. Send the initial direct message
-        await sendMessageAction({
-          conversationId: convoRes.conversationId,
-          text: cleanText
-        });
+      if (res?.success && res.message) {
+        // Replace optimistic entry with saved message
+        setMessages((prev) => 
+          prev.map((m) => (m.id === tempId ? res.message : m))
+        );
 
-        setSentSuccess(true);
+        // Emit through socket for real-time peer delivery
+        if (socket) {
+          socket.emit("send_message", {
+            ...res.message,
+            recipientId: candidate.id
+          });
+        }
       } else {
-        setError(convoRes?.error || "Could not open chat room. Please try again.");
+        throw new Error(res?.error || "Failed to deliver message.");
       }
     } catch (err) {
-      console.error("Direct floating chat error:", err);
-      setError("Failed to send message. Please try again.");
+      console.error("Direct floating chat send error:", err);
+      setError(err?.message || "Failed to send message. Please try again.");
+      // Mark optimistic message as failed
+      setMessages((prev) => 
+        prev.map((m) => (m.id === tempId ? { ...m, status: "FAILED" } : m))
+      );
     } finally {
       setSending(false);
+      setTimeout(() => scrollToBottom(true), 100);
     }
-  };
-
-  const handleResetForAnother = () => {
-    setMessageText("");
-    setSentSuccess(false);
-    setError("");
   };
 
   return (
     <div
-      className="fixed z-50 pointer-events-none bottom-4 right-4 sm:bottom-6 sm:right-6 left-4 sm:left-auto flex flex-col items-end"
+      className={`fixed z-[70] pointer-events-none left-2 right-2 sm:left-auto sm:right-4 md:right-6 md:w-[390px] flex flex-col items-end transition-[bottom] duration-200 ${
+        keyboardOffset > 0 
+          ? '' 
+          : 'bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] md:bottom-6'
+      }`}
+      style={
+        keyboardOffset > 0
+          ? { bottom: `${keyboardOffset + 10}px` }
+          : undefined
+      }
       role="region"
       aria-label={`Direct Chat with ${candidate?.fullName}`}
     >
@@ -167,7 +308,7 @@ export default function QuickMessageModal({ candidate, onClose }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             transition={{ type: "spring", stiffness: 350, damping: 28 }}
-            className="pointer-events-auto flex items-center gap-3 px-3.5 py-2.5 rounded-full bg-[#fffdfa]/95 dark:bg-[#2b1d24]/95 backdrop-blur-xl border border-[var(--sb-line)] dark:border-white/15 shadow-[0_12px_36px_rgba(74,23,44,0.18)] hover:shadow-[0_16px_40px_rgba(74,23,44,0.25)] transition-all cursor-pointer group select-none max-w-xs"
+            className="pointer-events-auto flex items-center gap-3 px-3.5 py-2.5 rounded-full bg-[#fffdfa]/95 dark:bg-[#2b1d24]/95 backdrop-blur-2xl border border-[var(--sb-line)] dark:border-white/15 shadow-[0_12px_36px_rgba(74,23,44,0.18)] hover:shadow-[0_16px_40px_rgba(74,23,44,0.25)] transition-all cursor-pointer group select-none max-w-xs"
             onClick={() => setIsMinimized(false)}
           >
             {/* Avatar with status indicator */}
@@ -189,10 +330,10 @@ export default function QuickMessageModal({ candidate, onClose }) {
             <div className="flex flex-col text-left overflow-hidden pr-1">
               <span className="text-xs font-bold text-foreground truncate flex items-center gap-1">
                 {firstName}
-                <Sparkles className="w-3 h-3 text-(--sb-rose) shrink-0" />
+                <Sparkles className="w-3 h-3 text-[var(--sb-rose)] shrink-0" />
               </span>
               <span className="text-[10px] text-foreground/50 truncate">
-                {sentSuccess ? "Message sent" : "Chat minimized"}
+                {messages.length > 0 ? `${messages.length} messages` : "Chat minimized"}
               </span>
             </div>
 
@@ -204,7 +345,7 @@ export default function QuickMessageModal({ candidate, onClose }) {
                   e.stopPropagation();
                   setIsMinimized(false);
                 }}
-                className="w-7 h-7 rounded-full bg-(--sb-blush)/50 dark:bg-white/10 hover:bg-[var(--sb-wine)] hover:text-white flex items-center justify-center text-foreground/70 transition-all cursor-pointer"
+                className="w-7 h-7 rounded-full bg-[var(--sb-blush)]/50 dark:bg-white/10 hover:bg-[var(--sb-wine)] hover:text-white flex items-center justify-center text-foreground/70 transition-all cursor-pointer"
                 title="Restore chat"
                 aria-label="Restore chat"
               >
@@ -234,19 +375,25 @@ export default function QuickMessageModal({ candidate, onClose }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 320, damping: 26 }}
-            className="pointer-events-auto w-full sm:w-[380px] max-h-[550px] flex flex-col rounded-3xl bg-[#fffdfa]/95 dark:bg-[#2b1d24]/95 backdrop-blur-2xl border border-[var(--sb-line)] dark:border-white/15 shadow-[0_20px_60px_rgba(74,23,44,0.24)] overflow-hidden"
+            className="pointer-events-auto w-full flex flex-col rounded-3xl bg-[#fffdfa]/95 dark:bg-[#2b1d24]/95 backdrop-blur-2xl border border-[var(--sb-line)] dark:border-white/15 shadow-[0_20px_60px_rgba(74,23,44,0.24)] overflow-hidden"
+            style={{
+              height: keyboardOffset > 0 
+                ? 'min(360px, calc(100dvh - 120px))' 
+                : 'min(520px, calc(100dvh - 6.5rem - env(safe-area-inset-bottom, 0px) - env(safe-area-inset-top, 0px)))',
+              maxHeight: '560px',
+            }}
           >
-            {/* 1. CHAT HEADER */}
-            <div className="flex items-center justify-between px-4 py-3.5 border-b border-[var(--sb-line)] dark:border-white/10 bg-gradient-to-r from-[var(--sb-wine)]/10 via-[var(--sb-blush)]/20 to-transparent">
-              <div className="flex items-center gap-3 min-w-0">
+            {/* 1. CHAT HEADER (FIXED TOP, NEVER SCROLLS) */}
+            <div className="flex-shrink-0 flex items-center justify-between px-3.5 sm:px-4 py-2.5 sm:py-3 border-b border-[var(--sb-line)] dark:border-white/10 bg-gradient-to-r from-[var(--sb-wine)]/10 via-[var(--sb-blush)]/20 to-transparent">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                 <div className="relative flex-shrink-0">
                   <img
                     src={avatarUrl}
                     alt={candidate?.fullName}
-                    className="w-10 h-10 rounded-full object-cover border-2 border-[var(--sb-wine)] shadow-sm"
+                    className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-[var(--sb-wine)] shadow-xs"
                   />
                   <span
-                    className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ring-2 ring-[#fffdfa] dark:ring-[#2b1d24] ${
+                    className={`absolute bottom-0 right-0 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ring-2 ring-[#fffdfa] dark:ring-[#2b1d24] ${
                       isOnline ? "bg-emerald-500 animate-pulse" : "bg-amber-400"
                     }`}
                     title={isOnline ? "Online" : "Offline"}
@@ -254,11 +401,11 @@ export default function QuickMessageModal({ candidate, onClose }) {
                 </div>
 
                 <div className="flex flex-col min-w-0">
-                  <h3 className="font-extrabold text-sm text-foreground flex items-center gap-1.5 truncate">
+                  <h3 className="font-extrabold text-xs sm:text-sm text-foreground flex items-center gap-1.5 truncate">
                     {candidate?.fullName}
                     <Sparkles className="w-3.5 h-3.5 text-[var(--sb-rose)] flex-shrink-0" />
                   </h3>
-                  <div className="flex items-center gap-1.5 text-[11px] text-foreground/60 truncate">
+                  <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-foreground/60 truncate">
                     <span
                       className={`inline-block w-1.5 h-1.5 rounded-full ${
                         isOnline ? "bg-emerald-500" : "bg-foreground/40"
@@ -277,172 +424,191 @@ export default function QuickMessageModal({ candidate, onClose }) {
 
               {/* Header Action Controls */}
               <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                {conversationId && (
+                  <Link
+                    href={`/chat?convo=${conversationId}`}
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/5 dark:bg-white/5 hover:bg-[var(--sb-wine)] hover:text-white flex items-center justify-center text-foreground/70 transition-all"
+                    title="Open in full chat page"
+                    aria-label="Open full chat"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Link>
+                )}
                 <button
                   type="button"
                   onClick={() => setIsMinimized(true)}
-                  className="w-8 h-8 rounded-full bg-black/5 dark:bg-white/5 hover:bg-[var(--sb-wine)] hover:text-white flex items-center justify-center text-foreground/70 transition-all cursor-pointer"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/5 dark:bg-white/5 hover:bg-[var(--sb-wine)] hover:text-white flex items-center justify-center text-foreground/70 transition-all cursor-pointer"
                   title="Minimize"
                   aria-label="Minimize chat"
                 >
-                  <Minus className="w-4 h-4" />
+                  <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="w-8 h-8 rounded-full bg-black/5 dark:bg-white/5 hover:bg-rose-500 hover:text-white flex items-center justify-center text-foreground/70 transition-all cursor-pointer"
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/5 dark:bg-white/5 hover:bg-rose-500 hover:text-white flex items-center justify-center text-foreground/70 transition-all cursor-pointer"
                   title="Close"
                   aria-label="Close chat"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
               </div>
             </div>
 
-            {/* 2. CHAT BODY */}
-            <div className="flex-1 p-4 overflow-y-auto space-y-4 max-h-[460px]">
-              {sentSuccess ? (
-                /* Sent Confirmation State (keeps user on Discover!) */
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="py-6 px-3 flex flex-col items-center text-center space-y-3"
-                >
-                  <div className="w-14 h-14 rounded-full bg-emerald-500/15 text-emerald-500 dark:text-emerald-400 flex items-center justify-center shadow-inner">
-                    <CheckCircle2 className="w-8 h-8 animate-bounce" />
+            {/* 2. CHAT BODY / SCROLL AREA (SCROLLS INDEPENDENTLY) */}
+            <div 
+              ref={scrollContainerRef}
+              className="flex-1 min-h-0 p-3 sm:p-4 overflow-y-auto space-y-3.5 overscroll-contain"
+            >
+              {/* Profile Intro / Icebreakers if no messages or short history */}
+              {messages.length === 0 && !loadingHistory && (
+                <div className="flex flex-col items-center text-center py-2 px-1">
+                  <div className="w-12 h-12 rounded-full bg-[var(--sb-blush)]/60 text-[var(--sb-wine)] flex items-center justify-center mb-2 shadow-xs">
+                    <MessageSquare className="w-6 h-6" />
                   </div>
-                  <div>
-                    <h4 className="font-extrabold text-base text-foreground">Message Sent!</h4>
-                    <p className="text-xs text-foreground/60 mt-1 max-w-[260px] mx-auto leading-relaxed">
-                      Your note has been delivered to {firstName}. You can continue browsing profiles without leaving Discover.
-                    </p>
-                  </div>
+                  <h4 className="font-bold text-xs sm:text-sm text-foreground">
+                    Start a chat with {firstName}
+                  </h4>
+                  <p className="text-[11px] text-foreground/60 max-w-[260px] mt-0.5 leading-relaxed">
+                    Break the ice with a thoughtful note or choose a suggested opener below!
+                  </p>
 
-                  {/* Action row */}
-                  <div className="flex flex-col sm:flex-row gap-2 w-full pt-2">
-                    {createdConvoId && (
-                      <Link
-                        href={`/chat?convo=${createdConvoId}`}
-                        className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-[var(--sb-wine)] to-[var(--sb-wine-deep)] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md hover:opacity-95 transition-all"
+                  {/* Icebreakers Chips */}
+                  <div className="flex flex-wrap justify-center gap-1.5 mt-3 pt-1">
+                    {DEFAULT_ICEBREAKERS.map((chip, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleSelectIcebreaker(chip)}
+                        className="text-left text-[11px] px-2.5 py-1 rounded-full bg-[var(--sb-blush)]/50 dark:bg-white/5 hover:bg-[var(--sb-wine)]/15 border border-[var(--sb-line)] dark:border-white/10 hover:border-[var(--sb-rose)]/40 text-foreground/80 hover:text-foreground transition-all cursor-pointer active:scale-95"
                       >
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        Open Full Chat
-                        <ExternalLink className="w-3 h-3 opacity-70" />
-                      </Link>
-                    )}
+                        {chip}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      className="flex-1 py-2 px-3 rounded-xl border border-[var(--sb-line)] hover:bg-black/5 dark:hover:bg-white/5 text-xs font-bold text-foreground/80 transition-all cursor-pointer"
+              {/* Loading history indicator */}
+              {loadingHistory && (
+                <div className="flex items-center justify-center py-6 gap-2 text-foreground/50">
+                  <div className="w-4 h-4 border-2 border-[var(--sb-wine)] border-t-transparent rounded-full animate-spin" />
+                  <span className="text-[11px] font-medium">Connecting room...</span>
+                </div>
+              )}
+
+              {/* Message Bubbles History */}
+              {messages.length > 0 && (
+                <div className="space-y-2.5">
+                  {messages.map((m) => {
+                    const isMe = m.senderId === currentUserId || m.senderId === "user_me" || (!m.senderId?.startsWith("mock_") && m.senderId !== candidate?.id);
+                    const timeStr = m.createdAt 
+                      ? new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+                      : "";
+
+                    return (
+                      <div
+                        key={m.id}
+                        className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}
+                      >
+                        <div
+                          className={`max-w-[82%] px-3.5 py-2 rounded-2xl text-xs leading-relaxed break-words shadow-xs ${
+                            isMe
+                              ? "bg-gradient-to-r from-[var(--sb-wine)] to-[var(--sb-wine-deep)] text-white rounded-br-xs"
+                              : "bg-white/85 dark:bg-white/10 text-foreground border border-[var(--sb-line)] dark:border-white/10 rounded-bl-xs"
+                          }`}
+                        >
+                          <p className="whitespace-pre-wrap">{m.text}</p>
+                        </div>
+
+                        {/* Message status / time */}
+                        <div className="flex items-center gap-1 mt-0.5 px-1 text-[9px] text-foreground/45">
+                          <span>{timeStr}</span>
+                          {isMe && (
+                            <span>
+                              {m.status === "SENDING" ? (
+                                <span className="opacity-60">Sending...</span>
+                              ) : m.status === "FAILED" ? (
+                                <span className="text-rose-500 font-semibold">Failed</span>
+                              ) : m.status === "READ" ? (
+                                <CheckCheck className="w-3 h-3 text-[var(--sb-rose)] inline" />
+                              ) : (
+                                <Check className="w-3 h-3 text-foreground/40 inline" />
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Auto-scroll anchor */}
+              <div ref={messagesEndRef} className="h-1" />
+            </div>
+
+            {/* 3. CHAT COMPOSER (PINNED TO BOTTOM, NEVER OBSCURED) */}
+            <div className="flex-shrink-0 p-2.5 sm:p-3 bg-[#fffdfa] dark:bg-[#2b1d24] border-t border-[var(--sb-line)] dark:border-white/10">
+              <form onSubmit={handleSendMessage} className="flex flex-col gap-1.5">
+                {error && (
+                  <div className="p-1.5 px-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-500 text-[11px] font-semibold flex items-center justify-between">
+                    <span>{error}</span>
+                    <button 
+                      type="button" 
+                      onClick={() => setError("")} 
+                      className="text-rose-500 hover:text-rose-700 ml-2"
                     >
-                      Done Browsing
+                      &times;
                     </button>
+                  </div>
+                )}
+
+                <div className="flex items-end gap-2">
+                  <div className="relative flex-1 min-w-0">
+                    <textarea
+                      id="quick-message-input"
+                      ref={textareaRef}
+                      value={messageText}
+                      onChange={(e) => setMessageText(e.target.value.slice(0, MAX_CHAR_COUNT))}
+                      onKeyDown={handleKeyDown}
+                      placeholder={`Message ${firstName}...`}
+                      rows={keyboardOffset > 0 ? 1 : 2}
+                      className="w-full px-3 py-2 rounded-xl bg-[var(--sb-paper)]/80 dark:bg-black/20 border border-[var(--sb-line)] dark:border-white/15 text-xs text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-[var(--sb-wine)] focus:ring-1 focus:ring-[var(--sb-wine)]/20 transition-all resize-none shadow-inner"
+                    />
                   </div>
 
                   <button
-                    type="button"
-                    onClick={handleResetForAnother}
-                    className="text-[11px] text-[var(--sb-rose)] hover:underline pt-1 cursor-pointer font-medium"
+                    type="submit"
+                    disabled={sending || !messageText.trim()}
+                    className="h-9 px-3.5 rounded-xl bg-gradient-to-r from-[var(--sb-wine)] to-[var(--sb-wine-deep)] hover:opacity-95 active:scale-95 text-white text-xs font-bold shadow-md disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 transition-all cursor-pointer flex-shrink-0"
+                    title="Send (Enter)"
+                    aria-label="Send message"
                   >
-                    Send another follow-up note
+                    {sending ? (
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <Send className="w-3.5 h-3.5 text-white" />
+                        <span className="hidden sm:inline text-white">Send</span>
+                      </>
+                    )}
                   </button>
-                </motion.div>
-              ) : (
-                /* Active Message Compose Mode */
-                <form onSubmit={handleSendMessage} className="flex flex-col gap-3">
-                  {/* Quick Icebreaker suggestions */}
-                  <div>
-                    <label className="text-[10px] font-bold text-foreground/50 uppercase tracking-wider mb-2 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-[var(--sb-rose)]" />
-                      Quick Icebreakers
-                    </label>
-                    <div className="flex flex-wrap gap-1.5">
-                      {DEFAULT_ICEBREAKERS.map((chip, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => handleSelectIcebreaker(chip)}
-                          className="text-left text-[11px] px-2.5 py-1 rounded-full bg-[var(--sb-blush)]/40 dark:bg-white/5 hover:bg-[var(--sb-wine)]/15 border border-[var(--sb-line)] dark:border-white/10 hover:border-[var(--sb-rose)]/40 text-foreground/80 hover:text-foreground transition-all cursor-pointer"
-                        >
-                          {chip}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                </div>
 
-                  {/* Message textarea with character counter */}
-                  <div className="flex flex-col gap-1 mt-1">
-                    <div className="flex items-center justify-between">
-                      <label
-                        htmlFor="quick-message-input"
-                        className="text-[10px] font-bold text-foreground/50 uppercase tracking-wider"
-                      >
-                        Your Note
-                      </label>
-                      <span
-                        className={`text-[10px] font-medium ${
-                          messageText.length > MAX_CHAR_COUNT - 50
-                            ? "text-rose-500 font-bold"
-                            : "text-foreground/40"
-                        }`}
-                      >
-                        {messageText.length}/{MAX_CHAR_COUNT}
-                      </span>
-                    </div>
-
-                    <div className="relative">
-                      <textarea
-                        id="quick-message-input"
-                        ref={textareaRef}
-                        value={messageText}
-                        onChange={(e) => setMessageText(e.target.value.slice(0, MAX_CHAR_COUNT))}
-                        onKeyDown={handleKeyDown}
-                        placeholder={`Say something nice to ${firstName}... (Press Enter to send)`}
-                        rows={3}
-                        className="w-full px-3.5 py-2.5 rounded-2xl bg-[var(--sb-paper)]/80 dark:bg-black/20 border border-[var(--sb-line)] dark:border-white/15 text-xs text-foreground placeholder:text-foreground/40 focus:outline-none focus:border-[var(--sb-wine)] focus:ring-2 focus:ring-[var(--sb-wine)]/15 transition-all resize-none shadow-inner"
-                      />
-                    </div>
-                    <p className="text-[10px] text-foreground/40 italic">
-                      Tip: Press <kbd className="px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 text-[9px]">Enter</kbd> to send, <kbd className="px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 text-[9px]">Shift+Enter</kbd> for newline
-                    </p>
-                  </div>
-
-                  {error && (
-                    <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs font-semibold">
-                      {error}
-                    </div>
-                  )}
-
-                  {/* Composer Footer Actions */}
-                  <div className="flex items-center justify-between pt-1">
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      className="px-3.5 py-2 rounded-xl border border-[var(--sb-line)] text-xs font-semibold hover:bg-black/5 dark:hover:bg-white/5 text-foreground/70 transition-all cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-
-                    <button
-                      type="submit"
-                      disabled={sending || !messageText.trim()}
-                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-[var(--sb-wine)] to-[var(--sb-wine-deep)] hover:opacity-95 active:scale-95 text-white text-xs font-bold shadow-md hover:shadow-[var(--sb-wine)]/30 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 transition-all cursor-pointer"
-                    >
-                      {sending ? (
-                        <>
-                          <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          <span>Sending...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-3.5 h-3.5" />
-                          <span>Send Message</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </form>
-              )}
+                {/* Footer hints & counter */}
+                <div className="flex items-center justify-between px-1 text-[10px] text-foreground/40">
+                  <span className="hidden sm:inline italic">
+                    Press <kbd className="px-1 py-0.5 rounded bg-black/5 dark:bg-white/10 text-[9px]">Enter</kbd> to send
+                  </span>
+                  <span className="sm:hidden text-[9px] opacity-75">
+                    SoulBridge Chat
+                  </span>
+                  <span className={messageText.length > MAX_CHAR_COUNT - 50 ? "text-rose-500 font-bold" : ""}>
+                    {messageText.length}/{MAX_CHAR_COUNT}
+                  </span>
+                </div>
+              </form>
             </div>
           </motion.div>
         )}
@@ -451,5 +617,5 @@ export default function QuickMessageModal({ candidate, onClose }) {
   );
 }
 
-// Named alias export for explicit semantic naming
+// Named alias export for backward compatibility
 export { QuickMessageModal as FloatingChatPopup };
