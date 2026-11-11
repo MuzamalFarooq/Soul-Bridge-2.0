@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import DashboardSkeleton from "@/components/ui/skeletons/DashboardSkeleton";
 import { getDashboardData } from "@/actions/dashboard";
 import { getProfileReviewAction as getAIReviewAction } from "@/actions/profile";
 
@@ -58,12 +59,11 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-[#09090B]">
+      <div className="min-h-screen flex flex-col">
         <Navbar />
-        <div className="flex-1 flex flex-col items-center justify-center gap-3">
-          <div className="w-10 h-10 border-4 border-[#FF4D8D] border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs text-white/50 font-semibold">Assembling your luxury matchmaking space...</p>
-        </div>
+        <main className="flex-1">
+          <DashboardSkeleton />
+        </main>
         <Footer />
       </div>
     );
@@ -207,7 +207,7 @@ export default function Dashboard() {
                       <h4 className="font-extrabold text-sm text-white">{sug.fullName}, {sug.age}</h4>
                       <p className="text-[10px] text-white/50 font-medium">{sug.profession} • {sug.city}</p>
                       <p className="text-[11px] text-white/80 line-clamp-2 italic font-medium">
-                        "{sug.bio || "No bio description set."}"
+                        &ldquo;{sug.bio || "No bio description set."}&rdquo;
                       </p>
                       
                       <Link

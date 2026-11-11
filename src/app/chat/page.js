@@ -146,9 +146,16 @@ function ChatContent() {
             </div>
 
             {loading && (
-              <div className="flex-1 flex flex-col items-center justify-center gap-2 text-foreground/40 py-10">
-                <div className="w-6 h-6 border-2 border-primary-pink border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-[10px]">Loading active rooms...</span>
+              <div className="space-y-3 py-2 animate-pulse">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex items-center gap-3 p-3 rounded-2xl bg-white/40 border border-white/20">
+                    <div className="w-10 h-10 rounded-full bg-[#f1e3e1] shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="h-3.5 w-24 bg-[#f1e3e1] rounded mb-1.5" />
+                      <div className="h-2.5 w-32 bg-[#f1e3e1]/60 rounded" />
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 

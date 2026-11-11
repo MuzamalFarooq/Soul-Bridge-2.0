@@ -7,6 +7,7 @@ import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
 import { Heart, Sparkles, AlertCircle, CheckCircle, Mail, Lock, ArrowRight, ShieldCheck, Eye, EyeOff, Camera, UploadCloud, X, Loader2 } from "lucide-react";
 import { registerUser } from "@/actions/auth";
+import AuthLoader from "@/components/ui/AuthLoader";
 
 export default function Register() {
   const router = useRouter();
@@ -137,6 +138,10 @@ export default function Register() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md glass-card-lux rounded-3xl p-8 md:p-10 border border-white/10 shadow-2xl relative"
       >
+        <AuthLoader 
+          isLoading={loading || googleLoading} 
+          message={googleLoading ? "Connecting securely with Google..." : "Creating your SoulBridge journey..."} 
+        />
         {/* Brand */}
         <div className="flex flex-col items-center mb-8 text-center">
           <Link href="/" className="flex items-center gap-2 mb-3 group">

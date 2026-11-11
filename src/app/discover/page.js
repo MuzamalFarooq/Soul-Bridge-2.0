@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import DiscoverSkeleton from "@/components/ui/skeletons/DiscoverSkeleton";
 import TinderCard from "@/components/swipe/TinderCard";
 import UserFeedPost from "@/components/discover/UserFeedPost";
 import QuickMessageModal from "@/components/discover/QuickMessageModal";
@@ -317,9 +318,8 @@ export default function Discover() {
 
         {/* Loading state */}
         {loading && (
-          <div className="flex-1 flex flex-col items-center justify-center py-16 min-h-[400px]">
-            <div className="w-10 h-10 border-4 border-primary-pink border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-xs text-foreground/50 mt-3">Fetching discovery profiles...</p>
+          <div className="flex-1 w-full">
+            <DiscoverSkeleton />
           </div>
         )}
 

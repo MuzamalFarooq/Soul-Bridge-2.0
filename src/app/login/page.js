@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
 import { Heart, AlertCircle, Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import AuthLoader from "@/components/ui/AuthLoader";
 
 function LoginContent() {
   const router = useRouter();
@@ -108,6 +109,10 @@ function LoginContent() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md glass-card-lux rounded-3xl p-8 md:p-10 border border-white/10 shadow-2xl relative"
       >
+        <AuthLoader 
+          isLoading={loading || googleLoading} 
+          message={googleLoading ? "Connecting securely with Google..." : "Preparing your SoulBridge experience..."} 
+        />
         {/* Brand */}
         <div className="flex flex-col items-center mb-8 text-center">
           <Link href="/" className="flex items-center gap-2 mb-3 group">
