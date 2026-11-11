@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { generateRomanticAiResponse } from "@/services/groq";
+import { getAiCompanionContext, updateAiCompanionMemory } from "@/lib/ai-memory";
 
 export async function POST(req) {
   try {
@@ -14,7 +15,7 @@ export async function POST(req) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { messages } = body;
+    const { messages, memorySummary } = body;
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json(
@@ -23,7 +24,12 @@ export async function POST(req) {
       );
     }
 
-    const lastMsg = messages[messages.length - 1];
+    const normalizedMessages = messages.map((message) => ({
+      ...message,
+      content: typeof message?.content === "string" ? message.content : (typeof message?.text === "string" ? message.text : "")
+    }));
+
+    const lastMsg = normalizedMessages[normalizedMessages.length - 1];
     if (!lastMsg || !lastMsg.content || typeof lastMsg.content !== "string" || !lastMsg.content.trim()) {
       return NextResponse.json(
         { success: false, error: "Latest message cannot be empty" },
@@ -31,7 +37,13 @@ export async function POST(req) {
       );
     }
 
-    const result = await generateRomanticAiResponse(messages);
+    const companionContext = await getAiCompanionContext(session.user.id);
+    const result = await generateRomanticAiResponse(normalizedMessages, {
+      userName: companionContext.preferredNickname || session.user?.name || "sweetheart",
+      memorySummary: memorySummary || companionContext.memorySummary
+    });
+
+    await updateAiCompanionMemory(session.user.id, normalizedMessages);
 
     if (!result.success) {
       return NextResponse.json(
@@ -46,7 +58,7 @@ export async function POST(req) {
 
     return NextResponse.json({
       success: true,
-      message: result.message
+      message: result.text || result.message
     });
   } catch (error) {
     console.error("[API /api/ai-chat Route Error]:", error);

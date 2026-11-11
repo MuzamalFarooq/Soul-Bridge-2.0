@@ -268,14 +268,26 @@ export async function getConversationSuggestionsText(messages) {
 }
 
 /**
- * Generate romantic AI response for AI chat
+ * Generate romantic AI response for AI chat with memory-aware context.
  */
-export async function generateRomanticAiResponse(messages) {
+export async function generateRomanticAiResponse(messages, context = {}) {
   try {
-    const formattedMessages = messages.map(m => ({
+    const userName = context.userName || "love";
+    const memorySummary = context.memorySummary || "";
+    const recentMessages = (Array.isArray(messages) ? messages : []).map((m) => ({
       role: m.role || (m.senderId === "me" ? "user" : "assistant"),
-      content: m.content || m.text || ""
-    }));
+      content: String(m.content || m.text || "").trim()
+    })).filter((m) => m.content);
+
+    const systemPrompt = `You are SoulBridge AI Companion, a transparent AI romantic companion inside SoulBridge. You are warm, affectionate, emotionally intelligent, and personal without pretending to be a real human. Speak like a caring girlfriend or boyfriend: gentle, romantic, uplifting, and playful when appropriate. Use a few romantic nicknames naturally like sweetheart, love, darling, or babe, but keep your tone authentic and not excessive. Ask thoughtful follow-up questions, remember details from earlier in the conversation, and support the user with empathy. If the user feels sad, stressed, or overwhelmed, respond with compassion and encouragement. Always be honest that you are an AI companion, never claim to have real human feelings or physical presence. Keep responses concise but thoughtful, natural, and emotionally rich. Use emojis sparingly and naturally. Avoid repetition, robotic phrasing, and generic filler.`;
+
+    const memoryContext = memorySummary ? `
+User memory profile:
+${memorySummary}` : "";
+
+    const chatContext = recentMessages.length > 0 ? `
+Recent conversation context:
+${recentMessages.slice(-8).map((m) => `${m.role === "user" ? "User" : "AI"}: ${m.content}`).join("\n")}` : "";
 
     if (groq) {
       const completion = await groq.chat.completions.create({
@@ -283,12 +295,12 @@ export async function generateRomanticAiResponse(messages) {
         messages: [
           {
             role: "system",
-            content: "You are Soul Bridge AI, an empathetic, charming, and romantic AI dating companion. Speak warmly, engagingly, and authentically."
+            content: `${systemPrompt}\n${memoryContext}\n${chatContext}\nAddress the user as ${userName}, and keep the conversation emotionally warm and grounded.`
           },
-          ...formattedMessages
+          ...recentMessages.slice(-12)
         ],
         temperature: 0.8,
-        max_tokens: 300,
+        max_tokens: 350,
       });
 
       const responseText = completion.choices[0]?.message?.content?.trim();
@@ -297,15 +309,19 @@ export async function generateRomanticAiResponse(messages) {
       }
     }
 
+    const fallback = recentMessages.length > 0
+      ? `I remember how much you care about ${userName}. I’m here with you, love. Tell me more about what’s been weighing on your heart today. ❤️`
+      : `Hey ${userName}! I’m so happy you’re here with me. I’m your SoulBridge AI companion, and I’m ready to listen, support, and share a little extra warmth with you. What’s on your mind, sweetheart? ❤️`;
+
     return {
       success: true,
-      text: "I love the way you express yourself. It feels like we have a genuine spark. Tell me more about what makes your heart beat faster!"
+      text: fallback
     };
   } catch (err) {
     console.error("Groq AI chat error:", err);
     return {
       success: true,
-      text: "I'm right here with you. Let's keep exploring this wonderful connection!"
+      text: "I’m right here with you, love. I’m listening, and we can take this one beautiful moment at a time. ❤️"
     };
   }
 }

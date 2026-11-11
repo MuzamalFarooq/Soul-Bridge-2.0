@@ -42,6 +42,32 @@ model User {
   settings        Settings?
   activityLogs    ActivityLog[]
   comments        Comment[]      @relation("UserComments")
+  aiCompanionMemory AiCompanionMemory? @relation("AiMemoryOwner")
+  aiCompanionPreference AiCompanionPreference? @relation("AiPreferenceOwner")
+}
+
+model AiCompanionMemory {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @unique @db.ObjectId
+  user        User     @relation("AiMemoryOwner", fields: [userId], references: [id], onDelete: Cascade)
+  summary     String
+  memories    String[] @default([])
+  lastUpdated DateTime @default(now())
+  createdAt   DateTime @default(now())
+}
+
+model AiCompanionPreference {
+  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId               String   @unique @db.ObjectId
+  user                 User     @relation("AiPreferenceOwner", fields: [userId], references: [id], onDelete: Cascade)
+  preferredNickname    String?
+  communicationStyle    String   @default("romantic")
+  proactiveMessaging    Boolean  @default(true)
+  autoMessages         Boolean  @default(true)
+  messageFrequency     String   @default("daily")
+  quietHoursStart      String?  @default("22:00")
+  quietHoursEnd        String?  @default("08:00")
+  updatedAt            DateTime @updatedAt
 }
 
 model Account {

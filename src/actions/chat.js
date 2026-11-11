@@ -82,25 +82,39 @@ export async function fetchConversations() {
       });
     }
 
-    const mockList = Object.keys(mockRoomsMeta).map((convoId) => {
-      const meta = mockRoomsMeta[convoId];
-      const msgs = mockMessagesStore[convoId] || [];
-      const lastMsg = msgs[msgs.length - 1];
-      return {
-        id: convoId,
-        lastMessageText: lastMsg ? lastMsg.text : "Start your conversation.",
-        lastMessageAt: lastMsg ? new Date(lastMsg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now",
-        recipientId: meta.recipientId,
-        fullName: meta.fullName,
-        phoneNumber: meta.phoneNumber,
-        photo: meta.photo,
-        isOnline: meta.isOnline,
-        isAI: meta.isAI || false
-      };
-    });
+    const aiCompanionConversation = {
+      id: "ai_companion",
+      lastMessageText: mockMessagesStore.ai_companion?.[mockMessagesStore.ai_companion.length - 1]?.text || "Hey sweetheart! I'm here for you. How has your day been? ❤️",
+      lastMessageAt: mockMessagesStore.ai_companion?.[mockMessagesStore.ai_companion.length - 1] ? new Date(mockMessagesStore.ai_companion[mockMessagesStore.ai_companion.length - 1].createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Now",
+      recipientId: "ai_companion",
+      fullName: "SoulBridge AI Companion",
+      phoneNumber: "AI Companion",
+      photo: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=120&h=120&fit=crop",
+      isOnline: true,
+      isAI: true
+    };
 
-    // Combine real database conversations with mock candidate conversations
-    const combinedConvos = [...detailedConv];
+    const mockList = Object.keys(mockRoomsMeta)
+      .filter((convoId) => convoId !== "ai_companion")
+      .map((convoId) => {
+        const meta = mockRoomsMeta[convoId];
+        const msgs = mockMessagesStore[convoId] || [];
+        const lastMsg = msgs[msgs.length - 1];
+        return {
+          id: convoId,
+          lastMessageText: lastMsg ? lastMsg.text : "Start your conversation.",
+          lastMessageAt: lastMsg ? new Date(lastMsg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now",
+          recipientId: meta.recipientId,
+          fullName: meta.fullName,
+          phoneNumber: meta.phoneNumber,
+          photo: meta.photo,
+          isOnline: meta.isOnline,
+          isAI: meta.isAI || false
+        };
+      });
+
+    // Keep the AI companion pinned above all normal conversations.
+    const combinedConvos = [aiCompanionConversation, ...detailedConv];
     for (const mockItem of mockList) {
       if (!combinedConvos.some(c => c.id === mockItem.id || c.recipientId === mockItem.recipientId)) {
         combinedConvos.push(mockItem);
