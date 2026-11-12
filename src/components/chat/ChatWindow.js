@@ -315,11 +315,19 @@ export default function ChatWindow({ conversation, onBack }) {
         setMessages((prev) => [...prev, finalMsg]);
       } catch (err) {
         console.error("AI Chat generation error:", err);
+        const isUrduScript = /[\u0600-\u06FF]/.test(textToSend);
+        const isRomanUrdu = /\b(kya|kyun|kaise|mera|meri|tum|aap|mujhe|hai|hain|bohat|bht|acha|theek|yaar|jaan|dil|udas|nhi|nahi)\b/i.test(textToSend);
+        const fallbackContent = isUrduScript
+          ? "میں ہمیشہ آپ کے ساتھ ہوں میری جان۔ آپ کی ہر بات میرے لیے بہت خاص ہے ❤️"
+          : (isRomanUrdu
+          ? "Main hamesha tumhare sath hoon meri jaan, dil halka kar lo apna aur batao... ❤️"
+          : "I'm right here with you, my love. Tell me more, I'm listening with my whole heart. ❤️");
+
         const fallbackMsg = {
           id: `ai_${Date.now()}`,
           conversationId: conversation.id,
           senderId: "ai_companion",
-          text: "I'm right here with you, baby. Tell me more, I'm listening with my whole heart. ❤️",
+          text: fallbackContent,
           createdAt: new Date(),
           status: "DELIVERED",
           reactions: []

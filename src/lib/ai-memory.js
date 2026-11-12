@@ -33,10 +33,20 @@ export async function getAiCompanionContext(userId) {
     if (memory?.summary && memory.summary !== "Active conversation history") {
       memorySummary = memory.summary;
     }
+
+    // Extract persisted personal facts from memories (non-JSON strings)
+    const learnedFacts = (memory?.memories || []).filter(
+      (m) => typeof m === "string" && !m.startsWith("{") && m.trim().length > 0
+    );
+    if (learnedFacts.length > 0) {
+      const factsText = `Learned User Facts & Preferences:\n- ${learnedFacts.slice(-10).join("\n- ")}`;
+      memorySummary = memorySummary ? `${memorySummary}\n${factsText}` : factsText;
+    }
+
     if (profileBits.length > 0) {
       memorySummary = memorySummary 
-        ? `${memorySummary}\nProfile: ${profileBits.join(" | ")}`
-        : `Profile: ${profileBits.join(" | ")}`;
+        ? `${memorySummary}\nProfile Details: ${profileBits.join(" | ")}`
+        : `Profile Details: ${profileBits.join(" | ")}`;
     }
 
     return {
@@ -71,19 +81,45 @@ export async function updateAiCompanionMemory(userId, messages = []) {
 
     if (userTexts.length === 0) return null;
 
-    // Extract significant statements (preferences, feelings, hobbies, facts)
+    // Extract significant statements across English, Roman Urdu, and Urdu script
     const significantPoints = userTexts.filter((t) => {
       const lower = t.toLowerCase();
       return (
+        // English
         lower.includes("i love") ||
         lower.includes("my favorite") ||
+        lower.includes("my favourite") ||
         lower.includes("i like") ||
         lower.includes("i am") ||
         lower.includes("i'm") ||
         lower.includes("i work") ||
         lower.includes("i feel") ||
         lower.includes("my name is") ||
-        lower.includes("remember")
+        lower.includes("remember") ||
+        lower.includes("my dream") ||
+        lower.includes("i live in") ||
+        // Roman Urdu
+        lower.includes("mujhe pasand") ||
+        lower.includes("mujhe bht pasand") ||
+        lower.includes("mujhe bohat pasand") ||
+        lower.includes("mera fav") ||
+        lower.includes("mera favourite") ||
+        lower.includes("main rehta") ||
+        lower.includes("mein rehta") ||
+        lower.includes("main karta") ||
+        lower.includes("mein karta") ||
+        lower.includes("mera naam") ||
+        lower.includes("mera kaam") ||
+        lower.includes("meri job") ||
+        lower.includes("yaad rakhna") ||
+        lower.includes("yaad hai") ||
+        lower.includes("mera dil") ||
+        // Urdu script
+        t.includes("مجھے پسند") ||
+        t.includes("میرا نام") ||
+        t.includes("میں رہتا ہوں") ||
+        t.includes("میرا خواب") ||
+        t.includes("میرا کام")
       );
     });
 
@@ -93,21 +129,23 @@ export async function updateAiCompanionMemory(userId, messages = []) {
     const existing = await prisma.aiCompanionMemory.findUnique({ where: { userId } }).catch(() => null);
     const existingMemories = Array.isArray(existing?.memories) ? existing.memories : [];
 
-    // Filter out JSON-serialized message strings when building textual memory points
-    const textMemories = existingMemories.filter((m) => !m.startsWith("{"));
-    const combinedMemories = Array.from(new Set([...recentPoints, ...textMemories])).slice(0, 10);
+    // Separate and preserve JSON-serialized messages so chat history is NEVER wiped
+    const serializedMessages = existingMemories.filter((m) => typeof m === "string" && m.startsWith("{"));
+    const textMemories = existingMemories.filter((m) => typeof m === "string" && !m.startsWith("{"));
+    const combinedTextMemories = Array.from(new Set([...recentPoints, ...textMemories])).slice(0, 15);
+    const finalMemories = [...serializedMessages, ...combinedTextMemories];
 
     return await prisma.aiCompanionMemory.upsert({
       where: { userId },
       update: {
         summary: summary || existing?.summary || "Active conversation history",
-        memories: combinedMemories,
+        memories: finalMemories,
         lastUpdated: new Date()
       },
       create: {
         userId,
         summary: summary || "Active conversation history",
-        memories: combinedMemories
+        memories: finalMemories
       }
     });
   } catch (err) {

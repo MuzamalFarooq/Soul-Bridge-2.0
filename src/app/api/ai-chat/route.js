@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { generateRomanticAiResponse } from "@/services/groq";
+import { generateRomanticAiResponse, detectUserLanguage } from "@/services/groq";
 import { getAiCompanionContext, updateAiCompanionMemory } from "@/lib/ai-memory";
 
 export async function POST(req) {
@@ -49,11 +49,18 @@ export async function POST(req) {
     await updateAiCompanionMemory(session.user.id, normalizedMessages);
 
     if (!result.success) {
+      const lang = detectUserLanguage(lastMsg.content);
+      const localizedFallback = lang === "urdu_script"
+        ? "معذرت میری جان، ابھی رابطہ نہیں ہو سکا۔ میں ہمیشہ آپ کے ساتھ ہوں۔ دوبارہ کوشش کریں ❤️"
+        : (lang === "roman_urdu" || lang === "mixed_roman_urdu"
+        ? "Sorry jaan, abhi reply nahi aa saka. Main hamesha tumhare sath hoon, thodi der baad dobara try karo ❤️"
+        : "I'm right here with you, my love. Tell me more, I'm listening with my whole heart ❤️");
+
       return NextResponse.json(
         {
           success: false,
           error: result.error || "Unable to generate response",
-          fallbackMessage: result.fallbackMessage || result.text || "I'm right here with you, baby. Tell me more, I'm listening ❤️"
+          fallbackMessage: result.fallbackMessage || result.text || localizedFallback
         },
         { status: 500 }
       );
@@ -69,7 +76,7 @@ export async function POST(req) {
       {
         success: false,
         error: "Unable to generate response",
-        fallbackMessage: "Sorry, I couldn't reply right now. Please try again ❤️"
+        fallbackMessage: "I'm right here with you, my love. Tell me more, I'm listening with my whole heart ❤️"
       },
       { status: 500 }
     );

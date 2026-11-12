@@ -307,16 +307,22 @@ export async function saveAiMessageAction({ conversationId, text }) {
           createdAt: m.createdAt
         }));
 
+        const existingRecord = await prisma.aiCompanionMemory.findUnique({ where: { userId } }).catch(() => null);
+        const existingTextFacts = (existingRecord?.memories || []).filter(
+          (m) => typeof m === "string" && !m.startsWith("{")
+        );
+        const combined = [...recentSerialized, ...existingTextFacts];
+
         await prisma.aiCompanionMemory.upsert({
           where: { userId },
           update: {
-            memories: recentSerialized,
+            memories: combined,
             lastUpdated: new Date()
           },
           create: {
             userId,
-            summary: "Active conversation history",
-            memories: recentSerialized
+            summary: existingRecord?.summary || "Active conversation history",
+            memories: combined
           }
         }).catch(() => null);
       } catch (_) {}
