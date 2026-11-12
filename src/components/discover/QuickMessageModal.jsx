@@ -50,8 +50,8 @@ export default function QuickMessageModal({ candidate, onClose }) {
   const [keyboardOffset, setKeyboardOffset] = useState(0);
 
   const textareaRef = useRef(null);
-  const messagesEndRef = useRef(null);
   const scrollContainerRef = useRef(null);
+  const isNearBottomRef = useRef(true);
 
   // Real-time presence via SocketContext
   let isOnline = false;
@@ -69,13 +69,27 @@ export default function QuickMessageModal({ candidate, onClose }) {
   const firstName = candidate?.fullName?.split(" ")[0] || "there";
   const avatarUrl = candidate?.photos?.[0] || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop";
 
-  // Scroll to bottom of message list smoothly
-  const scrollToBottom = useCallback((smooth = true) => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ 
-        behavior: smooth ? "smooth" : "auto", 
-        block: "nearest" 
+  // Track user scroll inside message container to preserve reading position
+  const handleMessagesScroll = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const threshold = 100;
+    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+  }, []);
+
+  // Scroll to bottom strictly inside the container (never scrolls window/page)
+  const scrollToBottom = useCallback((smooth = true, force = false) => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    if (!force && !isNearBottomRef.current) return;
+
+    if (smooth) {
+      el.scrollTo({ 
+        top: el.scrollHeight, 
+        behavior: "smooth" 
       });
+    } else {
+      el.scrollTop = el.scrollHeight;
     }
   }, []);
 
@@ -166,7 +180,7 @@ export default function QuickMessageModal({ candidate, onClose }) {
 
   // 4. Auto-scroll on new messages or keyboard adjustments
   useEffect(() => {
-    scrollToBottom(false);
+    scrollToBottom(false, false);
   }, [messages.length, keyboardOffset, scrollToBottom]);
 
   // Focus textarea when expanding from minimized
@@ -233,7 +247,7 @@ export default function QuickMessageModal({ candidate, onClose }) {
 
     setMessages((prev) => [...prev, optimisticMsg]);
     setMessageText("");
-    setTimeout(() => scrollToBottom(true), 50);
+    setTimeout(() => scrollToBottom(true, true), 50);
 
     try {
       let activeConvoId = conversationId;
@@ -278,7 +292,7 @@ export default function QuickMessageModal({ candidate, onClose }) {
       );
     } finally {
       setSending(false);
-      setTimeout(() => scrollToBottom(true), 100);
+      setTimeout(() => scrollToBottom(true, false), 100);
     }
   };
 
@@ -458,6 +472,7 @@ export default function QuickMessageModal({ candidate, onClose }) {
             {/* 2. CHAT BODY / SCROLL AREA (SCROLLS INDEPENDENTLY) */}
             <div 
               ref={scrollContainerRef}
+              onScroll={handleMessagesScroll}
               className="flex-1 min-h-0 p-3 sm:p-4 overflow-y-auto space-y-3.5 overscroll-contain"
             >
               {/* Profile Intro / Icebreakers if no messages or short history */}
@@ -544,8 +559,8 @@ export default function QuickMessageModal({ candidate, onClose }) {
                 </div>
               )}
 
-              {/* Auto-scroll anchor */}
-              <div ref={messagesEndRef} className="h-1" />
+              {/* Message scroll anchor space */}
+              <div className="h-1" />
             </div>
 
             {/* 3. CHAT COMPOSER (PINNED TO BOTTOM, NEVER OBSCURED) */}

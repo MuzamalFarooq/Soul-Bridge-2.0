@@ -40,11 +40,35 @@ export default function ChatWindow({ conversation, onBack }) {
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [pinnedOpen, setPinnedOpen] = useState(false);
 
-  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
+  const isNearBottomRef = useRef(true);
   const typingTimeoutRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // Monitor user scrolling inside the chat messages container to preserve position
+  const handleMessagesScroll = () => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const threshold = 120; // px threshold from bottom
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    isNearBottomRef.current = distanceFromBottom <= threshold;
+  };
+
+  // Scoped scrolling: strictly scrolls ONLY the messages container, NEVER the window or page
+  const scrollToBottom = (smooth = true, force = false) => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+
+    // If user scrolled up to read older messages and this is not forced, preserve scroll position
+    if (!force && !isNearBottomRef.current) return;
+
+    if (smooth) {
+      el.scrollTo({
+        top: el.scrollHeight,
+        behavior: "smooth"
+      });
+    } else {
+      el.scrollTop = el.scrollHeight;
+    }
   };
 
   // 1. Fetch message history
@@ -54,7 +78,7 @@ export default function ChatWindow({ conversation, onBack }) {
       const res = await fetchMessages(conversation.id);
       if (res.success) {
         setMessages(res.messages || []);
-        scrollToBottom();
+        setTimeout(() => scrollToBottom(false, true), 20);
       }
     };
     loadMessages();
@@ -82,7 +106,7 @@ export default function ChatWindow({ conversation, onBack }) {
           if (prev.some((m) => m.id === msg.id)) return prev;
           return [...prev, msg];
         });
-        scrollToBottom();
+        setTimeout(() => scrollToBottom(true, false), 20);
         
         // Auto mark read if received message
         markMessagesReadAction(conversation.id);
@@ -156,7 +180,7 @@ export default function ChatWindow({ conversation, onBack }) {
     };
 
     setMessages((prev) => [...prev, optimisticMsg]);
-    setTimeout(scrollToBottom, 50);
+    setTimeout(() => scrollToBottom(true, true), 30);
 
     const isAiChat = conversation.isAI || conversation.id === "ai_companion" || conversation.recipientId === "ai_companion";
 
@@ -169,7 +193,7 @@ export default function ChatWindow({ conversation, onBack }) {
 
       // 2. Turn on partner typing indicator
       setPartnerTyping(true);
-      setTimeout(scrollToBottom, 50);
+      setTimeout(() => scrollToBottom(true, false), 30);
 
       // 3. Format conversation history for Groq API
       const history = [...messages, optimisticMsg].map((m) => ({
@@ -214,6 +238,7 @@ export default function ChatWindow({ conversation, onBack }) {
         };
 
         setMessages((prev) => [...prev, finalMsg]);
+        setTimeout(() => scrollToBottom(true, false), 30);
       } catch (err) {
         console.error("AI Chat generation error:", err);
         const fallbackMsg = {
@@ -230,9 +255,10 @@ export default function ChatWindow({ conversation, onBack }) {
           text: fallbackMsg.text
         });
         setMessages((prev) => [...prev, fallbackMsg]);
+        setTimeout(() => scrollToBottom(true, false), 30);
       } finally {
         setPartnerTyping(false);
-        setTimeout(scrollToBottom, 50);
+        setTimeout(() => scrollToBottom(true, false), 30);
       }
       return;
     }
@@ -253,6 +279,7 @@ export default function ChatWindow({ conversation, onBack }) {
             ...res.message,
             receiverId: conversation.recipientId
           });
+          setTimeout(() => scrollToBottom(true, true), 30);
         }
       } else {
         const res = await sendMessageAction({
@@ -268,6 +295,7 @@ export default function ChatWindow({ conversation, onBack }) {
             ...res.message,
             receiverId: conversation.recipientId
           });
+          setTimeout(() => scrollToBottom(true, true), 30);
         }
       }
     } catch (err) {
@@ -345,7 +373,7 @@ export default function ChatWindow({ conversation, onBack }) {
   const displayPhoto = conversation?.photo || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80";
 
   return (
-    <div className="flex-1 flex flex-col h-[560px] glass-panel rounded-3xl border border-white/5 overflow-hidden relative">
+    <div className="flex-1 flex flex-col h-full min-h-[460px] md:min-h-[560px] glass-panel rounded-3xl border border-white/5 overflow-hidden relative">
       
       {/* HEADER SECTION */}
       <div className="px-6 py-4 flex items-center justify-between border-b border-white/5 bg-white/5 relative z-10">
@@ -427,7 +455,11 @@ export default function ChatWindow({ conversation, onBack }) {
       </div>
 
       {/* CHAT MESSAGES BODY */}
-      <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-4 bg-black/15">
+      <div 
+        ref={messagesContainerRef}
+        onScroll={handleMessagesScroll}
+        className="flex-1 min-h-0 p-4 sm:p-6 overflow-y-auto flex flex-col gap-4 bg-black/15 overscroll-contain"
+      >
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-foreground/40">
             <Heart className="w-10 h-10 text-primary-pink/20 fill-primary-pink/5 mb-2" />
@@ -502,14 +534,13 @@ export default function ChatWindow({ conversation, onBack }) {
             <span className="text-[9px] text-foreground/40 font-semibold uppercase">Typing...</span>
           </div>
         )}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* AI SUGGESTION ACCORDION */}
       {aiSuggestions.length > 0 && (
         <div className="p-3 bg-indigo-500/10 border-t border-indigo-500/25 flex flex-col gap-1.5 relative z-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <span className="text-[9px] font-bold text-indigo-300 flex items-center gap-1">
-            <Brain className="w-3 h-3 text-indigo-400" /> Groq AI Conversation Suggestions:
+            <Brain className="w-3 h-3 text-indigo-400" /> AI Conversation Suggestions:
           </span>
           <div className="flex flex-wrap gap-1.5">
             {aiSuggestions.map((sug, idx) => (
