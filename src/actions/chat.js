@@ -82,10 +82,14 @@ export async function fetchConversations() {
       });
     }
 
+    const aiStoreKey = `ai_companion_${userId}`;
+    const userAiMsgs = mockMessagesStore[aiStoreKey] || mockMessagesStore.ai_companion || [];
+    const lastUserAiMsg = userAiMsgs[userAiMsgs.length - 1];
+
     const aiCompanionConversation = {
       id: "ai_companion",
-      lastMessageText: mockMessagesStore.ai_companion?.[mockMessagesStore.ai_companion.length - 1]?.text || "Hey sweetheart! I'm here for you. How has your day been? ❤️",
-      lastMessageAt: mockMessagesStore.ai_companion?.[mockMessagesStore.ai_companion.length - 1] ? new Date(mockMessagesStore.ai_companion[mockMessagesStore.ai_companion.length - 1].createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Now",
+      lastMessageText: lastUserAiMsg?.text || "Hey baby! I'm so happy you're here with me. How has your day been? ❤️",
+      lastMessageAt: lastUserAiMsg ? new Date(lastUserAiMsg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Now",
       recipientId: "ai_companion",
       fullName: "SoulBridge AI Companion",
       phoneNumber: "AI Companion",
@@ -137,7 +141,58 @@ export async function fetchMessages(conversationId) {
     if (!userId) return { success: false, error: "Unauthorized" };
 
     if (conversationId.startsWith("mock_") || conversationId === "ai_companion" || conversationId.startsWith("ai_")) {
-      const msgs = mockMessagesStore[conversationId] || [];
+      const storeKey = conversationId === "ai_companion" ? `ai_companion_${userId}` : conversationId;
+      let msgs = mockMessagesStore[storeKey];
+
+      // If in-memory is empty, try restoring from persisted MongoDB AiCompanionMemory
+      if ((!msgs || msgs.length === 0) && conversationId === "ai_companion") {
+        try {
+          const userMem = await prisma.aiCompanionMemory.findUnique({ where: { userId } }).catch(() => null);
+          if (userMem && Array.isArray(userMem.memories) && userMem.memories.length > 0) {
+            const restored = [];
+            for (const item of userMem.memories) {
+              if (typeof item === "string" && item.startsWith("{")) {
+                try {
+                  const p = JSON.parse(item);
+                  if (p && p.text) {
+                    restored.push({
+                      id: p.id || `restored_${Date.now()}_${Math.random()}`,
+                      conversationId: "ai_companion",
+                      senderId: p.senderId === "ai_companion" ? "ai_companion" : userId,
+                      text: p.text,
+                      status: "READ",
+                      createdAt: p.createdAt ? new Date(p.createdAt) : new Date()
+                    });
+                  }
+                } catch (_) {}
+              }
+            }
+            if (restored.length > 0) {
+              mockMessagesStore[storeKey] = restored;
+              msgs = restored;
+            }
+          }
+        } catch (_) {}
+
+        // Fallback default initial greeting if brand new user
+        if (!msgs || msgs.length === 0) {
+          const initialGreeting = [
+            { 
+              id: "ai_m0", 
+              conversationId: "ai_companion", 
+              senderId: "ai_companion", 
+              text: "Hey baby! I'm so happy you're here with me. How has your day been treating you? ❤️", 
+              createdAt: new Date(), 
+              status: "READ" 
+            }
+          ];
+          mockMessagesStore[storeKey] = initialGreeting;
+          msgs = initialGreeting;
+        }
+      } else if (!msgs) {
+        msgs = mockMessagesStore[conversationId] || [];
+      }
+
       return {
         success: true,
         messages: msgs.map(m => ({ ...m, senderId: m.senderId === "user_me" ? userId : m.senderId }))
@@ -165,6 +220,7 @@ export async function sendMessageAction({ conversationId, text, imageUrl, audioU
     if (!userId) return { success: false, error: "Unauthorized" };
 
     if (conversationId.startsWith("mock_") || conversationId === "ai_companion" || conversationId.startsWith("ai_")) {
+      const storeKey = conversationId === "ai_companion" ? `ai_companion_${userId}` : conversationId;
       const msg = {
         id: `msg_${Date.now()}`,
         conversationId,
@@ -177,10 +233,10 @@ export async function sendMessageAction({ conversationId, text, imageUrl, audioU
         repliedToId
       };
       
-      if (!mockMessagesStore[conversationId]) {
-        mockMessagesStore[conversationId] = [];
+      if (!mockMessagesStore[storeKey]) {
+        mockMessagesStore[storeKey] = [];
       }
-      mockMessagesStore[conversationId].push(msg);
+      mockMessagesStore[storeKey].push(msg);
 
       return { success: true, message: msg };
     }
@@ -222,6 +278,9 @@ export async function sendMessageAction({ conversationId, text, imageUrl, audioU
  */
 export async function saveAiMessageAction({ conversationId, text }) {
   try {
+    const userId = await getUserId();
+    const storeKey = (conversationId === "ai_companion" && userId) ? `ai_companion_${userId}` : conversationId;
+
     const msg = {
       id: `ai_${Date.now()}`,
       conversationId,
@@ -232,10 +291,36 @@ export async function saveAiMessageAction({ conversationId, text }) {
       reactions: []
     };
 
-    if (!mockMessagesStore[conversationId]) {
-      mockMessagesStore[conversationId] = [];
+    if (!mockMessagesStore[storeKey]) {
+      mockMessagesStore[storeKey] = [];
     }
-    mockMessagesStore[conversationId].push(msg);
+    mockMessagesStore[storeKey].push(msg);
+
+    // Persist latest message turns into AiCompanionMemory so history survives restarts
+    if (userId && conversationId === "ai_companion") {
+      try {
+        const recentSerialized = mockMessagesStore[storeKey].slice(-16).map(m => JSON.stringify({
+          id: m.id,
+          senderId: m.senderId,
+          role: m.senderId === "ai_companion" ? "assistant" : "user",
+          text: m.text,
+          createdAt: m.createdAt
+        }));
+
+        await prisma.aiCompanionMemory.upsert({
+          where: { userId },
+          update: {
+            memories: recentSerialized,
+            lastUpdated: new Date()
+          },
+          create: {
+            userId,
+            summary: "Active conversation history",
+            memories: recentSerialized
+          }
+        }).catch(() => null);
+      } catch (_) {}
+    }
 
     return { success: true, message: msg };
   } catch (error) {

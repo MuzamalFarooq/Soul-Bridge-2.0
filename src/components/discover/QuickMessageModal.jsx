@@ -298,7 +298,7 @@ export default function QuickMessageModal({ candidate, onClose }) {
 
   return (
     <div
-      className={`fixed z-[70] pointer-events-none left-2 right-2 sm:left-auto sm:right-4 md:right-6 md:w-[390px] flex flex-col items-end transition-[bottom] duration-200 ${
+      className={`fixed z-70 pointer-events-none left-2 right-2 sm:left-auto sm:right-4 md:right-6 md:w-[390px] flex flex-col items-end transition-[bottom] duration-200 ${
         keyboardOffset > 0 
           ? '' 
           : 'bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] md:bottom-6'
@@ -326,11 +326,11 @@ export default function QuickMessageModal({ candidate, onClose }) {
             onClick={() => setIsMinimized(false)}
           >
             {/* Avatar with status indicator */}
-            <div className="relative flex-shrink-0">
+            <div className="relative shrink-0">
               <img
                 src={avatarUrl}
                 alt={candidate?.fullName}
-                className="w-8 h-8 rounded-full object-cover border border-[var(--sb-wine)]/30"
+                className="w-8 h-8 rounded-full object-cover border border-(--sb-wine)/30"
               />
               <span
                 className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-[#fffdfa] dark:ring-[#2b1d24] ${
@@ -344,7 +344,7 @@ export default function QuickMessageModal({ candidate, onClose }) {
             <div className="flex flex-col text-left overflow-hidden pr-1">
               <span className="text-xs font-bold text-foreground truncate flex items-center gap-1">
                 {firstName}
-                <Sparkles className="w-3 h-3 text-[var(--sb-rose)] shrink-0" />
+                <Sparkles className="w-3 h-3 text-(--sb-rose) shrink-0" />
               </span>
               <span className="text-[10px] text-foreground/50 truncate">
                 {messages.length > 0 ? `${messages.length} messages` : "Chat minimized"}
@@ -359,7 +359,7 @@ export default function QuickMessageModal({ candidate, onClose }) {
                   e.stopPropagation();
                   setIsMinimized(false);
                 }}
-                className="w-7 h-7 rounded-full bg-[var(--sb-blush)]/50 dark:bg-white/10 hover:bg-[var(--sb-wine)] hover:text-white flex items-center justify-center text-foreground/70 transition-all cursor-pointer"
+                className="w-7 h-7 rounded-full bg-(--sb-blush)/50 dark:bg-white/10 hover:bg-[var(--sb-wine)] hover:text-white flex items-center justify-center text-foreground/70 transition-all cursor-pointer"
                 title="Restore chat"
                 aria-label="Restore chat"
               >
@@ -371,7 +371,7 @@ export default function QuickMessageModal({ candidate, onClose }) {
                   e.stopPropagation();
                   onClose();
                 }}
-                className="w-7 h-7 rounded-full bg-[var(--sb-blush)]/50 dark:bg-white/10 hover:bg-rose-500 hover:text-white flex items-center justify-center text-foreground/70 transition-all cursor-pointer"
+                className="w-7 h-7 rounded-full bg-(--sb-blush)/50 dark:bg-white/10 hover:bg-rose-500 hover:text-white flex items-center justify-center text-foreground/70 transition-all cursor-pointer"
                 title="Close chat"
                 aria-label="Close chat"
               >
@@ -398,9 +398,9 @@ export default function QuickMessageModal({ candidate, onClose }) {
             }}
           >
             {/* 1. CHAT HEADER (FIXED TOP, NEVER SCROLLS) */}
-            <div className="flex-shrink-0 flex items-center justify-between px-3.5 sm:px-4 py-2.5 sm:py-3 border-b border-[var(--sb-line)] dark:border-white/10 bg-gradient-to-r from-[var(--sb-wine)]/10 via-[var(--sb-blush)]/20 to-transparent">
+            <div className="shrink-0 flex items-center justify-between px-3.5 sm:px-4 py-2.5 sm:py-3 border-b border-[var(--sb-line)] dark:border-white/10 bg-gradient-to-r from-[var(--sb-wine)]/10 via-[var(--sb-blush)]/20 to-transparent">
               <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                <div className="relative flex-shrink-0">
+                <div className="relative shrink-0">
                   <img
                     src={avatarUrl}
                     alt={candidate?.fullName}
@@ -417,7 +417,7 @@ export default function QuickMessageModal({ candidate, onClose }) {
                 <div className="flex flex-col min-w-0">
                   <h3 className="font-extrabold text-xs sm:text-sm text-foreground flex items-center gap-1.5 truncate">
                     {candidate?.fullName}
-                    <Sparkles className="w-3.5 h-3.5 text-[var(--sb-rose)] flex-shrink-0" />
+                    <Sparkles className="w-3.5 h-3.5 text-(--sb-rose) shrink-0" />
                   </h3>
                   <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-foreground/60 truncate">
                     <span

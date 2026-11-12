@@ -38,9 +38,12 @@ export async function POST(req) {
     }
 
     const companionContext = await getAiCompanionContext(session.user.id);
+    const resolvedUserName = companionContext.userName || session.user?.name || "";
+
     const result = await generateRomanticAiResponse(normalizedMessages, {
-      userName: companionContext.preferredNickname || session.user?.name || "sweetheart",
-      memorySummary: memorySummary || companionContext.memorySummary
+      userName: resolvedUserName,
+      memorySummary: memorySummary || companionContext.memorySummary,
+      userId: session.user.id
     });
 
     await updateAiCompanionMemory(session.user.id, normalizedMessages);
@@ -50,7 +53,7 @@ export async function POST(req) {
         {
           success: false,
           error: result.error || "Unable to generate response",
-          fallbackMessage: result.fallbackMessage || "Sorry, I couldn't reply right now. Please try again ❤️"
+          fallbackMessage: result.fallbackMessage || result.text || "I'm right here with you, baby. Tell me more, I'm listening ❤️"
         },
         { status: 500 }
       );

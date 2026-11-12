@@ -196,10 +196,15 @@ export default function ChatWindow({ conversation, onBack }) {
       setTimeout(() => scrollToBottom(true, false), 30);
 
       // 3. Format conversation history for Groq API
-      const history = [...messages, optimisticMsg].map((m) => ({
-        role: m.senderId === "ai_companion" ? "assistant" : "user",
-        content: m.text || ""
-      }));
+      const history = [...messages, optimisticMsg]
+        .map((m) => {
+          const isAssistant = m.role === "assistant" || m.senderId === "ai_companion" || String(m.senderId || "").startsWith("ai_");
+          return {
+            role: isAssistant ? "assistant" : "user",
+            content: m.text || m.content || ""
+          };
+        })
+        .filter((m) => m.content.trim().length > 0);
 
       try {
         const response = await fetch("/api/ai-chat", {
@@ -219,7 +224,7 @@ export default function ChatWindow({ conversation, onBack }) {
         if (response.ok && data.success && data.message) {
           aiReplyText = data.message;
         } else {
-          aiReplyText = data.fallbackMessage || "Sorry, I couldn't reply right now. Please try again ❤️";
+          aiReplyText = data.fallbackMessage || data.message || "I'm right here with you, baby. Tell me more, I'm listening ❤️";
         }
 
         const savedAiMsg = await saveAiMessageAction({
@@ -245,7 +250,7 @@ export default function ChatWindow({ conversation, onBack }) {
           id: `ai_${Date.now()}`,
           conversationId: conversation.id,
           senderId: "ai_companion",
-          text: "Sorry my Love , I couldn't reply right now. Please try again ❤️",
+          text: "I'm right here with you, baby. Tell me more, I'm listening with my whole heart. ❤️",
           createdAt: new Date(),
           status: "DELIVERED",
           reactions: []
