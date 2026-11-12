@@ -12,7 +12,10 @@ import {
   ExternalLink,
   MessageSquare,
   Check,
-  CheckCheck
+  CheckCheck,
+  ChevronDown,
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
@@ -48,10 +51,14 @@ export default function QuickMessageModal({ candidate, onClose }) {
   const [isMinimized, setIsMinimized] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [keyboardOffset, setKeyboardOffset] = useState(0);
+  const [showScrollBottomBtn, setShowScrollBottomBtn] = useState(false);
+  const [unreadBelowCount, setUnreadBelowCount] = useState(0);
 
   const textareaRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const isNearBottomRef = useRef(true);
+  const forceScrollRef = useRef(true);
+  const prevMessagesLengthRef = useRef(0);
 
   // Real-time presence via SocketContext
   let isOnline = false;
@@ -73,8 +80,14 @@ export default function QuickMessageModal({ candidate, onClose }) {
   const handleMessagesScroll = useCallback(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
-    const threshold = 100;
-    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+    const threshold = 120;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    const isNear = distanceFromBottom <= threshold;
+    isNearBottomRef.current = isNear;
+    setShowScrollBottomBtn(!isNear);
+    if (isNear) {
+      setUnreadBelowCount(0);
+    }
   }, []);
 
   // Scroll to bottom strictly inside the container (never scrolls window/page)
@@ -83,14 +96,22 @@ export default function QuickMessageModal({ candidate, onClose }) {
     if (!el) return;
     if (!force && !isNearBottomRef.current) return;
 
-    if (smooth) {
-      el.scrollTo({ 
-        top: el.scrollHeight, 
-        behavior: "smooth" 
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!el) return;
+        if (smooth) {
+          el.scrollTo({ 
+            top: el.scrollHeight, 
+            behavior: "smooth" 
+          });
+        } else {
+          el.scrollTop = el.scrollHeight;
+        }
+        isNearBottomRef.current = true;
+        setShowScrollBottomBtn(false);
+        setUnreadBelowCount(0);
       });
-    } else {
-      el.scrollTop = el.scrollHeight;
-    }
+    });
   }, []);
 
   // 1. Listen for mobile virtual keyboard changes via Visual Viewport API
@@ -133,6 +154,7 @@ export default function QuickMessageModal({ candidate, onClose }) {
           const msgsRes = await fetchMessages(convoRes.conversationId);
           if (isMounted && msgsRes?.success && Array.isArray(msgsRes.messages)) {
             setMessages(msgsRes.messages);
+            forceScrollRef.current = true;
             markMessagesReadAction(convoRes.conversationId);
           }
         } else {
@@ -178,10 +200,34 @@ export default function QuickMessageModal({ candidate, onClose }) {
     };
   }, [socket, conversationId]);
 
-  // 4. Auto-scroll on new messages or keyboard adjustments
+  // 4. Auto-scroll on new messages with user scroll awareness
   useEffect(() => {
-    scrollToBottom(false, false);
-  }, [messages.length, keyboardOffset, scrollToBottom]);
+    const prevLen = prevMessagesLengthRef.current;
+    const newLen = messages.length;
+    const hasNewMessages = newLen > prevLen;
+    prevMessagesLengthRef.current = newLen;
+
+    if (forceScrollRef.current) {
+      forceScrollRef.current = false;
+      scrollToBottom(false, true);
+      return;
+    }
+
+    if (hasNewMessages) {
+      if (isNearBottomRef.current) {
+        scrollToBottom(true, false);
+      } else {
+        setUnreadBelowCount((c) => c + (newLen - prevLen));
+      }
+    }
+  }, [messages, scrollToBottom]);
+
+  // 5. Scroll adjustment on mobile keyboard open/close
+  useEffect(() => {
+    if (keyboardOffset > 0) {
+      scrollToBottom(true, true);
+    }
+  }, [keyboardOffset, scrollToBottom]);
 
   // Focus textarea when expanding from minimized
   useEffect(() => {
@@ -247,7 +293,9 @@ export default function QuickMessageModal({ candidate, onClose }) {
 
     setMessages((prev) => [...prev, optimisticMsg]);
     setMessageText("");
-    setTimeout(() => scrollToBottom(true, true), 50);
+    forceScrollRef.current = true;
+    isNearBottomRef.current = true;
+    scrollToBottom(true, true);
 
     try {
       let activeConvoId = conversationId;
@@ -292,8 +340,15 @@ export default function QuickMessageModal({ candidate, onClose }) {
       );
     } finally {
       setSending(false);
-      setTimeout(() => scrollToBottom(true, false), 100);
+      scrollToBottom(true, false);
     }
+  };
+
+  const handleRetry = (failedMsg) => {
+    if (!failedMsg?.text) return;
+    setMessages((prev) => prev.filter((m) => m.id !== failedMsg.id));
+    setMessageText(failedMsg.text);
+    if (textareaRef.current) textareaRef.current.focus();
   };
 
   return (
@@ -389,7 +444,7 @@ export default function QuickMessageModal({ candidate, onClose }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 320, damping: 26 }}
-            className="pointer-events-auto w-full flex flex-col rounded-3xl bg-[#fffdfa]/95 dark:bg-[#2b1d24]/95 backdrop-blur-2xl border border-[var(--sb-line)] dark:border-white/15 shadow-[0_20px_60px_rgba(74,23,44,0.24)] overflow-hidden"
+            className="pointer-events-auto w-full flex flex-col rounded-3xl bg-[#fffdfa]/95 dark:bg-[#2b1d24]/95 backdrop-blur-2xl border border-[var(--sb-line)] dark:border-white/15 shadow-[0_20px_60px_rgba(74,23,44,0.24)] overflow-hidden relative"
             style={{
               height: keyboardOffset > 0 
                 ? 'min(360px, calc(100dvh - 120px))' 
@@ -533,7 +588,7 @@ export default function QuickMessageModal({ candidate, onClose }) {
                               : "bg-white/85 dark:bg-white/10 text-foreground border border-[var(--sb-line)] dark:border-white/10 rounded-bl-xs"
                           }`}
                         >
-                          <p className="whitespace-pre-wrap">{m.text}</p>
+                          <p className="whitespace-pre-wrap break-words max-w-full">{m.text}</p>
                         </div>
 
                         {/* Message status / time */}
@@ -544,7 +599,16 @@ export default function QuickMessageModal({ candidate, onClose }) {
                               {m.status === "SENDING" ? (
                                 <span className="opacity-60">Sending...</span>
                               ) : m.status === "FAILED" ? (
-                                <span className="text-rose-500 font-semibold">Failed</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRetry(m)}
+                                  className="text-rose-500 font-semibold inline-flex items-center gap-1 hover:underline cursor-pointer"
+                                  title="Retry sending"
+                                >
+                                  <AlertCircle className="w-2.5 h-2.5" />
+                                  <span>Failed • Retry</span>
+                                  <RefreshCw className="w-2.5 h-2.5" />
+                                </button>
                               ) : m.status === "READ" ? (
                                 <CheckCheck className="w-3 h-3 text-[var(--sb-rose)] inline" />
                               ) : (
@@ -562,6 +626,29 @@ export default function QuickMessageModal({ candidate, onClose }) {
               {/* Message scroll anchor space */}
               <div className="h-1" />
             </div>
+
+            {/* Floating scroll to bottom / jump button */}
+            {showScrollBottomBtn && (
+              <div className="absolute bottom-20 right-3.5 z-20 pointer-events-auto animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <button
+                  type="button"
+                  onClick={() => {
+                    forceScrollRef.current = true;
+                    scrollToBottom(true, true);
+                  }}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[var(--sb-wine)] text-white text-[10px] font-semibold shadow-lg hover:opacity-95 active:scale-95 transition-all cursor-pointer"
+                  title="Jump to latest message"
+                >
+                  <ChevronDown className="w-3 h-3" />
+                  <span>Latest</span>
+                  {unreadBelowCount > 0 && (
+                    <span className="w-3.5 h-3.5 rounded-full bg-white text-[var(--sb-wine)] text-[9px] font-black flex items-center justify-center">
+                      {unreadBelowCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+            )}
 
             {/* 3. CHAT COMPOSER (PINNED TO BOTTOM, NEVER OBSCURED) */}
             <div className="flex-shrink-0 p-2.5 sm:p-3 bg-[#fffdfa] dark:bg-[#2b1d24] border-t border-[var(--sb-line)] dark:border-white/10">

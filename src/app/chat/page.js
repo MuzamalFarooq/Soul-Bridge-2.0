@@ -125,11 +125,11 @@ function ChatContent() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-2 sm:px-6 py-3 sm:py-8 relative z-10 flex flex-col">
-        <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 min-h-[500px] md:min-h-145 rounded-3xl overflow-hidden glass-card border border-white/5 shadow-2xl p-2 bg-black/5">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-2 sm:px-4 md:px-6 py-2 sm:py-4 md:py-6 relative z-10 flex flex-col h-[calc(100dvh-4.75rem-env(safe-area-inset-bottom,0px))] md:h-[calc(100vh-5.5rem)] max-h-[calc(100dvh-4.75rem-env(safe-area-inset-bottom,0px))] md:max-h-[calc(100vh-5.5rem)] min-h-0 overflow-hidden">
+        <div className="flex-1 min-h-0 h-full w-full grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 rounded-2xl md:rounded-3xl overflow-hidden glass-card border border-white/5 shadow-2xl p-1.5 sm:p-2 bg-black/5">
           
           {/* LEFT THREADS PANE */}
-          <div className={`flex flex-col border-r border-white/5 p-4 ${selectedConvo ? "hidden md:flex" : "flex"}`}>
+          <div className={`h-full min-h-0 flex flex-col overflow-hidden border-r border-white/5 p-3 sm:p-4 ${selectedConvo ? "hidden md:flex" : "flex"}`}>
             <div className="px-2 mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold flex items-center gap-2">
@@ -177,7 +177,7 @@ function ChatContent() {
             )}
 
             {!loading && !error && conversations.length > 0 && (
-              <div className="flex-1 flex flex-col gap-2 overflow-y-auto pr-1">
+              <div className="flex-1 min-h-0 flex flex-col gap-2 overflow-y-auto pr-1 overscroll-contain">
                 {conversations.map((convo) => {
                   const isSelected = selectedConvo?.id === convo.id;
                   return (
@@ -226,9 +226,10 @@ function ChatContent() {
           </div>
 
           {/* RIGHT CHAT WINDOW PANE */}
-          <div className={`md:col-span-2 flex flex-col ${!selectedConvo ? "hidden md:flex" : "flex"}`}>
+          <div className={`h-full min-h-0 md:col-span-2 flex flex-col overflow-hidden ${!selectedConvo ? "hidden md:flex" : "flex"}`}>
             {selectedConvo ? (
               <ChatWindow 
+                key={selectedConvo.id}
                 conversation={selectedConvo} 
                 onBack={() => setSelectedConvo(null)} 
               />
@@ -246,7 +247,9 @@ function ChatContent() {
         </div>
       </main>
 
-      <Footer />
+      <div className="hidden md:block shrink-0">
+        <Footer />
+      </div>
 
       {/* Connection Requests Modal */}
       <ConnectionRequestsModal

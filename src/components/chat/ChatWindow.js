@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useSocket } from "@/context/SocketContext";
 import { 
   Send, Phone, Video, Star, Smile, Image, Mic, MoreVertical, 
   CornerUpLeft, CheckCheck, Crown, ShieldAlert, Sparkles, Brain,
   PhoneCall, PhoneOff, VideoOff, Volume2, Camera, Smartphone, MessageSquare,
-  Heart
+  Heart, ChevronDown, Check, AlertCircle, RefreshCw
 } from "lucide-react";
 import { 
   fetchMessages, 
@@ -42,34 +42,104 @@ export default function ChatWindow({ conversation, onBack }) {
 
   const messagesContainerRef = useRef(null);
   const isNearBottomRef = useRef(true);
+  const forceScrollRef = useRef(true);
+  const prevMessagesLengthRef = useRef(0);
   const typingTimeoutRef = useRef(null);
 
-  // Monitor user scrolling inside the chat messages container to preserve position
-  const handleMessagesScroll = () => {
+  const [showScrollBottomBtn, setShowScrollBottomBtn] = useState(false);
+  const [unreadBelowCount, setUnreadBelowCount] = useState(0);
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
+
+  // Precision bottom scroll function using requestAnimationFrame
+  const scrollToBottom = useCallback((smooth = true) => {
     const el = messagesContainerRef.current;
     if (!el) return;
-    const threshold = 120; // px threshold from bottom
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    isNearBottomRef.current = distanceFromBottom <= threshold;
-  };
-
-  // Scoped scrolling: strictly scrolls ONLY the messages container, NEVER the window or page
-  const scrollToBottom = (smooth = true, force = false) => {
-    const el = messagesContainerRef.current;
-    if (!el) return;
-
-    // If user scrolled up to read older messages and this is not forced, preserve scroll position
-    if (!force && !isNearBottomRef.current) return;
 
     if (smooth) {
-      el.scrollTo({
-        top: el.scrollHeight,
-        behavior: "smooth"
-      });
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
     } else {
       el.scrollTop = el.scrollHeight;
     }
-  };
+
+    requestAnimationFrame(() => {
+      if (!el) return;
+      if (smooth) {
+        el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+      } else {
+        el.scrollTop = el.scrollHeight;
+      }
+    });
+
+    isNearBottomRef.current = true;
+    setShowScrollBottomBtn(false);
+    setUnreadBelowCount(0);
+  }, []);
+
+  // Monitor user scrolling inside the chat messages container to preserve position
+  const handleMessagesScroll = useCallback(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+    const threshold = 140; // px threshold from bottom
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    const isAtBottom = distanceFromBottom <= threshold;
+
+    isNearBottomRef.current = isAtBottom;
+
+    if (isAtBottom) {
+      setShowScrollBottomBtn(false);
+      setUnreadBelowCount(0);
+    }
+  }, []);
+
+  // Auto-scroll effect after React commits DOM updates
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+
+    const currentCount = messages.length;
+    const wasAdded = currentCount > prevMessagesLengthRef.current;
+    prevMessagesLengthRef.current = currentCount;
+
+    if (forceScrollRef.current || isNearBottomRef.current) {
+      requestAnimationFrame(() => {
+        if (!el) return;
+        el.scrollTop = el.scrollHeight;
+        requestAnimationFrame(() => {
+          if (!el) return;
+          el.scrollTop = el.scrollHeight;
+        });
+      });
+      forceScrollRef.current = false;
+      setShowScrollBottomBtn(false);
+      setUnreadBelowCount(0);
+    } else if (wasAdded) {
+      setShowScrollBottomBtn(true);
+      setUnreadBelowCount((prev) => prev + 1);
+    }
+  }, [messages, partnerTyping, aiSuggestions.length]);
+
+  // Mobile virtual keyboard viewport listener
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.visualViewport) return;
+
+    const handleViewportChange = () => {
+      const vv = window.visualViewport;
+      const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      setKeyboardOffset(offset > 60 ? offset : 0);
+      if (offset > 60 && isNearBottomRef.current) {
+        forceScrollRef.current = true;
+        setTimeout(() => scrollToBottom(false), 150);
+      }
+    };
+
+    window.visualViewport.addEventListener("resize", handleViewportChange);
+    window.visualViewport.addEventListener("scroll", handleViewportChange);
+
+    return () => {
+      window.visualViewport?.removeEventListener("resize", handleViewportChange);
+      window.visualViewport?.removeEventListener("scroll", handleViewportChange);
+    };
+  }, [scrollToBottom]);
 
   // 1. Fetch message history
   useEffect(() => {
@@ -78,7 +148,7 @@ export default function ChatWindow({ conversation, onBack }) {
       const res = await fetchMessages(conversation.id);
       if (res.success) {
         setMessages(res.messages || []);
-        setTimeout(() => scrollToBottom(false, true), 20);
+        forceScrollRef.current = true;
       }
     };
     loadMessages();
@@ -180,7 +250,8 @@ export default function ChatWindow({ conversation, onBack }) {
     };
 
     setMessages((prev) => [...prev, optimisticMsg]);
-    setTimeout(() => scrollToBottom(true, true), 30);
+    forceScrollRef.current = true;
+    isNearBottomRef.current = true;
 
     const isAiChat = conversation.isAI || conversation.id === "ai_companion" || conversation.recipientId === "ai_companion";
 
@@ -193,7 +264,6 @@ export default function ChatWindow({ conversation, onBack }) {
 
       // 2. Turn on partner typing indicator
       setPartnerTyping(true);
-      setTimeout(() => scrollToBottom(true, false), 30);
 
       // 3. Format conversation history for Groq API
       const history = [...messages, optimisticMsg]
@@ -243,7 +313,6 @@ export default function ChatWindow({ conversation, onBack }) {
         };
 
         setMessages((prev) => [...prev, finalMsg]);
-        setTimeout(() => scrollToBottom(true, false), 30);
       } catch (err) {
         console.error("AI Chat generation error:", err);
         const fallbackMsg = {
@@ -260,10 +329,8 @@ export default function ChatWindow({ conversation, onBack }) {
           text: fallbackMsg.text
         });
         setMessages((prev) => [...prev, fallbackMsg]);
-        setTimeout(() => scrollToBottom(true, false), 30);
       } finally {
         setPartnerTyping(false);
-        setTimeout(() => scrollToBottom(true, false), 30);
       }
       return;
     }
@@ -284,7 +351,10 @@ export default function ChatWindow({ conversation, onBack }) {
             ...res.message,
             receiverId: conversation.recipientId
           });
-          setTimeout(() => scrollToBottom(true, true), 30);
+        } else {
+          setMessages((prev) => 
+            prev.map((m) => m.id === tempId ? { ...m, status: "FAILED" } : m)
+          );
         }
       } else {
         const res = await sendMessageAction({
@@ -300,11 +370,17 @@ export default function ChatWindow({ conversation, onBack }) {
             ...res.message,
             receiverId: conversation.recipientId
           });
-          setTimeout(() => scrollToBottom(true, true), 30);
+        } else {
+          setMessages((prev) => 
+            prev.map((m) => m.id === tempId ? { ...m, status: "FAILED" } : m)
+          );
         }
       }
     } catch (err) {
       console.error("Message send failed:", err);
+      setMessages((prev) => 
+        prev.map((m) => m.id === tempId ? { ...m, status: "FAILED" } : m)
+      );
     }
   };
 
@@ -373,15 +449,42 @@ export default function ChatWindow({ conversation, onBack }) {
     }
   };
 
+  // 7. Handle retrying a failed message
+  const handleRetry = async (failedMsg) => {
+    setMessages((prev) =>
+      prev.map((m) => m.id === failedMsg.id ? { ...m, status: "SENDING" } : m)
+    );
+    forceScrollRef.current = true;
+    try {
+      const res = await sendMessageAction({
+        conversationId: conversation.id,
+        text: failedMsg.text
+      });
+      if (res.success && res.message) {
+        setMessages((prev) =>
+          prev.map((m) => m.id === failedMsg.id ? res.message : m)
+        );
+      } else {
+        setMessages((prev) =>
+          prev.map((m) => m.id === failedMsg.id ? { ...m, status: "FAILED" } : m)
+        );
+      }
+    } catch (_) {
+      setMessages((prev) =>
+        prev.map((m) => m.id === failedMsg.id ? { ...m, status: "FAILED" } : m)
+      );
+    }
+  };
+
   const isPartnerOnline = conversation?.recipientId ? onlineUsers.includes(conversation.recipientId) : false;
   const displayName = conversation?.fullName || "Soul Bridge Partner";
   const displayPhoto = conversation?.photo || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80";
 
   return (
-    <div className="flex-1 flex flex-col h-full min-h-[460px] md:min-h-[560px] glass-panel rounded-3xl border border-white/5 overflow-hidden relative">
+    <div className="flex-1 min-h-0 h-full w-full flex flex-col glass-panel rounded-2xl md:rounded-3xl border border-white/5 overflow-hidden relative">
       
-      {/* HEADER SECTION */}
-      <div className="px-6 py-4 flex items-center justify-between border-b border-white/5 bg-white/5 relative z-10">
+      {/* HEADER SECTION (PINNED TOP) */}
+      <div className="shrink-0 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between border-b border-white/5 bg-white/5 relative z-10">
         <div className="flex items-center gap-3">
           <button onClick={onBack} className="md:hidden text-xs mr-1 p-1 hover:bg-white/10 rounded-lg">✕</button>
           
@@ -459,11 +562,11 @@ export default function ChatWindow({ conversation, onBack }) {
         </div>
       </div>
 
-      {/* CHAT MESSAGES BODY */}
+      {/* CHAT MESSAGES BODY (SCROLLS VERTICALLY WITH INTEGRITY) */}
       <div 
         ref={messagesContainerRef}
         onScroll={handleMessagesScroll}
-        className="flex-1 min-h-0 p-4 sm:p-6 overflow-y-auto flex flex-col gap-4 bg-black/15 overscroll-contain"
+        className="flex-1 min-h-0 p-3 sm:p-6 overflow-y-auto overflow-x-hidden flex flex-col gap-3 sm:gap-4 bg-black/15 overscroll-contain select-text relative"
       >
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-foreground/40">
@@ -475,14 +578,14 @@ export default function ChatWindow({ conversation, onBack }) {
           messages.map((m) => {
             const isMe = m.senderId === session?.user?.id;
             return (
-              <div key={m.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"} max-w-[80%] ${isMe ? "self-end" : "self-start"} group`}>
+              <div key={m.id} className={`flex flex-col ${isMe ? "items-end" : "items-start"} max-w-[85%] sm:max-w-[80%] ${isMe ? "self-end" : "self-start"} group`}>
                 {m.isSms && (
                   <span className="text-[8px] font-black uppercase text-emerald-400 tracking-wider mb-0.5 flex items-center gap-1 px-1">
                     <Smartphone className="w-2.5 h-2.5" /> SMS Text Message
                   </span>
                 )}
                 
-                <div className={`p-3 rounded-2xl text-xs relative ${
+                <div className={`p-3 rounded-2xl text-xs relative max-w-full break-words ${
                   m.isSms
                     ? isMe 
                       ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-tr-none border border-emerald-400/30"
@@ -491,7 +594,7 @@ export default function ChatWindow({ conversation, onBack }) {
                       ? "bg-gradient-premium text-white rounded-tr-none" 
                       : "bg-white/10 text-foreground border border-white/5 rounded-tl-none"
                 }`}>
-                  <p>{m.text}</p>
+                  <p className="whitespace-pre-wrap break-words">{m.text}</p>
 
                   {/* Reaction overlays */}
                   {m.reactions && m.reactions.length > 0 && (
@@ -503,8 +606,8 @@ export default function ChatWindow({ conversation, onBack }) {
                   )}
                 </div>
 
-                {/* Date / Reaction shortcuts */}
-                <div className="flex items-center gap-2 mt-1 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Date / Status / Failed retry */}
+                <div className="flex items-center gap-2 mt-1 px-1 opacity-80 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                   <span className="text-[9px] text-foreground/40">
                     {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
@@ -512,6 +615,17 @@ export default function ChatWindow({ conversation, onBack }) {
                   {/* Read receipts */}
                   {isMe && m.status === "READ" && (
                     <CheckCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  )}
+
+                  {/* Failed status & retry button */}
+                  {isMe && m.status === "FAILED" && (
+                    <button
+                      type="button"
+                      onClick={() => handleRetry(m)}
+                      className="text-[9px] text-rose-400 font-bold hover:underline flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <AlertCircle className="w-2.5 h-2.5 text-rose-400 inline" /> Failed • Retry
+                    </button>
                   )}
 
                   {!isMe && (
@@ -541,9 +655,22 @@ export default function ChatWindow({ conversation, onBack }) {
         )}
       </div>
 
+      {/* Floating Scroll to Bottom Button */}
+      {showScrollBottomBtn && (
+        <button
+          type="button"
+          onClick={() => scrollToBottom(true)}
+          className="absolute bottom-20 right-4 sm:right-6 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-premium text-white text-xs font-bold shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md animate-in fade-in slide-in-from-bottom-2"
+          aria-label="Scroll to latest messages"
+        >
+          <ChevronDown className="w-4 h-4" />
+          <span>Latest {unreadBelowCount > 0 ? `(${unreadBelowCount})` : ""}</span>
+        </button>
+      )}
+
       {/* AI SUGGESTION ACCORDION */}
       {aiSuggestions.length > 0 && (
-        <div className="p-3 bg-indigo-500/10 border-t border-indigo-500/25 flex flex-col gap-1.5 relative z-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="shrink-0 p-3 bg-indigo-500/10 border-t border-indigo-500/25 flex flex-col gap-1.5 relative z-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <span className="text-[9px] font-bold text-indigo-300 flex items-center gap-1">
             <Brain className="w-3 h-3 text-indigo-400" /> AI Conversation Suggestions:
           </span>
@@ -564,8 +691,8 @@ export default function ChatWindow({ conversation, onBack }) {
         </div>
       )}
 
-      {/* INPUT ACTION BOX */}
-      <form onSubmit={handleSend} className="p-4 border-t border-white/5 bg-white/5 flex flex-col gap-2 relative z-10">
+      {/* INPUT ACTION BOX (PINNED BOTTOM) */}
+      <form onSubmit={handleSend} className="shrink-0 p-3 sm:p-4 border-t border-white/5 bg-white/5 flex flex-col gap-2 relative z-10">
         <div className="flex items-center gap-2">
           {/* AI Helper trigger */}
           <button
@@ -583,12 +710,19 @@ export default function ChatWindow({ conversation, onBack }) {
             placeholder="Type a message..."
             value={inputText}
             onChange={handleInputChange}
+            onFocus={() => {
+              if (isNearBottomRef.current) {
+                forceScrollRef.current = true;
+                setTimeout(() => scrollToBottom(false), 200);
+              }
+            }}
             className="flex-1 px-4 py-2.5 rounded-xl glass-input text-xs"
           />
 
           <button
             type="submit"
-            className="p-2.5 rounded-xl bg-gradient-premium text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer shrink-0"
+            disabled={!inputText.trim()}
+            className="p-2.5 rounded-xl bg-gradient-premium text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send className="w-4 h-4" />
           </button>
