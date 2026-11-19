@@ -43,6 +43,7 @@ export async function POST(req) {
     const result = await generateRomanticAiResponse(normalizedMessages, {
       userName: resolvedUserName,
       memorySummary: memorySummary || companionContext.memorySummary,
+      communicationStyle: companionContext.communicationStyle || "romantic",
       userId: session.user.id
     });
 
