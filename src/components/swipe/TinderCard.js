@@ -134,8 +134,8 @@ export default function TinderCard({ candidate, onSwipe, onUndo, canUndo }) {
             <h3 className="text-2xl font-extrabold flex items-center gap-1.5">
               {candidate.fullName}, {candidate.age}
             </h3>
-            <span className="bg-gradient-premium px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider flex items-center gap-1 shadow-md">
-              <Award className="w-3.5 h-3.5 fill-white" /> {candidate.compatibility}% MATCH
+            <span className="bg-[#641C35] text-[#E8D3B5] border border-[#641C35]/30 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider flex items-center gap-1 shadow-md">
+              <Award className="w-3.5 h-3.5 fill-[#E8D3B5]" /> {candidate.compatibility}% MATCH
             </span>
           </div>
 
@@ -158,7 +158,7 @@ export default function TinderCard({ candidate, onSwipe, onUndo, canUndo }) {
           <div className="absolute inset-0 bg-background/95 backdrop-blur-md p-6 overflow-y-auto text-left z-20 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center border-b border-white/10 pb-3">
               <h3 className="text-xl font-bold">{candidate.fullName}, {candidate.age}</h3>
-              <span className="text-xs font-bold text-primary-pink uppercase">{candidate.relationshipGoal}</span>
+              <span className="text-xs font-bold text-[#E8D3B5] uppercase">{candidate.relationshipGoal}</span>
             </div>
 
             <div className="flex flex-col gap-1.5 text-xs text-foreground/80 leading-relaxed">
@@ -181,7 +181,7 @@ export default function TinderCard({ candidate, onSwipe, onUndo, canUndo }) {
               <h4 className="font-bold text-foreground">Interests & Hobbies</h4>
               <div className="flex flex-wrap gap-1.5">
                 {candidate.hobbies.map((h, i) => (
-                  <span key={i} className="px-2.5 py-1 rounded-full bg-primary-pink/15 text-primary-pink text-[10px] font-bold">
+                  <span key={i} className="px-2.5 py-1 rounded-full bg-[#641C35]/20 border border-[#641C35]/30 text-[#E8D3B5] text-[10px] font-bold">
                     {h}
                   </span>
                 ))}

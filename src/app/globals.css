@@ -1,45 +1,49 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@400;500;600;700&display=swap');
+/* Hallmark · v2.0.0 · theme: soulbridge-editorial · genre: editorial · tone: luxury · font: Playfair Display / DM Sans · palette: burgundy, wine, champagne */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 :root {
-  --sb-ivory: #f8f4ef;
-  --sb-paper: #fffdfa;
-  --sb-blush: #f1e3e1;
-  --sb-wine: #7c2945;
-  --sb-wine-deep: #4a172c;
-  --sb-rose: #b86f7d;
-  --sb-champagne: #b88a5a;
-  --sb-ink: #271f22;
-  --sb-muted: #74676a;
-  --sb-line: rgba(74, 23, 44, 0.13);
-  --sb-card: rgba(255, 253, 250, 0.88);
-  --sb-shadow: 0 18px 48px rgba(74, 23, 44, 0.1);
-  --background: var(--sb-ivory);
+  /* SoulBridge Hallmark Brand Identity Palette */
+  --sb-burgundy: #641C35;
+  --sb-wine: #7D2948;
+  --sb-rose: #C98296;
+  --sb-blush: #F6E8EC;
+  --sb-cream: #FFF9F3;
+  --sb-champagne: #E8D3B5;
+  --sb-ink: #30232A;
+  --sb-muted: #887780;
+  --sb-white: #FFFFFF;
+  --sb-line: rgba(100, 28, 53, 0.12);
+  --sb-card: #FFFFFF;
+  --sb-shadow: 0 16px 40px rgba(100, 28, 53, 0.08);
+
+  /* Semantic System Tokens */
+  --background: var(--sb-cream);
   --foreground: var(--sb-ink);
   --card-bg: var(--sb-card);
   --card-border: var(--sb-line);
-  --glass-blur: blur(18px);
+  --glass-blur: blur(16px);
 }
 
 .dark {
-  --background: #21171c;
-  --foreground: #f8f4ef;
-  --card-bg: rgba(53, 31, 40, 0.88);
-  --card-border: rgba(248, 244, 239, 0.14);
-  --sb-paper: #2b1d24;
-  --sb-ivory: #21171c;
-  --sb-blush: #422b35;
-  --sb-ink: #f8f4ef;
-  --sb-muted: #cbbbc0;
-  --sb-line: rgba(248, 244, 239, 0.14);
-  --sb-shadow: 0 18px 48px rgba(12, 6, 9, 0.3);
+  --background: #1C1318;
+  --foreground: #FFF9F3;
+  --card-bg: #261820;
+  --card-border: rgba(246, 232, 236, 0.14);
+  --sb-cream: #1C1318;
+  --sb-card: #261820;
+  --sb-blush: #34212C;
+  --sb-ink: #FFF9F3;
+  --sb-muted: #C5B7BE;
+  --sb-line: rgba(246, 232, 236, 0.14);
+  --sb-shadow: 0 16px 40px rgba(12, 6, 9, 0.35);
 }
 
 @theme {
   --font-sans: 'DM Sans', system-ui, sans-serif;
   --font-heading: 'Playfair Display', Georgia, serif;
-  --color-primary-pink: var(--sb-wine);
-  --color-secondary-purple: var(--sb-wine-deep);
+  --color-primary-pink: var(--sb-burgundy);
+  --color-secondary-purple: var(--sb-wine);
   --color-accent-pink: var(--sb-rose);
   --color-dark-bg: var(--background);
 }
@@ -50,26 +54,33 @@
 
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
 }
 
 body {
-  background:
-    radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--sb-rose) 10%, transparent), transparent 30rem),
-    radial-gradient(circle at 90% 100%, color-mix(in srgb, var(--sb-champagne) 9%, transparent), transparent 28rem),
-    var(--background);
+  background: var(--background);
   color: var(--foreground);
   font-family: 'DM Sans', system-ui, sans-serif;
   min-height: 100vh;
-  overflow-x: hidden;
+  overflow-x: clip;
   position: relative;
-  transition: background-color 0.35s ease, color 0.35s ease;
   -webkit-font-smoothing: antialiased;
 }
 
+/* Hallmark Floor Rule 6: Focus-visible appearing instantly */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--sb-wine);
+  outline-offset: 2px;
+}
+
 header.sticky {
-  background: color-mix(in srgb, var(--sb-paper) 94%, transparent) !important;
-  border-bottom-color: var(--sb-line) !important;
-  box-shadow: 0 4px 18px rgba(74, 23, 44, 0.05) !important;
+  background: color-mix(in srgb, var(--sb-card) 95%, transparent) !important;
+  border-bottom: 1px solid var(--sb-line) !important;
+  box-shadow: 0 4px 20px rgba(100, 28, 53, 0.05) !important;
   backdrop-filter: blur(16px);
 }
 
@@ -81,24 +92,26 @@ header.sticky nav {
 
 header.sticky nav a {
   color: var(--sb-muted) !important;
-  border-radius: 0.45rem;
+  border-radius: 9999px;
+  font-weight: 500;
 }
 
 header.sticky nav a:hover,
 header.sticky nav a[href="/"]:first-child {
-  color: var(--sb-wine) !important;
+  color: var(--sb-burgundy) !important;
 }
 
-header.sticky nav a[class*="bg-gradient"] {
+header.sticky nav a[class*="bg-gradient"],
+header.sticky nav a[class*="bg-linear"] {
   color: #fff !important;
-  background: var(--sb-wine) !important;
+  background: var(--sb-burgundy) !important;
   box-shadow: none !important;
 }
 
 header.sticky [class*="glass-panel-lux"] {
-  background: var(--sb-paper) !important;
+  background: var(--sb-card) !important;
   border-color: var(--sb-line) !important;
-  box-shadow: 0 3px 12px rgba(74, 23, 44, 0.06) !important;
+  box-shadow: 0 3px 12px rgba(100, 28, 53, 0.05) !important;
 }
 
 header.sticky [class*="text-white"] {
@@ -107,14 +120,14 @@ header.sticky [class*="text-white"] {
 
 header.sticky [class*="bg-linear"],
 header.sticky [class*="bg-gradient"] {
-  background: var(--sb-wine) !important;
+  background: var(--sb-burgundy) !important;
   color: #fff !important;
 }
 
 header.sticky a span[class*="text-transparent"] {
-  color: var(--sb-wine) !important;
+  color: var(--sb-burgundy) !important;
   background: none !important;
-  -webkit-text-fill-color: var(--sb-wine) !important;
+  -webkit-text-fill-color: var(--sb-burgundy) !important;
 }
 
 header.sticky > div {
@@ -260,11 +273,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .welcome-page {
-  --welcome-ink: #271f22;
-  --welcome-muted: #74676a;
-  --welcome-wine: #7c2945;
-  --welcome-rose: #d78a98;
-  --welcome-paper: #fffdfa;
+  --welcome-ink: var(--sb-ink);
+  --welcome-muted: var(--sb-muted);
+  --welcome-wine: var(--sb-burgundy);
+  --welcome-rose: var(--sb-rose);
+  --welcome-paper: var(--sb-cream);
   background: var(--welcome-paper);
   color: var(--welcome-ink);
 }
@@ -273,7 +286,7 @@ h1, h2, h3, h4, h5, h6 {
   isolation: isolate;
   min-height: min(760px, calc(100vh - 74px));
   position: relative;
-  overflow: hidden;
+  overflow: clip;
   color: #fff;
 }
 
@@ -284,7 +297,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .welcome-hero-overlay {
-  background: linear-gradient(90deg, rgba(42, 18, 30, 0.88) 0%, rgba(65, 24, 40, 0.68) 37%, rgba(65, 24, 40, 0.08) 78%), linear-gradient(0deg, rgba(34, 13, 23, 0.45), transparent 42%);
+  background: linear-gradient(90deg, rgba(48, 14, 25, 0.9) 0%, rgba(100, 28, 53, 0.72) 42%, rgba(100, 28, 53, 0.12) 82%), linear-gradient(0deg, rgba(30, 9, 16, 0.5), transparent 45%);
   inset: 0;
   position: absolute;
   z-index: -1;
@@ -307,17 +320,18 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Playfair Display', Georgia, serif;
   font-size: 1.25rem;
   gap: 0.6rem;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
 }
 
 .welcome-brand-mark {
   align-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(232, 211, 181, 0.65);
   border-radius: 999px;
   display: inline-flex;
   height: 2rem;
   justify-content: center;
   width: 2rem;
+  color: var(--sb-champagne);
 }
 
 .welcome-copy {
@@ -328,38 +342,30 @@ h1, h2, h3, h4, h5, h6 {
 .welcome-eyebrow,
 .welcome-section-kicker {
   align-items: center;
-  color: var(--welcome-rose);
+  color: var(--sb-champagne);
   display: flex;
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.85rem;
+  font-weight: 500;
   gap: 0.45rem;
-  letter-spacing: 0.17em;
-  margin: 0 0 1.25rem;
-  text-transform: uppercase;
-}
-
-.welcome-eyebrow {
-  color: #ffd9df;
+  margin: 0 0 1rem;
 }
 
 .welcome-copy h1 {
   color: #fff;
-  font-size: clamp(3.1rem, 7vw, 6.6rem);
-  line-height: 0.95;
+  font-size: clamp(2.8rem, 6.5vw, 5.8rem);
+  line-height: 1.05;
   margin: 0;
-}
-
-.welcome-copy h1 em {
-  color: #f3a5b2;
-  font-style: normal;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
 }
 
 .welcome-description {
-  color: rgba(255, 255, 255, 0.88);
-  font-size: clamp(1rem, 1.6vw, 1.25rem);
-  line-height: 1.55;
-  margin: 1.7rem 0 2rem;
-  max-width: 28rem;
+  color: rgba(255, 249, 243, 0.92);
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  line-height: 1.6;
+  margin: 1.5rem 0 2rem;
+  max-width: 32rem;
+  text-wrap: pretty;
 }
 
 .welcome-actions {
@@ -372,52 +378,51 @@ h1, h2, h3, h4, h5, h6 {
 .welcome-primary-button,
 .welcome-secondary-button {
   align-items: center;
-  border-radius: 999px;
+  border-radius: 9999px;
   display: inline-flex;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 600;
   gap: 0.55rem;
   justify-content: center;
   min-height: 3.2rem;
-  padding: 0.7rem 1.45rem;
-  transition: transform 180ms ease, background-color 180ms ease;
+  padding: 0.75rem 1.75rem;
+  transition: transform 180ms ease, opacity 180ms ease;
 }
 
 .welcome-primary-button {
-  background: var(--welcome-wine);
-  box-shadow: 0 12px 30px rgba(49, 9, 27, 0.3);
+  background: var(--sb-burgundy);
+  border: 1px solid rgba(232, 211, 181, 0.35);
+  box-shadow: 0 10px 28px rgba(48, 14, 25, 0.35);
   color: #fff;
-}
-
-.welcome-primary-button:hover,
-.welcome-secondary-button:hover {
-  transform: translateY(-2px);
 }
 
 .welcome-primary-button:hover {
-  background: #972e51;
+  transform: translateY(-2px);
+  background: var(--sb-wine);
 }
 
 .welcome-secondary-button {
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 249, 243, 0.6);
+  background: rgba(255, 249, 243, 0.1);
   color: #fff;
+  backdrop-filter: blur(8px);
 }
 
 .welcome-secondary-button:hover {
-  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  background: rgba(255, 249, 243, 0.2);
 }
 
 .welcome-hero-note {
   align-items: center;
   bottom: 2rem;
   display: flex;
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   gap: 0.65rem;
-  letter-spacing: 0.08em;
-  opacity: 0.8;
+  opacity: 0.9;
   position: absolute;
   right: clamp(1.5rem, 6vw, 5rem);
-  text-transform: uppercase;
+  color: var(--sb-champagne);
 }
 
 .welcome-note-line {
@@ -581,7 +586,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .welcome-section-alt {
-  background: #f6ece9;
+  background: var(--sb-blush);
 }
 
 .welcome-section-header {
@@ -591,7 +596,7 @@ h1, h2, h3, h4, h5, h6 {
 .welcome-section-header.text-center {
   margin-left: auto;
   margin-right: auto;
-  max-width: 42rem;
+  max-width: 44rem;
   text-align: center;
 }
 
@@ -614,20 +619,20 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .welcome-step-card {
-  background: var(--welcome-paper);
-  border: 1px solid rgba(74, 23, 44, 0.12);
+  background: var(--sb-card);
+  border: 1px solid var(--sb-line);
   border-radius: 1.25rem;
-  box-shadow: 0 10px 30px rgba(74, 23, 44, 0.05);
+  box-shadow: 0 10px 30px rgba(100, 28, 53, 0.05);
   display: flex;
   flex-direction: column;
   padding: 2.25rem 2rem;
   position: relative;
-  transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease;
+  transition: transform 240ms ease, box-shadow 240ms ease;
 }
 
 .welcome-step-card:hover {
-  border-color: color-mix(in srgb, var(--welcome-wine) 35%, transparent);
-  box-shadow: 0 18px 45px rgba(74, 23, 44, 0.1);
+  border-color: var(--sb-rose);
+  box-shadow: 0 18px 45px rgba(100, 28, 53, 0.1);
   transform: translateY(-4px);
 }
 
@@ -639,7 +644,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .welcome-step-number {
-  color: var(--welcome-rose);
+  color: var(--sb-champagne);
   font-family: 'Playfair Display', Georgia, serif;
   font-size: 2.2rem;
   font-weight: 700;
@@ -648,9 +653,9 @@ h1, h2, h3, h4, h5, h6 {
 
 .welcome-step-icon {
   align-items: center;
-  background: #f4e3e3;
+  background: var(--sb-blush);
   border-radius: 999px;
-  color: var(--welcome-wine);
+  color: var(--sb-burgundy);
   display: inline-flex;
   height: 3rem;
   justify-content: center;
@@ -678,10 +683,10 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .welcome-profile-card {
-  background: var(--welcome-paper);
-  border: 1px solid rgba(74, 23, 44, 0.12);
+  background: var(--sb-card);
+  border: 1px solid var(--sb-line);
   border-radius: 1.25rem;
-  box-shadow: 0 10px 30px rgba(74, 23, 44, 0.06);
+  box-shadow: 0 10px 30px rgba(100, 28, 53, 0.06);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -689,7 +694,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .welcome-profile-card:hover {
-  box-shadow: 0 20px 48px rgba(74, 23, 44, 0.12);
+  box-shadow: 0 20px 48px rgba(100, 28, 53, 0.12);
   transform: translateY(-5px);
 }
 
@@ -710,20 +715,20 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .welcome-profile-gradient {
-  background: linear-gradient(180deg, transparent 40%, rgba(39, 31, 34, 0.85) 100%);
+  background: linear-gradient(180deg, transparent 40%, rgba(48, 14, 25, 0.88) 100%);
   inset: 0;
   position: absolute;
   z-index: 1;
 }
 
 .welcome-profile-badge {
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid var(--sb-champagne);
   border-radius: 999px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  color: var(--welcome-wine);
+  box-shadow: 0 4px 12px rgba(100, 28, 53, 0.15);
+  color: var(--sb-burgundy);
   font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-weight: 600;
   padding: 0.3rem 0.75rem;
   position: absolute;
   right: 0.85rem;
@@ -783,9 +788,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .welcome-profile-tag {
-  background: #f6e8e8;
+  background: var(--sb-blush);
   border-radius: 999px;
-  color: var(--welcome-wine);
+  color: var(--sb-burgundy);
   font-size: 0.68rem;
   font-weight: 600;
   padding: 0.2rem 0.6rem;
@@ -793,12 +798,12 @@ h1, h2, h3, h4, h5, h6 {
 
 .welcome-profile-action {
   align-items: center;
-  border: 1px solid rgba(74, 23, 44, 0.18);
+  border: 1px solid var(--sb-line);
   border-radius: 999px;
-  color: var(--welcome-wine);
+  color: var(--sb-burgundy);
   display: flex;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
   justify-content: center;
   padding: 0.55rem 1rem;
   transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
@@ -806,8 +811,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .welcome-profile-action:hover {
-  background: var(--welcome-wine);
-  border-color: var(--welcome-wine);
+  background: var(--sb-burgundy);
+  border-color: var(--sb-burgundy);
   color: #fff;
 }
 
@@ -819,25 +824,25 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .welcome-why-card {
-  background: var(--welcome-paper);
-  border: 1px solid rgba(74, 23, 44, 0.12);
+  background: var(--sb-card);
+  border: 1px solid var(--sb-line);
   border-radius: 1.25rem;
-  box-shadow: 0 8px 24px rgba(74, 23, 44, 0.04);
+  box-shadow: 0 8px 24px rgba(100, 28, 53, 0.04);
   padding: 2rem;
-  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+  transition: transform 220ms ease, box-shadow 220ms ease;
 }
 
 .welcome-why-card:hover {
-  border-color: color-mix(in srgb, var(--welcome-wine) 30%, transparent);
-  box-shadow: 0 16px 40px rgba(74, 23, 44, 0.09);
+  border-color: var(--sb-rose);
+  box-shadow: 0 16px 40px rgba(100, 28, 53, 0.09);
   transform: translateY(-3px);
 }
 
 .welcome-why-icon {
   align-items: center;
-  background: #f4e3e3;
+  background: var(--sb-blush);
   border-radius: 999px;
-  color: var(--welcome-wine);
+  color: var(--sb-burgundy);
   display: inline-flex;
   height: 2.85rem;
   justify-content: center;

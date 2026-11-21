@@ -147,9 +147,9 @@ export default function NavbarSearch({ isMobile = false, onCloseMobile }) {
       <div className="relative flex items-center">
         <div className="absolute left-3.5 pointer-events-none text-white/40 flex items-center">
           {loading ? (
-            <Loader2 className="w-4 h-4 text-[#FF4D8D] animate-spin" />
+            <Loader2 className="w-4 h-4 text-[#641C35] animate-spin" />
           ) : (
-            <Search className="w-4 h-4 group-focus-within:text-[#FF4D8D] transition-colors" />
+            <Search className="w-4 h-4 group-focus-within:text-[#641C35] transition-colors" />
           )}
         </div>
 
@@ -163,7 +163,7 @@ export default function NavbarSearch({ isMobile = false, onCloseMobile }) {
           }}
           onKeyDown={handleKeyDown}
           placeholder="Search people by name or @username..."
-          className="w-full pl-10 pr-9 py-2 rounded-full text-xs font-medium bg-white/5 hover:bg-white/8 focus:bg-[#09090B] border border-white/10 focus:border-[#FF4D8D]/60 text-white placeholder-white/40 shadow-inner focus:shadow-[0_0_20px_rgba(255,77,141,0.25)] outline-none transition-all duration-300"
+          className="w-full pl-10 pr-9 py-2 rounded-full text-xs font-medium bg-white/5 hover:bg-white/8 focus:bg-[#09090B] border border-white/10 focus:border-[#641C35]/60 text-white placeholder-white/40 shadow-inner focus:shadow-[0_0_20px_rgba(100,28,53,0.25)] outline-none transition-all duration-300"
         />
 
         {query && (
@@ -184,7 +184,7 @@ export default function NavbarSearch({ isMobile = false, onCloseMobile }) {
           {/* Dropdown Header */}
           <div className="px-3 py-2 border-b border-white/10 mb-1 flex items-center justify-between text-[11px] font-bold text-white/60">
             <span className="flex items-center gap-1.5 uppercase tracking-wider text-[10px]">
-              <Sparkles className="w-3.5 h-3.5 text-primary-pink" /> Matching People
+              <Sparkles className="w-3.5 h-3.5 text-[#C98296]" /> Matching People
             </span>
             <span>{results.length} found</span>
           </div>
@@ -192,7 +192,7 @@ export default function NavbarSearch({ isMobile = false, onCloseMobile }) {
           {/* Loading Indicator */}
           {loading && results.length === 0 && (
             <div className="py-8 flex flex-col items-center justify-center gap-2 text-white/50">
-              <Loader2 className="w-6 h-6 text-[#FF4D8D] animate-spin" />
+              <Loader2 className="w-6 h-6 text-[#641C35] animate-spin" />
               <span className="text-xs font-medium">Searching for &quot;{query}&quot;...</span>
             </div>
           )}
@@ -225,13 +225,13 @@ export default function NavbarSearch({ isMobile = false, onCloseMobile }) {
                     onMouseEnter={() => setSelectedIndex(idx)}
                     className={`w-full flex items-center gap-3 p-2.5 rounded-xl transition-all text-left cursor-pointer ${
                       isSelected
-                        ? "bg-gradient-to-r from-pink-500/15 via-purple-500/10 to-transparent border border-pink-500/30"
+                        ? "bg-gradient-to-r from-[#641C35]/25 via-[#7D2948]/20 to-transparent border border-[#641C35]/40"
                         : "hover:bg-white/5 border border-transparent"
                     }`}
                   >
                     {/* User Avatar */}
                     <div className="relative shrink-0">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#FF4D8D] to-[#9C6BFF] p-0.5 shadow-md overflow-hidden flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#641C35] to-[#7D2948] p-0.5 shadow-md overflow-hidden flex items-center justify-center">
                         {user.avatar ? (
                           <img
                             src={user.avatar}
@@ -239,7 +239,7 @@ export default function NavbarSearch({ isMobile = false, onCloseMobile }) {
                             className="w-full h-full object-cover rounded-full"
                           />
                         ) : (
-                          <div className="w-full h-full rounded-full bg-[#181424] flex items-center justify-center text-xs font-black text-white uppercase">
+                          <div className="w-full h-full rounded-full bg-[#181424] flex items-center justify-center text-xs font-black text-[#E8D3B5] uppercase">
                             {user.fullName ? user.fullName[0] : "U"}
                           </div>
                         )}
@@ -266,7 +266,7 @@ export default function NavbarSearch({ isMobile = false, onCloseMobile }) {
                       </div>
 
                       <div className="flex items-center gap-2 text-[11px] text-white/50 truncate">
-                        <span className="text-primary-pink font-semibold">@{user.username}</span>
+                        <span className="text-[#C98296] font-semibold">@{user.username}</span>
                         {user.age && <span>• {user.age} yrs</span>}
                         {user.city && (
                           <span className="flex items-center gap-0.5 truncate">

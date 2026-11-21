@@ -504,7 +504,7 @@ export default function ChatWindow({ conversation, onBack }) {
           <div>
             <h3 className="font-bold text-sm flex items-center gap-1.5">
               {displayName}
-              {conversation?.isAI && <span className="text-[8px] bg-primary-pink/20 text-primary-pink border border-primary-pink/30 px-1.5 py-0.2 rounded-full font-extrabold ml-1">AI</span>}
+              {conversation?.isAI && <span className="text-[8px] bg-[#641C35]/20 text-[#C98296] border border-[#641C35]/30 px-1.5 py-0.2 rounded-full font-extrabold ml-1">AI</span>}
               {displayName.includes("Vanessa") && <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />}
             </h3>
             <div className="flex items-center gap-2 mt-0.5">
@@ -512,7 +512,7 @@ export default function ChatWindow({ conversation, onBack }) {
                 {conversation?.isAI ? "AI Romantic Companion" : (isPartnerOnline ? "Active Now" : "Offline")}
               </span>
               {conversation?.isAI ? (
-                <span className="text-[9px] px-2 py-0.2 rounded-full bg-primary-pink/15 border border-primary-pink/30 text-primary-pink font-bold flex items-center gap-1">
+                <span className="text-[9px] px-2 py-0.2 rounded-full bg-[#641C35]/20 border border-[#641C35]/30 text-[#C98296] font-bold flex items-center gap-1">
                   <Sparkles className="w-2.5 h-2.5" /> Soul AI
                 </span>
               ) : (
@@ -533,7 +533,7 @@ export default function ChatWindow({ conversation, onBack }) {
               onClick={() => setIsSmsMode(false)}
               className={`px-3 py-1 rounded-full transition-all flex items-center gap-1 cursor-pointer ${
                 !isSmsMode 
-                  ? "bg-gradient-premium text-white shadow-md" 
+                  ? "bg-[#641C35] text-white shadow-md" 
                   : "text-foreground/60 hover:text-white"
               }`}
             >
@@ -554,7 +554,7 @@ export default function ChatWindow({ conversation, onBack }) {
 
           <button
             onClick={() => initiateCall(conversation.recipientId, conversation.fullName, "voice")}
-            className="p-2 rounded-xl hover:bg-white/10 text-foreground/80 hover:text-primary-pink transition-all cursor-pointer"
+            className="p-2 rounded-xl hover:bg-white/10 text-foreground/80 hover:text-[#C98296] transition-all cursor-pointer"
             title="Audio Call"
           >
             <Phone className="w-4 h-4" />
@@ -562,7 +562,7 @@ export default function ChatWindow({ conversation, onBack }) {
           
           <button
             onClick={() => initiateCall(conversation.recipientId, conversation.fullName, "video")}
-            className="p-2 rounded-xl hover:bg-white/10 text-foreground/80 hover:text-primary-pink transition-all cursor-pointer"
+            className="p-2 rounded-xl hover:bg-white/10 text-foreground/80 hover:text-[#C98296] transition-all cursor-pointer"
             title="Video Call"
           >
             <Video className="w-4 h-4" />
@@ -578,7 +578,7 @@ export default function ChatWindow({ conversation, onBack }) {
       >
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-foreground/40">
-            <Heart className="w-10 h-10 text-primary-pink/20 fill-primary-pink/5 mb-2" />
+            <Heart className="w-10 h-10 text-[#C98296]/30 fill-[#C98296]/10 mb-2" />
             <p className="text-xs font-semibold">Matched on Soul Bridge</p>
             <p className="text-[10px] opacity-80 mt-1 max-w-[200px]">Connection active. Send standard messages or toggle SMS mode above.</p>
           </div>
@@ -599,8 +599,8 @@ export default function ChatWindow({ conversation, onBack }) {
                       ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-tr-none border border-emerald-400/30"
                       : "bg-emerald-950/80 text-emerald-100 border border-emerald-500/30 rounded-tl-none"
                     : isMe 
-                      ? "bg-gradient-premium text-white rounded-tr-none" 
-                      : "bg-white/10 text-foreground border border-white/5 rounded-tl-none"
+                      ? "bg-[#641C35] text-white rounded-tr-none shadow-sm" 
+                      : "bg-white/10 dark:bg-[#271A21] text-foreground border border-white/5 rounded-tl-none"
                 }`}>
                   <p className="whitespace-pre-wrap break-words">{m.text}</p>
 
@@ -654,9 +654,9 @@ export default function ChatWindow({ conversation, onBack }) {
         {partnerTyping && (
           <div className="flex items-center gap-2 self-start bg-white/5 px-3 py-2 rounded-2xl rounded-tl-none border border-white/5 animate-pulse">
             <div className="flex gap-1">
-              <span className="w-1.5 h-1.5 bg-primary-pink rounded-full animate-bounce"></span>
-              <span className="w-1.5 h-1.5 bg-primary-pink rounded-full animate-bounce delay-100"></span>
-              <span className="w-1.5 h-1.5 bg-primary-pink rounded-full animate-bounce delay-200"></span>
+              <span className="w-1.5 h-1.5 bg-[#C98296] rounded-full animate-bounce"></span>
+              <span className="w-1.5 h-1.5 bg-[#C98296] rounded-full animate-bounce delay-100"></span>
+              <span className="w-1.5 h-1.5 bg-[#C98296] rounded-full animate-bounce delay-200"></span>
             </div>
             <span className="text-[9px] text-foreground/40 font-semibold uppercase">Typing...</span>
           </div>
@@ -668,7 +668,7 @@ export default function ChatWindow({ conversation, onBack }) {
         <button
           type="button"
           onClick={() => scrollToBottom(true)}
-          className="absolute bottom-20 right-4 sm:right-6 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-premium text-white text-xs font-bold shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md animate-in fade-in slide-in-from-bottom-2"
+          className="absolute bottom-20 right-4 sm:right-6 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#641C35] hover:bg-[#7D2948] text-white text-xs font-bold shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer backdrop-blur-md animate-in fade-in slide-in-from-bottom-2"
           aria-label="Scroll to latest messages"
         >
           <ChevronDown className="w-4 h-4" />
@@ -730,7 +730,7 @@ export default function ChatWindow({ conversation, onBack }) {
           <button
             type="submit"
             disabled={!inputText.trim()}
-            className="p-2.5 rounded-xl bg-gradient-premium text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2.5 rounded-xl bg-[#641C35] hover:bg-[#7D2948] text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send className="w-4 h-4" />
           </button>
@@ -744,7 +744,7 @@ export default function ChatWindow({ conversation, onBack }) {
           {incomingCall && (
             <div className="flex flex-col items-center gap-6 animate-in zoom-in-95 duration-200">
               <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-gradient-premium border-4 border-white/10 flex items-center justify-center font-extrabold text-white text-3xl animate-pulse">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#641C35] to-[#7D2948] border-4 border-white/10 flex items-center justify-center font-extrabold text-[#E8D3B5] text-3xl animate-pulse">
                   {incomingCall.name[0]}
                 </div>
                 <PhoneCall className="w-8 h-8 text-emerald-400 absolute -bottom-1 -right-1 bg-black p-1.5 rounded-full border border-white/10 animate-bounce" />

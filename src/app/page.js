@@ -284,10 +284,10 @@ export default function Home() {
               <h1 id="welcome-heading">
                 Real People.
                 <br />
-                Meaningful <em>Connections.</em>
+                Meaningful Connections.
               </h1>
               <p className="welcome-description">
-                Find your perfect match and build something beautiful together.
+                Find your life partner and build something beautiful together.
               </p>
               <div className="welcome-actions">
                 <Link href="/register" className="welcome-primary-button">
@@ -493,23 +493,23 @@ export default function Home() {
                   </span>
                   <h3 className="text-xl font-bold mt-2 text-[var(--welcome-ink)]">Shared Life Outlook</h3>
                 </div>
-                <div className="w-12 h-12 rounded-full bg-[#f4e3e3] flex items-center justify-center text-[var(--welcome-wine)]">
+                <div className="w-12 h-12 rounded-full bg-[var(--sb-blush)] flex items-center justify-center text-[var(--welcome-wine)]">
                   <Heart size={22} fill="currentColor" />
                 </div>
               </div>
 
               <div className="space-y-4 text-sm">
-                <div className="p-3.5 rounded-xl bg-[#f8f4ef] border border-[rgba(74,23,44,0.08)]">
+                <div className="p-3.5 rounded-xl bg-[var(--sb-cream)] border border-[rgba(74,23,44,0.08)]">
                   <p className="font-bold text-xs uppercase tracking-wider text-[var(--welcome-rose)] mb-1">Mutual Vision</p>
                   <p className="text-[var(--welcome-ink)] font-medium">Both seeking long-term partnership with a focus on family, travel, and personal growth.</p>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#f8f4ef] border border-[rgba(74,23,44,0.08)]">
+                <div className="p-3.5 rounded-xl bg-[var(--sb-cream)] border border-[rgba(74,23,44,0.08)]">
                   <p className="font-bold text-xs uppercase tracking-wider text-[var(--welcome-rose)] mb-1">Lifestyle Pace</p>
                   <p className="text-[var(--welcome-ink)] font-medium">Balanced daily rhythm: quiet evenings with good books, weekend adventures, and deep curiosity.</p>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-[#f8f4ef] border border-[rgba(74,23,44,0.08)]">
+                <div className="p-3.5 rounded-xl bg-[var(--sb-cream)] border border-[rgba(74,23,44,0.08)]">
                   <p className="font-bold text-xs uppercase tracking-wider text-[var(--welcome-rose)] mb-1">Conversational Style</p>
                   <p className="text-[var(--welcome-ink)] font-medium">Open, thoughtful communicators who value active listening and intellectual honesty.</p>
                 </div>
@@ -664,7 +664,7 @@ export default function Home() {
            ─────────────────────────────────────────────────── */}
         <section className="welcome-cta-wrap" id="join" aria-labelledby="cta-heading">
           <div className="welcome-cta-card">
-            <p className="welcome-eyebrow justify-center mb-4 text-[#ffd9df]">
+            <p className="welcome-eyebrow justify-center mb-4 text-[var(--sb-champagne)]">
               <Heart size={15} fill="currentColor" aria-hidden="true" />
               Where true love begins
             </p>

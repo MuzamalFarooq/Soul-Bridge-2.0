@@ -80,20 +80,17 @@ export default function Navbar() {
       ];
 
   return (
-    <header className="sticky top-0 z-50 px-4 md:px-8 py-3.5 backdrop-blur-2xl bg-[#09090B]/85 border-b border-white/10 shadow-2xl transition-all">
+    <header className="sticky top-0 z-50 px-4 md:px-8 py-3 backdrop-blur-xl bg-[#FFF9F3]/90 dark:bg-[#1C1318]/90 border-b border-[#641C35]/10 dark:border-[#FFF9F3]/10 transition-colors">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 md:gap-6">
         
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-2.5 group cursor-pointer shrink-0">
-          <div className="relative flex items-center justify-center">
-            <Heart className="w-8 h-8 text-[#FF4D8D] fill-[#FF4D8D] group-hover:scale-110 transition-all duration-300 filter drop-shadow-[0_0_12px_rgba(255,77,141,0.6)]" />
-            <Heart className="w-8 h-8 text-[#9C6BFF] fill-[#9C6BFF] absolute inset-0 opacity-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-500 blur-sm" />
+          <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#641C35] text-[#E8D3B5] shadow-xs transition-transform duration-200 group-hover:scale-105">
+            <Heart className="w-4 h-4 fill-current" />
           </div>
-          <div className="flex flex-col">
-            <span className="text-xl md:text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#FF4D8D] via-[#FFB6C1] to-[#9C6BFF]">
-              Soul Bridge
-            </span>
-          </div>
+          <span className="text-xl md:text-2xl font-serif font-bold tracking-tight text-[#641C35] dark:text-[#FFF9F3]">
+            SoulBridge
+          </span>
         </Link>
 
         {/* Desktop Search Bar */}
@@ -102,17 +99,17 @@ export default function Navbar() {
         </div>
 
         {/* Desktop Nav Links */}
-        <nav className="hidden lg:flex items-center gap-1.5 p-1 rounded-full glass-panel-lux border-white/10 shrink-0">
+        <nav className="hidden lg:flex items-center gap-1 p-1 rounded-full bg-[#F6E8EC]/50 dark:bg-[#261820]/60 border border-[#641C35]/10 dark:border-[#FFF9F3]/10 shrink-0">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`px-4 py-2 rounded-full text-xs font-semibold transition-all duration-300 ${
+                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors duration-200 ${
                   isActive
-                    ? "bg-linear-to-r from-[#FF4D8D] to-[#9C6BFF] text-white shadow-md shadow-pink-500/20"
-                    : "text-white/70 hover:text-white hover:bg-white/5"
+                    ? "bg-[#641C35] text-white shadow-xs"
+                    : "text-[#887780] hover:text-[#641C35] hover:bg-[#F6E8EC]/80 dark:text-[#C5B7BE] dark:hover:text-[#FFF9F3] dark:hover:bg-[#34212C]"
                 }`}
               >
                 {link.label}
@@ -122,14 +119,14 @@ export default function Navbar() {
         </nav>
 
         {/* Right Action Icons & Controls */}
-        <div className="hidden md:flex items-center gap-3.5">
+        <div className="hidden md:flex items-center gap-3">
           {/* Theme Switcher */}
           <button
             onClick={toggleTheme}
-            className="p-2.5 rounded-full glass-panel-lux text-white/80 hover:text-white hover:border-[#FF4D8D]/40 transition-all cursor-pointer"
+            className="p-2 rounded-full border border-[#641C35]/15 dark:border-[#FFF9F3]/15 text-[#887780] hover:text-[#641C35] dark:text-[#C5B7BE] dark:hover:text-[#FFF9F3] hover:bg-[#F6E8EC]/50 dark:hover:bg-[#34212C] transition-colors cursor-pointer"
             aria-label="Toggle Theme"
           >
-            {theme === "dark" ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-indigo-300" />}
+            {theme === "dark" ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-[#7D2948]" />}
           </button>
 
           {session ? (
@@ -287,13 +284,13 @@ export default function Navbar() {
             <div className="flex items-center gap-3">
               <Link
                 href="/login"
-                className="text-xs font-bold px-5 py-2.5 rounded-full hover:bg-white/10 transition-all text-white"
+                className="text-xs font-semibold px-4 py-2 rounded-full border border-[#641C35]/15 dark:border-[#FFF9F3]/20 hover:bg-[#F6E8EC]/80 dark:hover:bg-[#34212C] text-[#30232A] dark:text-[#FFF9F3] transition-colors"
               >
                 Log In
               </Link>
               <Link
                 href="/register"
-                className="text-xs font-bold px-6 py-2.5 rounded-full bg-linear-to-r from-[#FF4D8D] to-[#9C6BFF] text-white shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 hover:scale-105 active:scale-95 transition-all"
+                className="text-xs font-semibold px-5 py-2 rounded-full bg-[#641C35] hover:bg-[#7D2948] text-white shadow-xs transition-transform active:scale-95"
               >
                 Join Free
               </Link>
@@ -311,21 +308,21 @@ export default function Navbar() {
             className="p-2 rounded-full glass-panel-lux text-white/80 hover:text-white"
             aria-label="Toggle Search"
           >
-            <Search className="w-4 h-4 text-[#FF4D8D]" />
+            <Search className="w-4 h-4 text-[#641C35] dark:text-[#E8D3B5]" />
           </button>
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-full glass-panel-lux text-white/80"
+            className="p-2 rounded-full border border-[#641C35]/15 dark:border-[#FFF9F3]/15 text-[#887780] dark:text-[#C5B7BE]"
             aria-label="Toggle Theme"
           >
-            {theme === "dark" ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-indigo-300" />}
+            {theme === "dark" ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4 text-[#7D2948]" />}
           </button>
           <button
             onClick={() => {
               setMobileMenuOpen(!mobileMenuOpen);
               if (mobileSearchOpen) setMobileSearchOpen(false);
             }}
-            className="p-2 rounded-xl glass-panel-lux text-white"
+            className="p-2 rounded-xl border border-[#641C35]/15 dark:border-[#FFF9F3]/15 text-[#30232A] dark:text-[#FFF9F3]"
             aria-label="Toggle Menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -335,23 +332,23 @@ export default function Navbar() {
 
       {/* Mobile Search Overlay Bar */}
       {mobileSearchOpen && (
-        <div className="sm:hidden px-4 pt-3 pb-2 border-t border-white/5 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="sm:hidden px-4 pt-3 pb-2 border-t border-[#641C35]/10 dark:border-[#FFF9F3]/10 animate-in fade-in slide-in-from-top-2 duration-200">
           <NavbarSearch isMobile onCloseMobile={() => setMobileSearchOpen(false)} />
         </div>
       )}
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="absolute top-full left-0 right-0 glass-card-lux border-b border-white/10 p-6 flex flex-col gap-3 shadow-2xl md:hidden animate-in fade-in slide-in-from-top-4 duration-300 z-50 bg-[#09090B]/95 max-h-[85vh] overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 border-b border-[#641C35]/10 dark:border-[#FFF9F3]/10 p-6 flex flex-col gap-3 shadow-2xl md:hidden animate-in fade-in slide-in-from-top-4 duration-300 z-50 bg-[#FFF9F3]/98 dark:bg-[#1C1318]/98 backdrop-blur-2xl max-h-[85vh] overflow-y-auto">
           {/* Search bar inside drawer */}
-          <div className="pb-3 border-b border-white/5">
+          <div className="pb-3 border-b border-[#641C35]/10 dark:border-[#FFF9F3]/10">
             <NavbarSearch isMobile onCloseMobile={() => setMobileMenuOpen(false)} />
           </div>
 
           {/* User Profile Header in Mobile Drawer if logged in */}
           {session && (
-            <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/10 mb-1">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] p-0.5 flex items-center justify-center text-white text-sm font-black uppercase shadow-md overflow-hidden shrink-0">
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#F6E8EC]/60 dark:bg-[#261820]/80 border border-[#641C35]/10 dark:border-[#FFF9F3]/10 mb-1">
+              <div className="w-10 h-10 rounded-full bg-[#641C35] text-[#E8D3B5] p-0.5 flex items-center justify-center text-sm font-bold uppercase shadow-sm overflow-hidden shrink-0">
                 {session.user.image ? (
                   <img src={session.user.image} alt={session.user.fullName || "User"} className="w-full h-full object-cover rounded-full" />
                 ) : (
@@ -360,12 +357,12 @@ export default function Navbar() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <p className="text-sm font-bold text-white truncate">{session.user.fullName || "User"}</p>
+                  <p className="text-sm font-bold text-[#30232A] dark:text-[#FFF9F3] truncate">{session.user.fullName || "User"}</p>
                   {session.user.premiumStatus && session.user.premiumStatus !== "FREE" && (
-                    <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0" />
+                    <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />
                   )}
                 </div>
-                <p className="text-xs text-white/50 truncate">{session.user.email}</p>
+                <p className="text-xs text-[#887780] dark:text-[#C5B7BE] truncate">{session.user.email}</p>
               </div>
             </div>
           )}
@@ -375,19 +372,19 @@ export default function Navbar() {
               key={link.href}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="text-sm font-bold py-2.5 border-b border-white/5 text-white/90 hover:text-[#FF4D8D]"
+              className="text-sm font-medium py-2.5 border-b border-[#641C35]/5 dark:border-[#FFF9F3]/5 text-[#30232A] dark:text-[#FFF9F3] hover:text-[#641C35]"
             >
               {link.label}
             </Link>
           ))}
 
           {session ? (
-            <div className="flex flex-col gap-2 pt-2 border-t border-white/10">
+            <div className="flex flex-col gap-2 pt-2 border-t border-[#641C35]/10 dark:border-[#FFF9F3]/10">
               {session.user.role === "ADMIN" && (
                 <Link
                   href="/admin"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2.5 text-sm font-bold py-2 text-[#9C6BFF] hover:text-[#b48eff]"
+                  className="flex items-center gap-2.5 text-sm font-medium py-2 text-[#7D2948] dark:text-[#C98296]"
                 >
                   <Shield className="w-4 h-4" /> Admin Console
                 </Link>
@@ -395,14 +392,14 @@ export default function Navbar() {
               <Link
                 href="/profile"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2.5 text-sm font-bold py-2 text-white/80 hover:text-white"
+                className="flex items-center gap-2.5 text-sm font-medium py-2 text-[#30232A] dark:text-[#FFF9F3] hover:text-[#641C35]"
               >
-                <User className="w-4 h-4 text-[#FF4D8D]" /> My Profile
+                <User className="w-4 h-4 text-[#641C35]" /> My Profile
               </Link>
               <Link
                 href="/settings"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2.5 text-sm font-bold py-2 text-white/80 hover:text-white"
+                className="flex items-center gap-2.5 text-sm font-medium py-2 text-[#30232A] dark:text-[#FFF9F3] hover:text-[#641C35]"
               >
                 <Settings className="w-4 h-4" /> Settings
               </Link>
@@ -411,7 +408,7 @@ export default function Navbar() {
                   setMobileMenuOpen(false);
                   handleSignOut();
                 }}
-                className="w-full mt-2 flex items-center justify-center gap-2 py-3 rounded-2xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-400 text-xs font-bold transition-all cursor-pointer shadow-md"
+                className="w-full mt-2 flex items-center justify-center gap-2 py-3 rounded-2xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold transition-colors cursor-pointer"
               >
                 <LogOut className="w-4 h-4" /> Sign Out
               </button>
@@ -421,14 +418,14 @@ export default function Navbar() {
               <Link
                 href="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center py-3 rounded-2xl border border-white/15 text-xs font-bold text-white"
+                className="w-full text-center py-3 rounded-2xl border border-[#641C35]/20 dark:border-[#FFF9F3]/20 text-xs font-semibold text-[#30232A] dark:text-[#FFF9F3]"
               >
                 Log In
               </Link>
               <Link
                 href="/register"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center py-3 rounded-2xl bg-gradient-to-r from-[#FF4D8D] to-[#9C6BFF] text-white text-xs font-bold shadow-lg"
+                className="w-full text-center py-3 rounded-2xl bg-[#641C35] hover:bg-[#7D2948] text-white text-xs font-semibold shadow-xs"
               >
                 Join Free
               </Link>

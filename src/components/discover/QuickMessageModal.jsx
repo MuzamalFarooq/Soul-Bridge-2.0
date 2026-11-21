@@ -584,7 +584,7 @@ export default function QuickMessageModal({ candidate, onClose }) {
                         <div
                           className={`max-w-[82%] px-3.5 py-2 rounded-2xl text-xs leading-relaxed break-words shadow-xs ${
                             isMe
-                              ? "bg-gradient-to-r from-[var(--sb-wine)] to-[var(--sb-wine-deep)] text-white rounded-br-xs"
+                              ? "bg-gradient-to-r from-[var(--sb-wine)] to-[var(--sb-burgundy)] text-white rounded-br-xs"
                               : "bg-white/85 dark:bg-white/10 text-foreground border border-[var(--sb-line)] dark:border-white/10 rounded-bl-xs"
                           }`}
                         >
@@ -683,7 +683,7 @@ export default function QuickMessageModal({ candidate, onClose }) {
                   <button
                     type="submit"
                     disabled={sending || !messageText.trim()}
-                    className="h-9 px-3.5 rounded-xl bg-gradient-to-r from-[var(--sb-wine)] to-[var(--sb-wine-deep)] hover:opacity-95 active:scale-95 text-white text-xs font-bold shadow-md disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 transition-all cursor-pointer flex-shrink-0"
+                    className="h-9 px-3.5 rounded-xl bg-gradient-to-r from-[var(--sb-wine)] to-[var(--sb-burgundy)] hover:opacity-95 active:scale-95 text-white text-xs font-bold shadow-md disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 transition-all cursor-pointer flex-shrink-0"
                     title="Send (Enter)"
                     aria-label="Send message"
                   >

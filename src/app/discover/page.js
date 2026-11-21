@@ -187,7 +187,7 @@ export default function Discover() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-extrabold flex items-center gap-2">
-              Discover Matches <Sparkles className="w-5 h-5 text-primary-pink" />
+              Discover Matches <Sparkles className="w-5 h-5 text-[#C98296]" />
             </h1>
             <p className="text-xs text-foreground/60">Browse user profiles, images & direct messages</p>
           </div>
@@ -199,7 +199,7 @@ export default function Discover() {
                 onClick={() => setViewMode("feed")}
                 className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   viewMode === "feed"
-                    ? "bg-gradient-premium text-white shadow-md"
+                    ? "bg-[#641C35] text-white shadow-md"
                     : "text-foreground/60 hover:text-foreground hover:bg-white/5"
                 }`}
               >
@@ -209,7 +209,7 @@ export default function Discover() {
                 onClick={() => setViewMode("swipe")}
                 className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   viewMode === "swipe"
-                    ? "bg-gradient-premium text-white shadow-md"
+                    ? "bg-[#641C35] text-white shadow-md"
                     : "text-foreground/60 hover:text-foreground hover:bg-white/5"
                 }`}
               >
@@ -220,7 +220,7 @@ export default function Discover() {
             {/* Filters Button */}
             <button
               onClick={() => setFiltersOpen(!filtersOpen)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl glass-panel hover:border-primary-pink hover:text-primary-pink text-xs font-bold transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl glass-panel hover:border-[#641C35] hover:text-[#C98296] text-xs font-bold transition-all cursor-pointer"
             >
               <Filter className="w-4 h-4" /> Filters {filtersOpen ? "Open" : ""}
             </button>
@@ -308,7 +308,7 @@ export default function Discover() {
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 rounded-lg bg-gradient-premium text-white text-xs font-semibold shadow-md cursor-pointer"
+                className="px-5 py-2 rounded-lg bg-[#641C35] hover:bg-[#7D2948] text-white text-xs font-semibold shadow-md cursor-pointer transition-all"
               >
                 Apply Filters
               </button>
@@ -351,7 +351,7 @@ export default function Discover() {
               ))
             ) : (
               <div className="text-center flex flex-col items-center max-w-sm glass-card p-8 rounded-3xl border border-white/5 my-12">
-                <div className="w-16 h-16 rounded-full bg-pink-500/10 flex items-center justify-center text-primary-pink border border-pink-500/25 mb-4">
+                <div className="w-16 h-16 rounded-full bg-[#641C35]/15 flex items-center justify-center text-[#C98296] border border-[#641C35]/30 mb-4">
                   <RefreshCcw className="w-8 h-8 animate-spin" />
                 </div>
                 <h3 className="font-extrabold text-base mb-1.5">No Profiles Found</h3>
@@ -360,7 +360,7 @@ export default function Discover() {
                 </p>
                 <button
                   onClick={handleResetFilters}
-                  className="px-5 py-2.5 rounded-full bg-gradient-premium text-white text-xs font-bold shadow-lg cursor-pointer"
+                  className="px-5 py-2.5 rounded-full bg-[#641C35] hover:bg-[#7D2948] text-white text-xs font-bold shadow-lg cursor-pointer transition-all"
                 >
                   Reset Search Filters
                 </button>
@@ -383,7 +383,7 @@ export default function Discover() {
               </div>
             ) : (
               <div className="text-center flex flex-col items-center max-w-sm glass-card p-8 rounded-3xl border border-white/5">
-                <div className="w-16 h-16 rounded-full bg-pink-500/10 flex items-center justify-center text-primary-pink border border-pink-500/25 mb-4">
+                <div className="w-16 h-16 rounded-full bg-[#641C35]/15 flex items-center justify-center text-[#C98296] border border-[#641C35]/30 mb-4">
                   <RefreshCcw className="w-8 h-8 animate-spin" />
                 </div>
                 <h3 className="font-extrabold text-base mb-1.5">No More Profiles Around</h3>
@@ -392,7 +392,7 @@ export default function Discover() {
                 </p>
                 <button
                   onClick={handleResetFilters}
-                  className="px-5 py-2.5 rounded-full bg-gradient-premium text-white text-xs font-bold shadow-lg cursor-pointer"
+                  className="px-5 py-2.5 rounded-full bg-[#641C35] hover:bg-[#7D2948] text-white text-xs font-bold shadow-lg cursor-pointer transition-all"
                 >
                   Reset Search Filters
                 </button>
