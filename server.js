@@ -1,5 +1,4 @@
 const { createServer } = require('http');
-const { parse } = require('url');
 const next = require('next');
 const { Server } = require('socket.io');
 
@@ -26,8 +25,7 @@ app.prepare().then(() => {
       maxHeaderSize: 64 * 1024,
     },
     (req, res) => {
-      const parsedUrl = parse(req.url, true);
-      handle(req, res, parsedUrl);
+      handle(req, res);
     }
   );
 
