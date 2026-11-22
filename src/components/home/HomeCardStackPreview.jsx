@@ -214,7 +214,7 @@ export default function HomeCardStackPreview() {
 
   if (loading) {
     return (
-      <div className="w-full max-w-3xl rounded-3xl glass-card-lux border border-white/20 p-8 shadow-2xl flex flex-col items-center justify-center min-h-[460px]">
+      <div className="w-full max-w-3xl rounded-3xl glass-card-lux border border-white/20 p-8 shadow-2xl flex flex-col items-center justify-center min-h-115">
         <div className="w-12 h-12 rounded-full border-3 border-[#FF4D8D] border-t-transparent animate-spin mb-4" />
         <p className="text-sm font-medium text-white/70">Connecting to live member stream...</p>
       </div>
