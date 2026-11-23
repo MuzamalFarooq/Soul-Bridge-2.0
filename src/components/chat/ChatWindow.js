@@ -730,7 +730,7 @@ export default function ChatWindow({ conversation, onBack }) {
           <button
             type="submit"
             disabled={!inputText.trim()}
-            className="p-2.5 rounded-xl bg-[#641C35] hover:bg-[#7D2948] text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2.5 rounded-xl bg-[#641C35] hover:bg-[#7D2948] text-white flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer shrink-0 disabled:opacity-50 "
           >
             <Send className="w-4 h-4" />
           </button>
