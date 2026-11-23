@@ -744,7 +744,7 @@ export default function ChatWindow({ conversation, onBack }) {
           {incomingCall && (
             <div className="flex flex-col items-center gap-6 animate-in zoom-in-95 duration-200">
               <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-[#641C35] to-[#7D2948] border-4 border-white/10 flex items-center justify-center font-extrabold text-[#E8D3B5] text-3xl animate-pulse">
+                <div className="w-24 h-24 rounded-full bg-linear-to-tr from-[#641C35] to-[#7D2948] border-4 border-white/10 flex items-center justify-center font-extrabold text-[#E8D3B5] text-3xl animate-pulse">
                   {incomingCall.name[0]}
                 </div>
                 <PhoneCall className="w-8 h-8 text-emerald-400 absolute -bottom-1 -right-1 bg-black p-1.5 rounded-full border border-white/10 animate-bounce" />
