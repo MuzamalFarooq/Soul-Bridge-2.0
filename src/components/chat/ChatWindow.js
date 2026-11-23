@@ -596,7 +596,7 @@ export default function ChatWindow({ conversation, onBack }) {
                 <div className={`p-3 rounded-2xl text-xs relative max-w-full break-words ${
                   m.isSms
                     ? isMe 
-                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-tr-none border border-emerald-400/30"
+                      ? "bg-linear-to-r from-emerald-600 to-teal-600 text-white rounded-tr-none border border-emerald-400/30"
                       : "bg-emerald-950/80 text-emerald-100 border border-emerald-500/30 rounded-tl-none"
                     : isMe 
                       ? "bg-[#641C35] text-white rounded-tr-none shadow-sm" 
