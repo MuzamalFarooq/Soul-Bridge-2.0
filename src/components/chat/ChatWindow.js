@@ -602,7 +602,7 @@ export default function ChatWindow({ conversation, onBack }) {
                       ? "bg-[#641C35] text-white rounded-tr-none shadow-sm" 
                       : "bg-white/10 dark:bg-[#271A21] text-foreground border border-white/5 rounded-tl-none"
                 }`}>
-                  <p className="whitespace-pre-wrap break-words">{m.text}</p>
+                  <p className="whitespace-pre-wrap wrap-break-words">{m.text}</p>
 
                   {/* Reaction overlays */}
                   {m.reactions && m.reactions.length > 0 && (
